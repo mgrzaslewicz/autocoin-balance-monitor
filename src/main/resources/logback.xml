@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <property name="LOG_DATEFORMAT_PATTERN" value="yyyy-MM-dd HH:mm:ss.SSS"/>
+    <property name="LOG_BASE_NAME" value="autocoin-arbitrage-monitor"/>
+    <property name="LOG_LEVEL_PATTERN" value="%5p"/>
+    <property name="AUTOCOIN_FILE_LOG_PATTERN"
+              value="${AUTOCOIN_FILE_LOG_PATTERN:-%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %-40.40logger{39} : %m%n}"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <appender name="RollingFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>log/${LOG_BASE_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>log/${LOG_BASE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${AUTOCOIN_FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="automate.profit.autocoin.exchange.ticker"
+            level="${logging.level.automate.profit.autocoin.exchange.ticker:-WARN}"/>
+    <logger name="automate.profit.autocoin.exchange.orderbook"
+            level="${logging.level.automate.profit.autocoin.exchange.orderbook:-WARN}"/>
+    <root level="${logging.level:-INFO}">
+        <appender-ref ref="RollingFileAppender"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
