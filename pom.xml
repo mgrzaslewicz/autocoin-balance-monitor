@@ -17,6 +17,7 @@
         <kotlin.version>1.7.0-RC</kotlin.version>
         <junit.version>5.8.2</junit.version>
         <jackson.version>2.13.3</jackson.version>
+        <jdbi.version>3.30.0</jdbi.version>
         <autocoin-exchange-api-rest.version>2.0.34</autocoin-exchange-api-rest.version>
         <autocoin-metrics-client.version>1.1.4</autocoin-metrics-client.version>
         <maven.compiler.source>17</maven.compiler.source>
@@ -92,6 +93,37 @@
             <groupId>autocoin</groupId>
             <artifactId>autocoin-metrics-client</artifactId>
             <version>${autocoin-metrics-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.0.1</version>
+        </dependency>
+        <!-- DB -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi3-core</artifactId>
+            <version>${jdbi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi3-sqlobject</artifactId>
+            <version>${jdbi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.17.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+            <version>4.11.0</version>
         </dependency>
         <!-- Other -->
         <dependency>

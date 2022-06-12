@@ -41,6 +41,7 @@ class HealthMetricsScheduler(
                 reportMemoryUsage()
                 reportThreadsUsage()
                 reportDescriptorsUsage()
+                metricsService.reportDbConnectionHealth(health.connectedToDb)
             } catch (e: Exception) {
                 logger.error(e) { "Something went wrong when sending metrics" }
             }

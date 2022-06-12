@@ -1,6 +1,5 @@
 package autocoin.balance.app
 
-import autocoin.metrics.JsonlFileStatsDClient
 import autocoin.balance.api.ServerBuilder
 import autocoin.balance.api.controller.EthWalletController
 import autocoin.balance.api.controller.HealthController
@@ -15,12 +14,20 @@ import autocoin.balance.oauth.server.AccessTokenChecker
 import autocoin.balance.oauth.server.Oauth2AuthenticationMechanism
 import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
 import autocoin.balance.scheduled.HealthMetricsScheduler
+import autocoin.metrics.JsonlFileStatsDClient
 import com.timgroup.statsd.NonBlockingStatsDClient
+import liquibase.Liquibase
+import liquibase.database.jvm.JdbcConnection
+import liquibase.resource.ClassLoaderResourceAccessor
 import mu.KLogging
 import okhttp3.OkHttpClient
 import java.nio.file.Path
+import java.sql.Connection
+import java.sql.DriverManager
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class AppContext(private val appConfig: AppConfig) {
     private companion object : KLogging()
@@ -57,7 +64,24 @@ class AppContext(private val appConfig: AppConfig) {
     val scheduledJobsxecutorService = Executors.newScheduledThreadPool(3)
 
 
-    val healthService = HealthService()
+    /**
+     * lazy because object creation (AppContext instance) should have no side effects
+     * and getConnection actually makes a connection to DB
+     */
+    val dbConnection = AtomicReference<Connection>()
+
+    fun createAndSetDbConnection() {
+        dbConnection.set(
+            DriverManager.getConnection(appConfig.jdbcUrl, Properties().apply {
+                put("user", appConfig.dbUsername)
+                put("password", appConfig.dbPassword)
+            })
+        )
+    }
+
+    val liquibase: Liquibase by lazy { Liquibase("dbschema.sql", ClassLoaderResourceAccessor(), JdbcConnection(dbConnection.get())) }
+
+    val healthService = HealthService(dbConnection = dbConnection)
 
     val healthMetricsScheduler = HealthMetricsScheduler(
         healthService = healthService,
