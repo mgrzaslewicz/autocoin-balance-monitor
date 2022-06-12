@@ -11,7 +11,7 @@ import io.undertow.server.HttpHandler
 import io.undertow.util.Methods.GET
 import io.undertow.util.PathTemplateMatch
 
-data class EthWalletBalanceDto(
+data class EthWalletBalanceResponseDto(
     val ethWalletAddress: String,
     val balance: String,
 )
@@ -35,7 +35,7 @@ class EthWalletController(
                 val balance = ethService.getEthBalance(ethWalletAddress)
                 httpServerExchange.responseSender.send(
                     objectMapper.writeValueAsString(
-                        EthWalletBalanceDto(
+                        EthWalletBalanceResponseDto(
                             ethWalletAddress = ethWalletAddress,
                             balance = balance.toPlainString(),
                         )
@@ -48,5 +48,5 @@ class EthWalletController(
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
-    override fun apiHandlers(): List<ApiEndpoint> = listOf(getEthWalletBalance())
+    override fun apiEndpoints(): List<ApiEndpoint> = listOf(getEthWalletBalance())
 }
