@@ -16,18 +16,18 @@ import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
 import autocoin.balance.scheduled.HealthMetricsScheduler
 import autocoin.metrics.JsonlFileStatsDClient
 import com.timgroup.statsd.NonBlockingStatsDClient
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import liquibase.Liquibase
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.ClassLoaderResourceAccessor
 import mu.KLogging
 import okhttp3.OkHttpClient
 import java.nio.file.Path
-import java.sql.Connection
-import java.sql.DriverManager
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import javax.sql.DataSource
 
 class AppContext(private val appConfig: AppConfig) {
     private companion object : KLogging()
@@ -68,20 +68,24 @@ class AppContext(private val appConfig: AppConfig) {
      * lazy because object creation (AppContext instance) should have no side effects
      * and getConnection actually makes a connection to DB
      */
-    val dbConnection = AtomicReference<Connection>()
+    val datasource = AtomicReference<DataSource>()
 
-    fun createAndSetDbConnection() {
-        dbConnection.set(
-            DriverManager.getConnection(appConfig.jdbcUrl, Properties().apply {
-                put("user", appConfig.dbUsername)
-                put("password", appConfig.dbPassword)
-            })
-        )
+    fun createDatasource() {
+        val config = HikariConfig().apply {
+            jdbcUrl = appConfig.jdbcUrl
+            username = appConfig.dbUsername
+            password = appConfig.dbPassword
+            minimumIdle = 5
+            maximumPoolSize = 10
+            connectionTimeout = 250
+            keepaliveTime = 5000
+        }
+        datasource.set(HikariDataSource(config))
     }
 
-    val liquibase: Liquibase by lazy { Liquibase("dbschema.sql", ClassLoaderResourceAccessor(), JdbcConnection(dbConnection.get())) }
+    val liquibase: Liquibase by lazy { Liquibase("dbschema.sql", ClassLoaderResourceAccessor(), JdbcConnection(datasource.get().connection)) }
 
-    val healthService = HealthService(dbConnection = dbConnection)
+    val healthService = HealthService(datasource = datasource)
 
     val healthMetricsScheduler = HealthMetricsScheduler(
         healthService = healthService,
