@@ -30,8 +30,7 @@ class EthWalletControllerIT {
             ethWalletAddressValidator = EthWalletAddressValidator(),
         )
         val startedServer = startTestServer(ethWalletController)
-        val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/eth/wallet/$sampleEthAddressTakenFromEtherscan")
+        val request = Request.Builder() .url("http://localhost:${startedServer.port}/eth/wallet/$sampleEthAddressTakenFromEtherscan")
             .build()
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()

@@ -3,6 +3,7 @@ package autocoin.balance.app
 import autocoin.balance.api.ServerBuilder
 import autocoin.balance.api.controller.EthWalletController
 import autocoin.balance.api.controller.HealthController
+import autocoin.balance.api.controller.WalletController
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.blockchain.eth.Web3EthService
 import autocoin.balance.health.HealthService
@@ -15,6 +16,7 @@ import autocoin.balance.oauth.server.AccessTokenChecker
 import autocoin.balance.oauth.server.Oauth2AuthenticationMechanism
 import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
 import autocoin.balance.scheduled.HealthMetricsScheduler
+import autocoin.balance.wallet.UserBlockChainWalletRepository
 import autocoin.metrics.JsonlFileStatsDClient
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
@@ -32,6 +34,38 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.sql.DataSource
+
+fun createJdbi(datasource: DataSource): Jdbi {
+    val jdbi = Jdbi.create(datasource)
+    with(jdbi) {
+        installPlugin(KotlinPlugin())
+        installPlugin(KotlinSqlObjectPlugin())
+    }
+    return jdbi
+}
+
+fun createLiquibase(datasource: DataSource): Liquibase {
+    val liquibase =
+        Liquibase(
+            /* changeLogFile = */ "dbschema.sql",
+            /* resourceAccessor = */ ClassLoaderResourceAccessor(),
+            /* conn = */ JdbcConnection(datasource.connection)
+        )
+    return liquibase
+}
+
+fun createDatasource(jdbcUrl: String, username: String, password: String): DataSource {
+    val config = HikariConfig().apply {
+        this.jdbcUrl = jdbcUrl
+        this.username = username
+        this.password = password
+        minimumIdle = 5
+        maximumPoolSize = 10
+        connectionTimeout = 250
+        keepaliveTime = 5000
+    }
+    return HikariDataSource(config)
+}
 
 class AppContext(private val appConfig: AppConfig) {
     private companion object : KLogging()
@@ -76,18 +110,14 @@ class AppContext(private val appConfig: AppConfig) {
 
     val jdbi = AtomicReference<Jdbi>()
 
-    private fun createDatasource() {
-        val config = HikariConfig().apply {
-            jdbcUrl = appConfig.jdbcUrl
-            username = appConfig.dbUsername
-            password = appConfig.dbPassword
-            minimumIdle = 5
-            maximumPoolSize = 10
-            connectionTimeout = 250
-            keepaliveTime = 5000
-        }
-        datasource.set(HikariDataSource(config))
-    }
+    private fun createDatasource() = datasource.set(
+        createDatasource(
+            jdbcUrl = appConfig.jdbcUrl,
+            username = appConfig.dbUsername,
+            password = appConfig.dbPassword,
+        )
+    )
+
 
     fun initDbRelatedServices() {
         createDatasource()
@@ -95,23 +125,9 @@ class AppContext(private val appConfig: AppConfig) {
         createJdbi()
     }
 
-    private fun createJdbi() {
-        jdbi.set(Jdbi.create(datasource.get()))
-        with(jdbi.get()) {
-            installPlugin(KotlinPlugin())
-            installPlugin(KotlinSqlObjectPlugin())
-        }
-    }
+    private fun createJdbi() = jdbi.set(createJdbi(datasource.get()))
 
-    private fun createLiquibase() {
-        liquibase.set(
-            Liquibase(
-                /* changeLogFile = */ "dbschema.sql",
-                /* resourceAccessor = */ ClassLoaderResourceAccessor(),
-                /* conn = */ JdbcConnection(datasource.get().connection)
-            )
-        )
-    }
+    private fun createLiquibase() = liquibase.set(createLiquibase(datasource.get()))
 
     val liquibase = AtomicReference<Liquibase>()
 
@@ -146,7 +162,13 @@ class AppContext(private val appConfig: AppConfig) {
         objectMapper = objectMapper,
     )
 
-    val controllers = listOf(healthController, ethWalletController)
+    val walletController = WalletController(
+        objectMapper = objectMapper,
+        oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
+        userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) }
+    )
+
+    val controllers = listOf(healthController, ethWalletController, walletController)
 
     val server = ServerBuilder(appConfig.appServerPort, controllers, metricsService).build()
 
