@@ -15,9 +15,9 @@ class AppStarter(private val appContext: AppContext) {
     fun start(): StartedApp {
 
         with(appContext) {
+            appContext.initDbRelatedServices()
             logger.info { "Running DB migrations" }
-            appContext.createDatasource()
-            appContext.liquibase.update(Contexts())
+            appContext.liquibase.get().update(Contexts())
 
             logger.info { "Scheduling jobs" }
             healthMetricsScheduler.scheduleSendingMetrics()

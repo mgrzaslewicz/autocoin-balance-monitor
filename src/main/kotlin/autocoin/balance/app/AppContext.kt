@@ -6,6 +6,7 @@ import autocoin.balance.api.controller.HealthController
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.blockchain.eth.Web3EthService
 import autocoin.balance.health.HealthService
+import autocoin.balance.health.db.DbHealthCheck
 import autocoin.balance.metrics.MetricsService
 import autocoin.balance.oauth.client.AccessTokenAuthenticator
 import autocoin.balance.oauth.client.AccessTokenInterceptor
@@ -23,6 +24,9 @@ import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.ClassLoaderResourceAccessor
 import mu.KLogging
 import okhttp3.OkHttpClient
+import org.jdbi.v3.core.Jdbi
+import org.jdbi.v3.core.kotlin.KotlinPlugin
+import org.jdbi.v3.sqlobject.kotlin.KotlinSqlObjectPlugin
 import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -70,7 +74,9 @@ class AppContext(private val appConfig: AppConfig) {
      */
     val datasource = AtomicReference<DataSource>()
 
-    fun createDatasource() {
+    val jdbi = AtomicReference<Jdbi>()
+
+    private fun createDatasource() {
         val config = HikariConfig().apply {
             jdbcUrl = appConfig.jdbcUrl
             username = appConfig.dbUsername
@@ -83,9 +89,36 @@ class AppContext(private val appConfig: AppConfig) {
         datasource.set(HikariDataSource(config))
     }
 
-    val liquibase: Liquibase by lazy { Liquibase("dbschema.sql", ClassLoaderResourceAccessor(), JdbcConnection(datasource.get().connection)) }
+    fun initDbRelatedServices() {
+        createDatasource()
+        createLiquibase()
+        createJdbi()
+    }
 
-    val healthService = HealthService(datasource = datasource)
+    private fun createJdbi() {
+        jdbi.set(Jdbi.create(datasource.get()))
+        with(jdbi.get()) {
+            installPlugin(KotlinPlugin())
+            installPlugin(KotlinSqlObjectPlugin())
+        }
+    }
+
+    private fun createLiquibase() {
+        liquibase.set(
+            Liquibase(
+                /* changeLogFile = */ "dbschema.sql",
+                /* resourceAccessor = */ ClassLoaderResourceAccessor(),
+                /* conn = */ JdbcConnection(datasource.get().connection)
+            )
+        )
+    }
+
+    val liquibase = AtomicReference<Liquibase>()
+
+    val healthChecks = listOf(
+        DbHealthCheck(datasource = datasource)
+    )
+    val healthService = HealthService(healthChecks)
 
     val healthMetricsScheduler = HealthMetricsScheduler(
         healthService = healthService,

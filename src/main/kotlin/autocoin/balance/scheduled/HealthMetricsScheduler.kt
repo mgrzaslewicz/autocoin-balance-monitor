@@ -1,6 +1,7 @@
 package autocoin.balance.scheduled
 
 import autocoin.balance.health.HealthService
+import autocoin.balance.health.db.DbHealthCheck
 import autocoin.balance.metrics.MetricsService
 import mu.KLogging
 import java.time.Duration
@@ -41,7 +42,7 @@ class HealthMetricsScheduler(
                 reportMemoryUsage()
                 reportThreadsUsage()
                 reportDescriptorsUsage()
-                metricsService.reportDbConnectionHealth(health.connectedToDb)
+                metricsService.reportDbConnectionHealth(health.findHealthCheckResult(DbHealthCheck::class.java).healthy)
             } catch (e: Exception) {
                 logger.error(e) { "Something went wrong when sending metrics" }
             }

@@ -9,8 +9,8 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 interface EthService {
-    fun getWeiBalance(ethAddress: String): BigInteger
-    fun getEthBalance(ethAddress: String): BigDecimal
+    fun getWeiBalance(ethWalletAddress: String): BigInteger
+    fun getEthBalance(ethWalletAddress: String): BigDecimal
 }
 
 class Web3EthService(private val ethNodeUrl: String) : EthService {
@@ -25,8 +25,8 @@ class Web3EthService(private val ethNodeUrl: String) : EthService {
         return balanceResponse.balance
     }
 
-    override fun getEthBalance(ethAddress: String): BigDecimal {
-        return Convert.fromWei(getWeiBalance(ethAddress).toBigDecimal(), Convert.Unit.ETHER)
+    override fun getEthBalance(ethWalletAddress: String): BigDecimal {
+        return Convert.fromWei(getWeiBalance(ethWalletAddress).toBigDecimal(), Convert.Unit.ETHER)
     }
 
 }
