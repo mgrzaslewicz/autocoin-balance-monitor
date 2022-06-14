@@ -1,5 +1,6 @@
 package autocoin.balance.api.controller
 
+import autocoin.StartedServer
 import autocoin.TestDb
 import autocoin.TestServer
 import autocoin.balance.api.HttpHandlerWrapper
@@ -10,6 +11,7 @@ import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.oauth.server.UserAccount
 import autocoin.balance.wallet.UserBlockChainWallet
 import autocoin.balance.wallet.UserBlockChainWalletRepository
+import autocoin.balance.wallet.UserBlockChainWalletService
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
@@ -31,6 +33,7 @@ import io.undertow.util.StatusCodes
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.internal.EMPTY_REQUEST
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.jdbi.v3.core.Jdbi
@@ -85,33 +88,43 @@ class WalletControllerIT {
     private lateinit var startedDatabase: TestDb.StartedDatabase
     private lateinit var jdbi: Jdbi
     private lateinit var walletRepository: UserBlockChainWalletRepository
+    private lateinit var ethService: EthService
+    private lateinit var walletController: WalletController
+    private lateinit var walletService: UserBlockChainWalletService
+    private lateinit var startedServer: StartedServer
 
     @BeforeEach
     fun setup() {
         startedDatabase = TestDb.startDatabase()
         jdbi = createJdbi(startedDatabase.datasource)
         walletRepository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
+        ethService = mock()
+        walletService = UserBlockChainWalletService(
+            userBlockChainWalletRepository = { walletRepository },
+            ethService = ethService
+        )
+        walletController = WalletController(
+            objectMapper = objectMapper,
+            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
+            userBlockChainWalletRepository = { walletRepository },
+            ethWalletAddressValidator = EthWalletAddressValidator(),
+            ethService = ethService,
+            userBlockChainWalletService = walletService,
+        )
     }
 
     @AfterEach
     fun cleanup() {
         startedDatabase.container.stop()
+        startedServer.stop()
     }
 
 
     @Test
     fun shouldAddWallets() {
         // given
-        val walletController = WalletController(
-            objectMapper = objectMapper,
-            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
-            userBlockChainWalletRepository = { walletRepository },
-            ethWalletAddressValidator = EthWalletAddressValidator(),
-            ethService = mock<EthService>().apply {
-                whenever(this.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
-            }
-        )
-        val startedServer = TestServer.startTestServer(walletController)
+        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        startedServer = TestServer.startTestServer(walletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallets")
             .post(
@@ -141,16 +154,8 @@ class WalletControllerIT {
     @Test
     fun shouldRespondWithDuplicatedWallets() {
         // given
-        val walletController = WalletController(
-            objectMapper = objectMapper,
-            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
-            userBlockChainWalletRepository = { walletRepository },
-            ethWalletAddressValidator = EthWalletAddressValidator(),
-            ethService = mock<EthService>().apply {
-                whenever(this.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
-            }
-        )
-        val startedServer = TestServer.startTestServer(walletController)
+        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        startedServer = TestServer.startTestServer(walletController)
         val duplicatedWalletAddress = sampleEthAddress1
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallets")
@@ -174,19 +179,12 @@ class WalletControllerIT {
         val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), AddWalletsErrorResponseDto::class.java)
         assertThat(addWalletsErrorResponse.duplicatedAddresses).containsExactly(duplicatedWalletAddress)
     }
+
     @Test
     fun shouldRespondWithInvalidWallets() {
         // given
-        val walletController = WalletController(
-            objectMapper = objectMapper,
-            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
-            userBlockChainWalletRepository = { walletRepository },
-            ethWalletAddressValidator = EthWalletAddressValidator(),
-            ethService = mock<EthService>().apply {
-                whenever(this.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
-            }
-        )
-        val startedServer = TestServer.startTestServer(walletController)
+        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        startedServer = TestServer.startTestServer(walletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallets")
             .post(
@@ -218,6 +216,7 @@ class WalletControllerIT {
     @Test
     fun shouldGetWallets() {
         // given
+        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
@@ -240,16 +239,7 @@ class WalletControllerIT {
         walletRepository.insertWallet(expectedWallets[0])
         walletRepository.insertWallet(expectedWallets[1])
 
-        val walletController = WalletController(
-            objectMapper = objectMapper,
-            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
-            userBlockChainWalletRepository = { walletRepository },
-            ethWalletAddressValidator = EthWalletAddressValidator(),
-            ethService = mock<EthService>().apply {
-                whenever(this.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
-            }
-        )
-        val startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(walletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallets")
             .get()
@@ -269,6 +259,50 @@ class WalletControllerIT {
             assertThat(walletsResponse[1].description).isNull()
             assertThat(walletsResponse[1].walletAddress).isEqualTo(sampleEthAddress2)
             assertThat(walletsResponse[1].balance).isEqualTo("2.78")
+            assertAll()
+        }
+    }
+
+    @Test
+    fun shouldRefreshWalletsBalances() {
+        // given
+        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        val expectedWallets = listOf(
+            UserBlockChainWallet(
+                userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
+                currency = "ETH",
+                walletAddress = sampleEthAddress1,
+                description = "sample description 1",
+                balance = null,
+                id = UUID.randomUUID().toString(),
+            ),
+            UserBlockChainWallet(
+                userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
+                currency = "ETH",
+                walletAddress = sampleEthAddress2,
+                description = null,
+                balance = BigDecimal("2.78"),
+                id = UUID.randomUUID().toString(),
+            ),
+        )
+
+        walletRepository.insertWallet(expectedWallets[0])
+        walletRepository.insertWallet(expectedWallets[1])
+
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallets/balance/refresh")
+            .post(EMPTY_REQUEST)
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.isSuccessful).isTrue
+        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<WalletResponseDto>::class.java)
+        SoftAssertions().apply {
+            assertThat(walletsResponse).hasSize(2)
+            assertThat(walletsResponse[0].balance).isEqualTo("0.56")
+            assertThat(walletsResponse[1].balance).isEqualTo("0.56")
             assertAll()
         }
     }

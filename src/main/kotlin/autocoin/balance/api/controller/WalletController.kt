@@ -9,8 +9,10 @@ import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.wallet.UserBlockChainWallet
 import autocoin.balance.wallet.UserBlockChainWalletRepository
+import autocoin.balance.wallet.UserBlockChainWalletService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.undertow.server.HttpHandler
+import io.undertow.server.HttpServerExchange
 import io.undertow.util.Methods.GET
 import io.undertow.util.Methods.POST
 import mu.KLogging
@@ -54,6 +56,7 @@ class WalletController(
     private val userBlockChainWalletRepository: () -> UserBlockChainWalletRepository,
     private val ethService: EthService,
     private val ethWalletAddressValidator: EthWalletAddressValidator,
+    private val userBlockChainWalletService: UserBlockChainWalletService,
 ) : ApiController {
 
     private companion object : KLogging()
@@ -105,6 +108,12 @@ class WalletController(
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
+    private fun HttpServerExchange.sendUserWallets(userAccountId: String) {
+        val wallets = userBlockChainWalletRepository().findWalletsByUserAccountId(userAccountId)
+            .map { it.toDto() }
+        this.responseSender.send(objectMapper.writeValueAsString(wallets))
+    }
+
     private fun getMonitoredWallets() = object : ApiEndpoint {
         override val method = GET
         override val urlTemplate = "/wallets"
@@ -112,12 +121,27 @@ class WalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            logger.debug { "User $userAccountId is requesting wallets" }
-            val wallets = userBlockChainWalletRepository().findWalletsByUserAccountId(userAccountId)
-                .map { it.toDto() }
-            httpServerExchange.responseSender.send(objectMapper.writeValueAsString(wallets))
+            logger.info { "User $userAccountId is requesting wallets" }
+            httpServerExchange.sendUserWallets(userAccountId)
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
-    override fun apiEndpoints(): List<ApiEndpoint> = listOf(addMonitoredWallets(), getMonitoredWallets())
+    private fun refreshWalletsBalance() = object : ApiEndpoint {
+        override val method = POST
+        override val urlTemplate = "/wallets/balance/refresh"
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is refreshing wallets balance" }
+            userBlockChainWalletService.refreshWalletBalances(userAccountId)
+            logger.info { "User $userAccountId refreshed wallets balance" }
+            httpServerExchange.sendUserWallets(userAccountId)
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
+    override fun apiEndpoints(): List<ApiEndpoint> = listOf(
+        addMonitoredWallets(),
+        getMonitoredWallets(),
+        refreshWalletsBalance()
+    )
 }

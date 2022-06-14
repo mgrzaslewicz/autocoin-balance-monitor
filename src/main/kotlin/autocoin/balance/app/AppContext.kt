@@ -17,6 +17,7 @@ import autocoin.balance.oauth.server.Oauth2AuthenticationMechanism
 import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
 import autocoin.balance.scheduled.HealthMetricsScheduler
 import autocoin.balance.wallet.UserBlockChainWalletRepository
+import autocoin.balance.wallet.UserBlockChainWalletService
 import autocoin.metrics.JsonlFileStatsDClient
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
@@ -162,12 +163,18 @@ class AppContext(private val appConfig: AppConfig) {
         objectMapper = objectMapper,
     )
 
+    val userBlockChainWalletService = UserBlockChainWalletService(
+        userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
+        ethService = ethService,
+    )
+
     val walletController = WalletController(
         objectMapper = objectMapper,
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
         userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
         ethService = ethService,
         ethWalletAddressValidator = ethWalletAddressValidator,
+        userBlockChainWalletService = userBlockChainWalletService,
     )
 
     val controllers = listOf(healthController, ethWalletController, walletController)
