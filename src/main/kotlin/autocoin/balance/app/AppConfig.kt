@@ -33,7 +33,7 @@ data class AppConfig(
     val oauth2ApiBaseUrl: String = getPropertyThenEnv("OAUTH2_API_URL", "https://users-apiv2.autocoin-trader.com"),
 
     @InternalDependency
-    val oauth2ClientId: String = getPropertyThenEnv("OAUTH_CLIENT_ID", "wallet-service"),
+    val oauth2ClientId: String = getPropertyThenEnv("OAUTH_CLIENT_ID", "balance-monitor"),
     @InternalDependency
     val oauth2ClientSecret: String = getPropertyThenEnv("OAUTH_CLIENT_SECRET"),
 
