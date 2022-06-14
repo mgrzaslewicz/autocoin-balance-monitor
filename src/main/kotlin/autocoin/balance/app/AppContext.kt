@@ -165,7 +165,9 @@ class AppContext(private val appConfig: AppConfig) {
     val walletController = WalletController(
         objectMapper = objectMapper,
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
-        userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) }
+        userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
+        ethService = ethService,
+        ethWalletAddressValidator = ethWalletAddressValidator,
     )
 
     val controllers = listOf(healthController, ethWalletController, walletController)
