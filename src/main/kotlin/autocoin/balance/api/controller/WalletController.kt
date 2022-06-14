@@ -33,7 +33,7 @@ fun UserBlockChainWallet.toDto() = WalletResponseDto(
     balance = this.balance?.stripTrailingZeros()?.toPlainString(),
 )
 
-fun AddWalletRequestDto.toUserBlockChainWallet(userAccountId: String) =    UserBlockChainWallet(
+fun AddWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserBlockChainWallet(
     walletAddress = this.walletAddress,
     currency = this.currency,
     userAccountId = userAccountId,
@@ -60,8 +60,20 @@ class WalletController(
             httpServerExchange.startBlocking() // in order to user inputStream
             val addWalletsRequest = objectMapper.readValue(httpServerExchange.inputStream, Array<AddWalletRequestDto>::class.java)
             logger.info { "User $userAccountId is adding wallets: $addWalletsRequest" }
-            addWalletsRequest.forEach {
-                userBlockChainWalletRepository().insertWallet(it.toUserBlockChainWallet(userAccountId))
+            val duplicatedWalletAddresses = addWalletsRequest.mapNotNull {
+                val walletToAdd = it.toUserBlockChainWallet(userAccountId)
+                try {
+                    // TODO if needed make the check more granular, not all exceptions might be related to unique constraint
+                    userBlockChainWalletRepository().insertWallet(walletToAdd)
+                    null
+                } catch (e: Exception) {
+                    logger.error(e) { "Could not add wallet $walletToAdd" }
+                    walletToAdd.walletAddress
+                }
+            }
+            if (duplicatedWalletAddresses.isNotEmpty()) {
+                httpServerExchange.statusCode = 400
+                httpServerExchange.responseSender.send(objectMapper.writeValueAsString(duplicatedWalletAddresses))
             }
             logger.info { "User $userAccountId added wallets: $addWalletsRequest" }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)

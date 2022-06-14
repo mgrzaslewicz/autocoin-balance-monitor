@@ -127,6 +127,39 @@ class WalletControllerIT {
     }
 
     @Test
+    fun shouldRespondWithDuplicatedWallets() {
+        // given
+        val walletController = WalletController(
+            objectMapper = objectMapper,
+            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
+            userBlockChainWalletRepository = { walletRepository },
+        )
+        val startedServer = TestServer.startTestServer(walletController)
+        val duplicatedWalletAddress = "sample wallet address"
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallets")
+            .post(
+                objectMapper.writeValueAsString(
+                    listOf(
+                        AddWalletRequestDto(
+                            walletAddress = duplicatedWalletAddress,
+                            currency = "sample currency",
+                            description = "sample description"
+                        )
+                    )
+                ).toRequestBody()
+            )
+            .build()
+        httpClientWithoutAuthorization.newCall(request).execute()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(400)
+        val duplicatedWalletAddresses = objectMapper.readValue(response.body?.string(), Array<String>::class.java)
+        assertThat(duplicatedWalletAddresses).containsExactly(duplicatedWalletAddress)
+    }
+
+    @Test
     fun shouldGetWallets() {
         // given
         val expectedWallets = listOf(
