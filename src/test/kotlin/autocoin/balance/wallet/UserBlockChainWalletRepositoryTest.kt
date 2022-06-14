@@ -7,6 +7,7 @@ import org.jdbi.v3.core.Jdbi
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.util.*
 import javax.sql.DataSource
 
@@ -41,6 +42,8 @@ class UserBlockChainWalletRepositoryTest {
                 walletAddress = "test",
                 currency = "ETH",
                 userAccountId = userAccountId,
+                description = "sample description",
+                balance = BigDecimal("10.6"),
             )
         )
         // then
@@ -52,8 +55,8 @@ class UserBlockChainWalletRepositoryTest {
                 userAccountId = userAccountId,
                 currency = "ETH",
                 walletAddress = "test",
-                balance = null,
-                description = null
+                description = "sample description",
+                balance = BigDecimal("10.6"),
             )
         )
     }
