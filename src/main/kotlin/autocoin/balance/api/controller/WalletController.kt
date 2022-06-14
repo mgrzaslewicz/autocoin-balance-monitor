@@ -33,6 +33,14 @@ fun UserBlockChainWallet.toDto() = WalletResponseDto(
     balance = this.balance?.stripTrailingZeros()?.toPlainString(),
 )
 
+fun AddWalletRequestDto.toUserBlockChainWallet(userAccountId: String) =    UserBlockChainWallet(
+    walletAddress = this.walletAddress,
+    currency = this.currency,
+    userAccountId = userAccountId,
+    description = this.description,
+    balance = null,
+)
+
 class WalletController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
@@ -53,13 +61,7 @@ class WalletController(
             val addWalletsRequest = objectMapper.readValue(httpServerExchange.inputStream, Array<AddWalletRequestDto>::class.java)
             logger.info { "User $userAccountId is adding wallets: $addWalletsRequest" }
             addWalletsRequest.forEach {
-                userBlockChainWalletRepository().insertWallet(
-                    UserBlockChainWallet(
-                        walletAddress = it.walletAddress,
-                        currency = it.currency,
-                        userAccountId = userAccountId,
-                    )
-                )
+                userBlockChainWalletRepository().insertWallet(it.toUserBlockChainWallet(userAccountId))
             }
             logger.info { "User $userAccountId added wallets: $addWalletsRequest" }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)

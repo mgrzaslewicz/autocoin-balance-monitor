@@ -77,11 +77,13 @@ class WalletControllerIT {
 
     private lateinit var startedDatabase: TestDb.StartedDatabase
     private lateinit var jdbi: Jdbi
+    private lateinit var walletRepository: UserBlockChainWalletRepository
 
     @BeforeEach
     fun setup() {
         startedDatabase = TestDb.startDatabase()
         jdbi = createJdbi(startedDatabase.datasource)
+        walletRepository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
     }
 
     @AfterEach
@@ -96,7 +98,7 @@ class WalletControllerIT {
         val walletController = WalletController(
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
-            userBlockChainWalletRepository = { jdbi.onDemand(UserBlockChainWalletRepository::class.java) },
+            userBlockChainWalletRepository = { walletRepository },
         )
         val startedServer = TestServer.startTestServer(walletController)
         val request = Request.Builder()
@@ -107,7 +109,7 @@ class WalletControllerIT {
                         AddWalletRequestDto(
                             walletAddress = "sample wallet address",
                             currency = "sample currency",
-                            description = null
+                            description = "sample description"
                         )
                     )
                 ).toRequestBody()
@@ -117,36 +119,42 @@ class WalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
+        val addedWallets = walletRepository.findWalletsByUserAccountId(authenticatedHttpHandlerWrapper.userAccountId)
+        assertThat(addedWallets).hasSize(1)
+        assertThat(addedWallets[0].walletAddress).isEqualTo("sample wallet address")
+        assertThat(addedWallets[0].currency).isEqualTo("sample currency")
+        assertThat(addedWallets[0].description).isEqualTo("sample description")
     }
 
     @Test
     fun shouldGetWallets() {
         // given
-        val userBlockChainWalletRepository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
                 currency = "ETH",
                 walletAddress = "sample wallet address 1",
                 description = "sample description 1",
+                balance = null,
                 id = UUID.randomUUID().toString(),
             ),
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
                 currency = "ETH",
                 walletAddress = "sample wallet address 2",
-                id = UUID.randomUUID().toString(),
+                description = null,
                 balance = BigDecimal("2.78"),
+                id = UUID.randomUUID().toString(),
             ),
         )
 
-        userBlockChainWalletRepository.insertWallet(expectedWallets[0])
-        userBlockChainWalletRepository.insertWallet(expectedWallets[1])
+        walletRepository.insertWallet(expectedWallets[0])
+        walletRepository.insertWallet(expectedWallets[1])
 
         val walletController = WalletController(
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
-            userBlockChainWalletRepository = { userBlockChainWalletRepository },
+            userBlockChainWalletRepository = { walletRepository },
         )
         val startedServer = TestServer.startTestServer(walletController)
         val request = Request.Builder()
