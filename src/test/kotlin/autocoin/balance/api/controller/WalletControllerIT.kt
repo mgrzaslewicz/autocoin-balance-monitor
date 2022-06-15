@@ -264,6 +264,80 @@ class WalletControllerIT {
     }
 
     @Test
+    fun shouldGetWallet() {
+        // given
+        val walletId = UUID.randomUUID().toString()
+        val wallet = UserBlockChainWallet(
+            userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
+            currency = "ETH",
+            walletAddress = sampleEthAddress1,
+            description = "sample description 1",
+            balance = null,
+            id = walletId,
+        )
+
+        walletRepository.insertWallet(wallet)
+
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallets/$walletId")
+            .get()
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(200)
+        val walletsResponse = objectMapper.readValue(response.body?.string(), WalletResponseDto::class.java)
+        SoftAssertions().apply {
+            assertThat(walletsResponse.currency).isEqualTo("ETH")
+            assertThat(walletsResponse.description).isEqualTo("sample description 1")
+            assertThat(walletsResponse.walletAddress).isEqualTo(sampleEthAddress1)
+            assertAll()
+        }
+    }
+
+    @Test
+    fun shouldReturn404WhenGetNonExistingWallet() {
+        // given
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallets/nonexistingwallet")
+            .get()
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(404)
+    }
+
+    @Test
+    fun shouldReturn404WhenGetWalletBelongingToAnotherUser() {
+        // given
+        val userAccountOfSomeOtherUserNotMakingTheRequest = UUID.randomUUID().toString()
+        val walletId = UUID.randomUUID().toString()
+        val wallet = UserBlockChainWallet(
+            userAccountId = userAccountOfSomeOtherUserNotMakingTheRequest,
+            currency = "ETH",
+            walletAddress = sampleEthAddress1,
+            description = "sample description 1",
+            balance = null,
+            id = walletId,
+        )
+
+        walletRepository.insertWallet(wallet)
+
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallets/$walletId")
+            .get()
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(404)
+    }
+
+    @Test
     fun shouldRefreshWalletsBalances() {
         // given
         whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
@@ -380,6 +454,33 @@ class WalletControllerIT {
         startedServer = TestServer.startTestServer(walletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallet/nonexistingwallet")
+            .delete(EMPTY_REQUEST)
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(404)
+    }
+
+    @Test
+    fun shouldReturn404WhenDeletingWalletBelongingToAnotherUser() {
+        // given
+        val walletId = UUID.randomUUID().toString()
+        val userAccountOfSomeOtherUserNotMakingTheRequest = UUID.randomUUID().toString()
+        val wallet = UserBlockChainWallet(
+            userAccountId = userAccountOfSomeOtherUserNotMakingTheRequest,
+            currency = "ETH",
+            walletAddress = sampleEthAddress1,
+            description = "sample description 1",
+            balance = null,
+            id = walletId,
+        )
+
+        walletRepository.insertWallet(wallet)
+
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallet/$walletId")
             .delete(EMPTY_REQUEST)
             .build()
         // when
