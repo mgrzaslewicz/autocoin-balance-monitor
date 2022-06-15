@@ -25,15 +25,22 @@ interface UserBlockChainWalletRepository {
 
     @SqlQuery("SELECT * FROM user_blockchain_wallet WHERE user_account_id = :userAccountId")
     @RegisterKotlinMapper(UserBlockChainWallet::class)
-    fun findWalletsByUserAccountId(@Bind("userAccountId") userAccountId: String): List<UserBlockChainWallet>
+    fun findManyByUserAccountId(@Bind("userAccountId") userAccountId: String): List<UserBlockChainWallet>
 
     @SqlQuery("SELECT * FROM user_blockchain_wallet WHERE id = :id")
     @RegisterKotlinMapper(UserBlockChainWallet::class)
-    fun findWalletById(@Bind("id") id: String): UserBlockChainWallet
+    fun findOneById(@Bind("id") id: String): UserBlockChainWallet
+
+    @SqlQuery("SELECT EXISTS(SELECT 1 FROM user_blockchain_wallet WHERE id = :id)")
+    @RegisterKotlinMapper(UserBlockChainWallet::class)
+    fun existsById(@Bind("id") id: String): Boolean
 
     @SqlQuery("SELECT EXISTS (select 1 FROM user_blockchain_wallet WHERE user_account_id = :userAccountId and wallet_address = :walletAddress)")
     fun existsByUserAccountIdAndWalletAddress(@Bind("userAccountId") userAccountId: String, @Bind("walletAddress") walletAddress: String): Boolean
 
+    @SqlQuery("SELECT EXISTS (select 1 FROM user_blockchain_wallet WHERE user_account_id = :userAccountId and id = :id)")
+    fun existsByUserAccountIdAndId(@Bind("userAccountId") userAccountId: String, @Bind("id") id: String): Boolean
+
     @SqlUpdate("DELETE FROM user_blockchain_wallet WHERE user_account_id = :userAccountId and wallet_address = :walletAddress")
-    fun deleteByUserAccountIdAndWalletAddress(@Bind("userAccountId") userAccountId: String, @Bind("walletAddress") walletAddress: String): Int
+    fun deleteOneByUserAccountIdAndWalletAddress(@Bind("userAccountId") userAccountId: String, @Bind("walletAddress") walletAddress: String): Int
 }

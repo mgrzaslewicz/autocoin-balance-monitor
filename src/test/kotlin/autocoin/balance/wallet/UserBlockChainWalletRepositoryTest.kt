@@ -49,7 +49,7 @@ class UserBlockChainWalletRepositoryTest {
             )
         )
         // then
-        val userWallets = repository.findWalletsByUserAccountId(userAccountId)
+        val userWallets = repository.findManyByUserAccountId(userAccountId)
         assertThat(userWallets).hasSize(1)
         assertThat(userWallets.first()).isEqualTo(
             UserBlockChainWallet(
@@ -81,7 +81,7 @@ class UserBlockChainWalletRepositoryTest {
         // when
         val howManyUpdated = repository.updateWallet(wallet.copy(walletAddress = "test2", currency = "BTC", description = "new description", balance = BigDecimal("11.5")))
         // then
-        val updatedWallet = repository.findWalletById(id)
+        val updatedWallet = repository.findOneById(id)
         assertThat(howManyUpdated).isEqualTo(1)
         assertThat(updatedWallet.walletAddress).isEqualTo("test2")
         assertThat(updatedWallet.currency).isEqualTo("BTC")
@@ -105,13 +105,13 @@ class UserBlockChainWalletRepositoryTest {
         )
         repository.insertWallet(wallet)
         // when
-        val foundWallet = repository.findWalletById(id)
+        val foundWallet = repository.findOneById(id)
         // then
         assertThat(foundWallet.id).isEqualTo(id)
     }
 
     @Test
-    fun shouldWalletExist() {
+    fun shouldWalletExistByUserAccountIdAndWalletAddress() {
         // given
         val id = UUID.randomUUID().toString()
         val userAccountId = UUID.randomUUID().toString()
@@ -132,6 +132,27 @@ class UserBlockChainWalletRepositoryTest {
     }
 
     @Test
+    fun shouldWalletExistByUserAccountIdAndId() {
+        // given
+        val id = UUID.randomUUID().toString()
+        val userAccountId = UUID.randomUUID().toString()
+        val repository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
+        val wallet = UserBlockChainWallet(
+            id = id,
+            walletAddress = "test",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description",
+            balance = BigDecimal("10.6"),
+        )
+        repository.insertWallet(wallet)
+        // when
+        val walletExists = repository.existsByUserAccountIdAndId(userAccountId, id)
+        // then
+        assertThat(walletExists).isTrue
+    }
+
+    @Test
     fun shouldDeleteWallet() {
         // given
         val id = UUID.randomUUID().toString()
@@ -147,7 +168,7 @@ class UserBlockChainWalletRepositoryTest {
         )
         repository.insertWallet(wallet)
         // when
-        val howManyDeleted = repository.deleteByUserAccountIdAndWalletAddress(userAccountId, "test")
+        val howManyDeleted = repository.deleteOneByUserAccountIdAndWalletAddress(userAccountId, "test")
         // then
         assertThat(howManyDeleted).isEqualTo(1)
         assertThat(repository.existsByUserAccountIdAndWalletAddress(userAccountId, "test")).isFalse

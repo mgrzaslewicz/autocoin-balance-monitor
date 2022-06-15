@@ -130,7 +130,7 @@ class WalletControllerIT {
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
-                        AddWalletRequestDto(
+                        CreateWalletRequestDto(
                             walletAddress = sampleEthAddress1,
                             currency = "ETH",
                             description = "sample description"
@@ -143,7 +143,7 @@ class WalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val addedWallets = walletRepository.findWalletsByUserAccountId(authenticatedHttpHandlerWrapper.userAccountId)
+        val addedWallets = walletRepository.findManyByUserAccountId(authenticatedHttpHandlerWrapper.userAccountId)
         assertThat(addedWallets).hasSize(1)
         assertThat(addedWallets[0].walletAddress).isEqualTo(sampleEthAddress1)
         assertThat(addedWallets[0].currency).isEqualTo("ETH")
@@ -162,7 +162,7 @@ class WalletControllerIT {
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
-                        AddWalletRequestDto(
+                        CreateWalletRequestDto(
                             walletAddress = duplicatedWalletAddress,
                             currency = "ETH",
                             description = "sample description"
@@ -176,7 +176,7 @@ class WalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(400)
-        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), AddWalletsErrorResponseDto::class.java)
+        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), CreateWalletsErrorResponseDto::class.java)
         assertThat(addWalletsErrorResponse.duplicatedAddresses).containsExactly(duplicatedWalletAddress)
     }
 
@@ -190,12 +190,12 @@ class WalletControllerIT {
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
-                        AddWalletRequestDto(
+                        CreateWalletRequestDto(
                             walletAddress = "invalid address 1",
                             currency = "ETH",
                             description = "sample description"
                         ),
-                        AddWalletRequestDto(
+                        CreateWalletRequestDto(
                             walletAddress = "invalid address 2",
                             currency = "ETH",
                             description = "sample description"
@@ -209,7 +209,7 @@ class WalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(400)
-        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), AddWalletsErrorResponseDto::class.java)
+        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), CreateWalletsErrorResponseDto::class.java)
         assertThat(addWalletsErrorResponse.invalidAddresses).containsExactly("invalid address 1", "invalid address 2")
     }
 
@@ -305,6 +305,47 @@ class WalletControllerIT {
             assertThat(walletsResponse[1].balance).isEqualTo("0.56")
             assertAll()
         }
+    }
+
+    @Test
+    fun shouldUpdateWallet() {
+        // given
+        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        val walletId = UUID.randomUUID().toString()
+        val expectedWallet = UserBlockChainWallet(
+            userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
+            currency = "ETH",
+            walletAddress = sampleEthAddress1,
+            description = "sample description 1",
+            balance = null,
+            id = walletId,
+        )
+
+        walletRepository.insertWallet(expectedWallet)
+
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallet")
+            .put(
+                objectMapper.writeValueAsString(
+                    UpdateWalletRequestDto(
+                        id = walletId,
+                        walletAddress = sampleEthAddress2,
+                        description = "new description",
+                        currency = "BTC",
+                    )
+                ).toRequestBody()
+            )
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(200)
+        val updatedWallet = walletRepository.findOneById(walletId)
+        assertThat(updatedWallet.walletAddress).isEqualTo(sampleEthAddress2)
+        assertThat(updatedWallet.description).isEqualTo("new description")
+        assertThat(updatedWallet.currency).isEqualTo("BTC")
+        assertThat(updatedWallet.balance).isEqualTo(BigDecimal("0.56"))
     }
 
     @Test

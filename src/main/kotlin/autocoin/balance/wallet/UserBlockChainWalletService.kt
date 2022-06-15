@@ -11,7 +11,7 @@ class UserBlockChainWalletService(
     companion object : KLogging()
 
     fun refreshWalletBalances(userAccountId: String) {
-        val userWallets = userBlockChainWalletRepository().findWalletsByUserAccountId(userAccountId)
+        val userWallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
         userWallets.forEach { wallet ->
             val newBalance = ethService.getEthBalance(wallet.walletAddress)
             if (newBalance != null) {

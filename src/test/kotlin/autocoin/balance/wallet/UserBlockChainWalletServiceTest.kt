@@ -14,7 +14,7 @@ class UserBlockChainWalletServiceTest {
         val walletAddress1 = "wallet-address-1"
         val walletAddress2 = "wallet-address-2"
         val walletRepository = mock<UserBlockChainWalletRepository>().apply {
-            whenever(this.findWalletsByUserAccountId(userAccountId)).thenReturn(
+            whenever(this.findManyByUserAccountId(userAccountId)).thenReturn(
                 listOf(
                     UserBlockChainWallet(
                         id = "1-2-3",
@@ -43,7 +43,7 @@ class UserBlockChainWalletServiceTest {
         // when
         tested.refreshWalletBalances(userAccountId)
         // then
-        verify(walletRepository).findWalletsByUserAccountId(userAccountId)
+        verify(walletRepository).findManyByUserAccountId(userAccountId)
         verify(walletRepository).updateWallet(
             UserBlockChainWallet(
                 id = "1-2-3",
@@ -72,7 +72,7 @@ class UserBlockChainWalletServiceTest {
         val userAccountId = "a-2-c"
         val walletAddress = "wallet-address-1"
         val walletRepository = mock<UserBlockChainWalletRepository>().apply {
-            whenever(this.findWalletsByUserAccountId(userAccountId)).thenReturn(
+            whenever(this.findManyByUserAccountId(userAccountId)).thenReturn(
                 listOf(
                     UserBlockChainWallet(
                         id = "1-2-3",
@@ -92,7 +92,7 @@ class UserBlockChainWalletServiceTest {
         // when
         tested.refreshWalletBalances(userAccountId)
         // then
-        verify(walletRepository).findWalletsByUserAccountId(userAccountId)
+        verify(walletRepository).findManyByUserAccountId(userAccountId)
         verify(walletRepository, never()).updateWallet(any())
     }
 }
