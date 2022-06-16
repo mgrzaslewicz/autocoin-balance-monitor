@@ -264,6 +264,49 @@ class WalletControllerIT {
     }
 
     @Test
+    fun shouldGetCurrencyBalance() {
+        // given
+        val expectedWallets = listOf(
+            UserBlockChainWallet(
+                userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
+                currency = "ETH",
+                walletAddress = sampleEthAddress1,
+                description = "sample description 1",
+                balance = BigDecimal("2.5"),
+                id = UUID.randomUUID().toString(),
+            ),
+            UserBlockChainWallet(
+                userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
+                currency = "ETH",
+                walletAddress = sampleEthAddress2,
+                description = null,
+                balance = BigDecimal("3.15"),
+                id = UUID.randomUUID().toString(),
+            ),
+        )
+
+        walletRepository.insertWallet(expectedWallets[0])
+        walletRepository.insertWallet(expectedWallets[1])
+
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallets/currency/balance")
+            .get()
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(200)
+        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceDto>::class.java)
+        SoftAssertions().apply {
+            assertThat(walletsResponse).hasSize(1)
+            assertThat(walletsResponse[0].currency).isEqualTo("ETH")
+            assertThat(walletsResponse[0].balance).isEqualTo("5.65")
+            assertAll()
+        }
+    }
+
+    @Test
     fun shouldGetWallet() {
         // given
         val walletId = UUID.randomUUID().toString()

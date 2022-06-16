@@ -10,6 +10,7 @@ import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.wallet.UserBlockChainWallet
 import autocoin.balance.wallet.UserBlockChainWalletRepository
 import autocoin.balance.wallet.UserBlockChainWalletService
+import autocoin.balance.wallet.UserCurrencyBalance
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.undertow.server.HttpHandler
 import io.undertow.server.HttpServerExchange
@@ -65,6 +66,16 @@ fun CreateWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserB
     balance = null,
 )
 
+data class UserCurrencyBalanceDto(
+    val currency: String,
+    val balance: String,
+)
+
+fun UserCurrencyBalance.toDto() = UserCurrencyBalanceDto(
+    currency = this.currency,
+    balance = this.balance.stripTrailingZeros().toPlainString(),
+)
+
 class WalletController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
@@ -109,12 +120,10 @@ class WalletController(
             }
             if (duplicatedWalletAddresses.isNotEmpty() || invalidAddresses.isNotEmpty()) {
                 httpServerExchange.statusCode = 400
-                httpServerExchange.responseSender.send(
-                    objectMapper.writeValueAsString(
-                        CreateWalletsErrorResponseDto(
-                            duplicatedAddresses = duplicatedWalletAddresses,
-                            invalidAddresses = invalidAddresses,
-                        )
+                httpServerExchange.sendJson(
+                    CreateWalletsErrorResponseDto(
+                        duplicatedAddresses = duplicatedWalletAddresses,
+                        invalidAddresses = invalidAddresses,
                     )
                 )
             }
@@ -138,7 +147,7 @@ class WalletController(
             logger.info { "User $userAccountId is updating wallet: $walletUpdateRequest" }
             if (!ethWalletAddressValidator.isWalletAddressValid(walletUpdateRequest.walletAddress)) {
                 httpServerExchange.statusCode = 400
-                httpServerExchange.responseSender.send(objectMapper.writeValueAsString(UpdateWalletErrorResponseDto(isAddressInvalid = true)))
+                httpServerExchange.sendJson(UpdateWalletErrorResponseDto(isAddressInvalid = true))
             } else try {
                 val updateResult = userBlockChainWalletService.updateWallet(userAccountId, walletUpdateRequest)
                 if (updateResult.isSuccessful()) {
@@ -146,12 +155,10 @@ class WalletController(
                 } else {
                     logger.warn { "User $userAccountId dit not update wallet $walletUpdateRequest successfully: $updateResult" }
                     httpServerExchange.statusCode = 400
-                    httpServerExchange.responseSender.send(
-                        objectMapper.writeValueAsString(
-                            UpdateWalletErrorResponseDto(
-                                isAddressDuplicated = updateResult.userAlreadyHasWalletWithThisAddress,
-                                isIdInvalid = updateResult.userHasNoWalletWithGivenId,
-                            )
+                    httpServerExchange.sendJson(
+                        UpdateWalletErrorResponseDto(
+                            isAddressDuplicated = updateResult.userAlreadyHasWalletWithThisAddress,
+                            isIdInvalid = updateResult.userHasNoWalletWithGivenId,
                         )
                     )
                 }
@@ -165,12 +172,16 @@ class WalletController(
     private fun HttpServerExchange.sendUserWallets(userAccountId: String) {
         val wallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
             .map { it.toDto() }
-        this.responseSender.send(objectMapper.writeValueAsString(wallets))
+        this.sendJson(wallets)
     }
 
     private fun HttpServerExchange.sendUserWallet(userAccountId: String, walletId: String) {
         val wallet = userBlockChainWalletRepository().findOneById(walletId).toDto()
-        this.responseSender.send(objectMapper.writeValueAsString(wallet))
+        this.sendJson(wallet)
+    }
+
+    private fun <T> HttpServerExchange.sendJson(response: T) {
+        this.responseSender.send(objectMapper.writeValueAsString(response))
     }
 
     private fun getMonitoredWallets() = object : ApiEndpoint {
@@ -202,6 +213,18 @@ class WalletController(
                     httpServerExchange.statusCode = 404
                 }
             }
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
+    private fun getCurrencyBalance() = object : ApiEndpoint {
+        override val method = GET
+        override val urlTemplate = "/wallets/currency/balance"
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is requesting wallets currency balance" }
+            val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
+            httpServerExchange.sendJson(currencyBalance.map { it.toDto() })
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -244,6 +267,7 @@ class WalletController(
         addMonitoredWallets(),
         getMonitoredWallets(),
         getMonitoredWallet(),
+        getCurrencyBalance(),
         refreshWalletsBalance(),
         deleteWallet(),
         updateWallet(),
