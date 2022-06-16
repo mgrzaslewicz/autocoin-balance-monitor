@@ -15,6 +15,8 @@ import autocoin.balance.oauth.client.ClientCredentialsAccessTokenProvider
 import autocoin.balance.oauth.server.AccessTokenChecker
 import autocoin.balance.oauth.server.Oauth2AuthenticationMechanism
 import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
+import autocoin.balance.price.CachingPriceService
+import autocoin.balance.price.RestPriceService
 import autocoin.balance.scheduled.HealthMetricsScheduler
 import autocoin.balance.wallet.UserBlockChainWalletRepository
 import autocoin.balance.wallet.UserBlockChainWalletService
@@ -168,6 +170,15 @@ class AppContext(private val appConfig: AppConfig) {
         ethService = ethService,
     )
 
+    val priceService = CachingPriceService(
+        decorated = RestPriceService(
+            priceApiUrl = appConfig.exchangeMediatorApiBaseUrl,
+            httpClient = oauth2HttpClient,
+            metricsService = metricsService,
+            objectMapper = objectMapper
+        )
+    )
+
     val walletController = WalletController(
         objectMapper = objectMapper,
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
@@ -175,6 +186,7 @@ class AppContext(private val appConfig: AppConfig) {
         ethService = ethService,
         ethWalletAddressValidator = ethWalletAddressValidator,
         userBlockChainWalletService = userBlockChainWalletService,
+        priceService = priceService,
     )
 
     val controllers = listOf(healthController, ethWalletController, walletController)

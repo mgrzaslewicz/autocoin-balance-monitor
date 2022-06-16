@@ -7,6 +7,7 @@ import autocoin.balance.blockchain.eth.EthService
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
+import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.UserBlockChainWallet
 import autocoin.balance.wallet.UserBlockChainWalletRepository
 import autocoin.balance.wallet.UserBlockChainWalletService
@@ -17,6 +18,7 @@ import io.undertow.server.HttpServerExchange
 import io.undertow.util.Methods.*
 import io.undertow.util.PathTemplateMatch
 import mu.KLogging
+import java.math.BigDecimal
 
 data class CreateWalletRequestDto(
     val walletAddress: String,
@@ -69,11 +71,13 @@ fun CreateWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserB
 data class UserCurrencyBalanceDto(
     val currency: String,
     val balance: String,
+    val usdBalance: String,
 )
 
-fun UserCurrencyBalance.toDto() = UserCurrencyBalanceDto(
+fun UserCurrencyBalance.toDto(usdBalance: BigDecimal) = UserCurrencyBalanceDto(
     currency = this.currency,
     balance = this.balance.stripTrailingZeros().toPlainString(),
+    usdBalance = usdBalance.stripTrailingZeros().toPlainString(),
 )
 
 class WalletController(
@@ -83,6 +87,7 @@ class WalletController(
     private val ethService: EthService,
     private val ethWalletAddressValidator: EthWalletAddressValidator,
     private val userBlockChainWalletService: UserBlockChainWalletService,
+    private val priceService: PriceService,
 ) : ApiController {
 
     private companion object : KLogging()
@@ -224,7 +229,11 @@ class WalletController(
             val userAccountId = httpServerExchange.userAccountId()
             logger.info { "User $userAccountId is requesting wallets currency balance" }
             val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
-            httpServerExchange.sendJson(currencyBalance.map { it.toDto() })
+            httpServerExchange.sendJson(currencyBalance.map {
+
+                val usdBalance = priceService.getUsdValue(it.currency, it.balance)
+                it.toDto(usdBalance)
+            })
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 

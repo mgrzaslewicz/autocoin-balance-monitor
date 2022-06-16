@@ -9,6 +9,7 @@ import autocoin.balance.app.createJdbi
 import autocoin.balance.blockchain.eth.EthService
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.oauth.server.UserAccount
+import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.UserBlockChainWallet
 import autocoin.balance.wallet.UserBlockChainWalletRepository
 import autocoin.balance.wallet.UserBlockChainWalletService
@@ -92,6 +93,7 @@ class WalletControllerIT {
     private lateinit var walletController: WalletController
     private lateinit var walletService: UserBlockChainWalletService
     private lateinit var startedServer: StartedServer
+    private lateinit var priceService: PriceService
 
     @BeforeEach
     fun setup() {
@@ -99,6 +101,7 @@ class WalletControllerIT {
         jdbi = createJdbi(startedDatabase.datasource)
         walletRepository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
         ethService = mock()
+        priceService = mock()
         walletService = UserBlockChainWalletService(
             userBlockChainWalletRepository = { walletRepository },
             ethService = ethService
@@ -110,6 +113,7 @@ class WalletControllerIT {
             ethWalletAddressValidator = EthWalletAddressValidator(),
             ethService = ethService,
             userBlockChainWalletService = walletService,
+            priceService = priceService,
         )
     }
 
@@ -266,6 +270,7 @@ class WalletControllerIT {
     @Test
     fun shouldGetCurrencyBalance() {
         // given
+        whenever(priceService.getUsdValue("ETH", BigDecimal("5.65"))).thenReturn(BigDecimal("2000.0"))
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
@@ -302,6 +307,7 @@ class WalletControllerIT {
             assertThat(walletsResponse).hasSize(1)
             assertThat(walletsResponse[0].currency).isEqualTo("ETH")
             assertThat(walletsResponse[0].balance).isEqualTo("5.65")
+            assertThat(walletsResponse[0].usdBalance).isEqualTo("2000")
             assertAll()
         }
     }
