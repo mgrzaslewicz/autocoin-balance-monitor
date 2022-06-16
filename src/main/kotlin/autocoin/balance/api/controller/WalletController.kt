@@ -7,6 +7,7 @@ import autocoin.balance.blockchain.eth.EthService
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
+import autocoin.balance.price.PriceResponseException
 import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.UserBlockChainWallet
 import autocoin.balance.wallet.UserBlockChainWalletRepository
@@ -50,14 +51,16 @@ data class WalletResponseDto(
     val currency: String,
     val description: String?,
     val balance: String?,
+    val usdBalance: String?,
 )
 
-fun UserBlockChainWallet.toDto() = WalletResponseDto(
+fun UserBlockChainWallet.toDto(usdBalance: BigDecimal?) = WalletResponseDto(
     id = this.id,
     walletAddress = this.walletAddress,
     currency = this.currency,
     description = this.description,
     balance = this.balance?.stripTrailingZeros()?.toPlainString(),
+    usdBalance = usdBalance?.stripTrailingZeros()?.toPlainString(),
 )
 
 fun CreateWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserBlockChainWallet(
@@ -68,16 +71,16 @@ fun CreateWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserB
     balance = null,
 )
 
-data class UserCurrencyBalanceDto(
+data class UserCurrencyBalanceResponseDto(
     val currency: String,
     val balance: String,
-    val usdBalance: String,
+    val usdBalance: String?, // in case of with getting usd price, better send anything
 )
 
-fun UserCurrencyBalance.toDto(usdBalance: BigDecimal) = UserCurrencyBalanceDto(
+fun UserCurrencyBalance.toDto(usdBalance: BigDecimal?) = UserCurrencyBalanceResponseDto(
     currency = this.currency,
     balance = this.balance.stripTrailingZeros().toPlainString(),
-    usdBalance = usdBalance.stripTrailingZeros().toPlainString(),
+    usdBalance = usdBalance?.stripTrailingZeros()?.toPlainString(),
 )
 
 class WalletController(
@@ -176,13 +179,17 @@ class WalletController(
 
     private fun HttpServerExchange.sendUserWallets(userAccountId: String) {
         val wallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
-            .map { it.toDto() }
+            .map {
+                val usdBalance = tryGetUsdValue(it.currency, it.balance)
+                it.toDto(usdBalance)
+            }
         this.sendJson(wallets)
     }
 
-    private fun HttpServerExchange.sendUserWallet(userAccountId: String, walletId: String) {
-        val wallet = userBlockChainWalletRepository().findOneById(walletId).toDto()
-        this.sendJson(wallet)
+    private fun HttpServerExchange.sendUserWallet(walletId: String) {
+        val wallet = userBlockChainWalletRepository().findOneById(walletId)
+        val usdBalance = if (wallet.balance == null) null else priceService.getUsdValue(wallet.currency, wallet.balance)
+        this.sendJson(wallet.toDto(usdBalance))
     }
 
     private fun <T> HttpServerExchange.sendJson(response: T) {
@@ -213,12 +220,24 @@ class WalletController(
             logger.info { "User $userAccountId is requesting wallet $walletId" }
             if (walletId != null) {
                 if (userBlockChainWalletRepository().existsByUserAccountIdAndId(userAccountId, walletId)) {
-                    httpServerExchange.sendUserWallet(userAccountId, walletId)
+                    httpServerExchange.sendUserWallet(walletId)
                 } else {
                     httpServerExchange.statusCode = 404
                 }
             }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
+    private fun tryGetUsdValue(currency: String, currencyBalance: BigDecimal?): BigDecimal? {
+        return if (currencyBalance != null) {
+            try {
+                priceService.getUsdValue(currency, currencyBalance)
+            } catch (e: PriceResponseException) {
+                null
+            }
+        } else {
+            null
+        }
     }
 
     private fun getCurrencyBalance() = object : ApiEndpoint {
@@ -230,8 +249,7 @@ class WalletController(
             logger.info { "User $userAccountId is requesting wallets currency balance" }
             val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
             httpServerExchange.sendJson(currencyBalance.map {
-
-                val usdBalance = priceService.getUsdValue(it.currency, it.balance)
+                val usdBalance = tryGetUsdValue(it.currency, it.balance)
                 it.toDto(usdBalance)
             })
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)

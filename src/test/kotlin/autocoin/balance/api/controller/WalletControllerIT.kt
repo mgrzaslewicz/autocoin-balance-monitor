@@ -14,6 +14,7 @@ import autocoin.balance.wallet.UserBlockChainWallet
 import autocoin.balance.wallet.UserBlockChainWalletRepository
 import autocoin.balance.wallet.UserBlockChainWalletService
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import io.undertow.security.api.AuthenticationMechanism
@@ -220,7 +221,7 @@ class WalletControllerIT {
     @Test
     fun shouldGetWallets() {
         // given
-        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        whenever(priceService.getUsdValue(eq("ETH"), eq(BigDecimal("2.78")))).thenReturn(BigDecimal("10.5"))
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
@@ -258,11 +259,13 @@ class WalletControllerIT {
             assertThat(walletsResponse[0].currency).isEqualTo("ETH")
             assertThat(walletsResponse[0].description).isEqualTo("sample description 1")
             assertThat(walletsResponse[0].walletAddress).isEqualTo(sampleEthAddress1)
+            assertThat(walletsResponse[0].usdBalance).isNull()
 
             assertThat(walletsResponse[1].currency).isEqualTo("ETH")
             assertThat(walletsResponse[1].description).isNull()
             assertThat(walletsResponse[1].walletAddress).isEqualTo(sampleEthAddress2)
             assertThat(walletsResponse[1].balance).isEqualTo("2.78")
+            assertThat(walletsResponse[1].usdBalance).isEqualTo("10.5")
             assertAll()
         }
     }
@@ -302,7 +305,7 @@ class WalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceDto>::class.java)
+        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
         SoftAssertions().apply {
             assertThat(walletsResponse).hasSize(1)
             assertThat(walletsResponse[0].currency).isEqualTo("ETH")
