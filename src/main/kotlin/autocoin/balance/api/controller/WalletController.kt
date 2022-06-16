@@ -31,9 +31,9 @@ data class UpdateWalletRequestDto(
 )
 
 data class UpdateWalletErrorResponseDto(
-    val isAddressDuplicated: Boolean,
-    val isAddressInvalid: Boolean,
-    val isIdInvalid: Boolean,
+    val isAddressDuplicated: Boolean = false,
+    val isAddressInvalid: Boolean = false,
+    val isIdInvalid: Boolean = false,
 )
 
 data class CreateWalletsErrorResponseDto(
@@ -84,8 +84,7 @@ class WalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            httpServerExchange.startBlocking() // in order to user inputStream
-            val addWalletsRequest = objectMapper.readValue(httpServerExchange.inputStream, Array<CreateWalletRequestDto>::class.java)
+            val addWalletsRequest = httpServerExchange.inputStreamToObject(Array<CreateWalletRequestDto>::class.java)
             logger.info { "User $userAccountId is adding wallets: $addWalletsRequest" }
             val duplicatedWalletAddresses = mutableListOf<String>()
             val invalidAddresses = mutableListOf<String>()
@@ -123,6 +122,11 @@ class WalletController(
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
+    private fun <T> HttpServerExchange.inputStreamToObject(clazz: Class<T>): T {
+        this.startBlocking() // in order to user inputStream
+        return objectMapper.readValue(this.inputStream, clazz)
+    }
+
     private fun updateWallet() = object : ApiEndpoint {
         override val method = PUT
         override val urlTemplate = "/wallet"
@@ -130,44 +134,30 @@ class WalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            httpServerExchange.startBlocking() // in order to user inputStream
-            val walletUpdateRequest = objectMapper.readValue(httpServerExchange.inputStream, UpdateWalletRequestDto::class.java)
-            var isWalletAddressDuplicated = false
-            var isWalletAddressInvalid = false
-            var isWalletIdInvalid = false
+            val walletUpdateRequest = httpServerExchange.inputStreamToObject(UpdateWalletRequestDto::class.java)
             logger.info { "User $userAccountId is updating wallet: $walletUpdateRequest" }
             if (!ethWalletAddressValidator.isWalletAddressValid(walletUpdateRequest.walletAddress)) {
-                isWalletAddressInvalid = true
-            } else if (userBlockChainWalletRepository().existsByUserAccountIdAndWalletAddress(userAccountId, walletUpdateRequest.walletAddress)) {
-                isWalletAddressDuplicated = true
-            } else if (!userBlockChainWalletRepository().existsByUserAccountIdAndId(userAccountId, walletUpdateRequest.id)) {
-                isWalletIdInvalid = true
+                httpServerExchange.statusCode = 400
+                httpServerExchange.responseSender.send(objectMapper.writeValueAsString(UpdateWalletErrorResponseDto(isAddressInvalid = true)))
             } else try {
-                val walletToUpdate = userBlockChainWalletRepository().findOneById(walletUpdateRequest.id)
-                    .copy(
-                        description = walletUpdateRequest.description,
-                        currency = walletUpdateRequest.currency,
-                        walletAddress = walletUpdateRequest.walletAddress
+                val updateResult = userBlockChainWalletService.updateWallet(userAccountId, walletUpdateRequest)
+                if (updateResult.isSuccessful()) {
+                    logger.info { "User $userAccountId updated wallet: $walletUpdateRequest" }
+                } else {
+                    logger.warn { "User $userAccountId dit not update wallet $walletUpdateRequest successfully: $updateResult" }
+                    httpServerExchange.statusCode = 400
+                    httpServerExchange.responseSender.send(
+                        objectMapper.writeValueAsString(
+                            UpdateWalletErrorResponseDto(
+                                isAddressDuplicated = updateResult.isAddressDuplicated,
+                                isIdInvalid = updateResult.isIdInvalid,
+                            )
+                        )
                     )
-                userBlockChainWalletRepository().updateWallet(walletToUpdate)
-                val walletBalance = ethService.getEthBalance(walletToUpdate.walletAddress)
-                userBlockChainWalletRepository().updateWallet(walletToUpdate.copy(balance = walletBalance))
-                logger.info { "User $userAccountId updated wallet: $walletUpdateRequest" }
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Could not update wallet $walletUpdateRequest" }
                 throw e
-            }
-            if (isWalletAddressDuplicated || isWalletAddressInvalid || isWalletIdInvalid) {
-                httpServerExchange.statusCode = 400
-                httpServerExchange.responseSender.send(
-                    objectMapper.writeValueAsString(
-                        UpdateWalletErrorResponseDto(
-                            isAddressDuplicated = isWalletAddressDuplicated,
-                            isAddressInvalid = isWalletAddressInvalid,
-                            isIdInvalid = isWalletIdInvalid,
-                        )
-                    )
-                )
             }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
@@ -203,7 +193,7 @@ class WalletController(
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
             val pathMatch: PathTemplateMatch = httpServerExchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY)
-            val walletId= pathMatch.parameters[walletIdParameter]
+            val walletId = pathMatch.parameters[walletIdParameter]
             logger.info { "User $userAccountId is requesting wallet $walletId" }
             if (walletId != null) {
                 if (userBlockChainWalletRepository().existsByUserAccountIdAndId(userAccountId, walletId)) {
