@@ -6,7 +6,6 @@ import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
-import autocoin.balance.price.PriceResponseException
 import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.UserBlockChainWallet
 import autocoin.balance.wallet.UserBlockChainWalletRepository
@@ -101,7 +100,7 @@ class WalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val addWalletsRequest = httpServerExchange.inputStreamToObject(Array<CreateWalletRequestDto>::class.java)
+            val addWalletsRequest = httpServerExchange.inputStreamToObject(Array<CreateWalletRequestDto>::class.java).toList()
             logger.info { "User $userAccountId is adding wallets: $addWalletsRequest" }
             val duplicatedWalletAddresses = mutableListOf<String>()
             val invalidAddresses = mutableListOf<String>()
@@ -183,7 +182,7 @@ class WalletController(
 
     private fun HttpServerExchange.sendUserWallet(walletId: String) {
         val wallet = userBlockChainWalletRepository().findOneById(walletId)
-        val usdBalance = if (wallet.balance == null) null else priceService.getUsdValue(wallet.currency, wallet.balance)
+        val usdBalance = if (wallet.balance == null) null else priceService.getUsdValueOrNull(wallet.currency, wallet.balance)
         this.sendJson(wallet.toDto(usdBalance))
     }
 
@@ -225,11 +224,7 @@ class WalletController(
 
     private fun tryGetUsdValue(currency: String, currencyBalance: BigDecimal?): BigDecimal? {
         return if (currencyBalance != null) {
-            try {
-                priceService.getUsdValue(currency, currencyBalance)
-            } catch (e: PriceResponseException) {
-                null
-            }
+            priceService.getUsdValueOrNull(currency, currencyBalance)
         } else {
             null
         }
