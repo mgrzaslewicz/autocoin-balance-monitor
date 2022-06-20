@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-        <kotlin.version>1.7.0-RC</kotlin.version>
+        <kotlin.version>1.7.0</kotlin.version>
         <junit.version>5.8.2</junit.version>
         <jackson.version>2.13.3</jackson.version>
         <jdbi.version>3.30.0</jdbi.version>
@@ -53,7 +53,7 @@
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
-            <version>4.9.2</version>
+            <version>5.0.0</version>
         </dependency>
         <!-- Kotlin -->
         <dependency>
@@ -69,13 +69,18 @@
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core-jvm</artifactId>
-            <version>1.6.1</version>
+            <version>1.6.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.1.1</version>
         </dependency>
         <!-- logging -->
         <dependency>
             <groupId>io.github.microutils</groupId>
             <artifactId>kotlin-logging-jvm</artifactId>
-            <version>2.1.21</version>
+            <version>2.1.23</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
