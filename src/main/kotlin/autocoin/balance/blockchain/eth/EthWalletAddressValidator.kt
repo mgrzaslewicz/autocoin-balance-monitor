@@ -1,7 +1,11 @@
 package autocoin.balance.blockchain.eth
 
-class EthWalletAddressValidator {
+import autocoin.balance.blockchain.WalletAddressValidator
+
+class EthWalletAddressValidator : WalletAddressValidator {
     private val ethWalletAddressRegex = Regex("^0x[a-fA-F0-9]{40}\$")
 
-    fun isWalletAddressValid(ethWalletAddress: String) = ethWalletAddressRegex.matches(ethWalletAddress)
+    override fun isWalletAddressValid(walletAddress: String) = ethWalletAddressRegex.matches(walletAddress)
+    override val currency: String = "ETH"
+
 }

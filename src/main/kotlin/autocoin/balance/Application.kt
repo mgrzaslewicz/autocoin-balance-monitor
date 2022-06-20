@@ -4,7 +4,6 @@ import autocoin.balance.app.*
 import mu.KotlinLogging
 import org.testcontainers.containers.PostgreSQLContainer
 import java.net.SocketAddress
-import java.util.Map
 import kotlin.system.measureTimeMillis
 
 private val logger = KotlinLogging.logger { }
@@ -17,7 +16,7 @@ private fun startOwnDbContainer() {
     dbContainer.withUsername(dbUser)
     dbContainer.withPassword(dbPassword)
     // use in memory storage for faster execution
-    dbContainer.withTmpFs(Map.of("/var/lib/postgresql/data", "rw"))
+    dbContainer.withTmpFs(mapOf("/var/lib/postgresql/data" to "rw"))
     dbContainer.start()
 
     logger.warn { "Own database container started" }
