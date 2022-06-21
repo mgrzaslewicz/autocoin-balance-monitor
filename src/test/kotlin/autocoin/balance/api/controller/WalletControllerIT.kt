@@ -12,9 +12,9 @@ import autocoin.balance.blockchain.btc.BtcWalletAddressValidator
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.oauth.server.UserAccount
 import autocoin.balance.price.PriceService
-import autocoin.balance.wallet.UserBlockChainWallet
-import autocoin.balance.wallet.UserBlockChainWalletRepository
-import autocoin.balance.wallet.UserBlockChainWalletService
+import autocoin.balance.wallet.blockchain.UserBlockChainWallet
+import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
+import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock

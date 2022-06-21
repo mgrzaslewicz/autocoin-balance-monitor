@@ -1,4 +1,4 @@
-package autocoin.balance.wallet
+package autocoin.balance.wallet.blockchain
 
 import autocoin.TestDb
 import autocoin.balance.app.createJdbi
