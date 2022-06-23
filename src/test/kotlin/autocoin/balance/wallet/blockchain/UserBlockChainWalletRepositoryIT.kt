@@ -13,7 +13,7 @@ import java.math.BigDecimal
 import java.util.*
 import javax.sql.DataSource
 
-class UserBlockChainWalletRepositoryTest {
+class UserBlockChainWalletRepositoryIT {
 
     private lateinit var startedDatabase: TestDb.StartedDatabase
     private lateinit var datasource: DataSource
@@ -50,8 +50,7 @@ class UserBlockChainWalletRepositoryTest {
         )
         // then
         val userWallets = repository.findManyByUserAccountId(userAccountId)
-        assertThat(userWallets).hasSize(1)
-        assertThat(userWallets.first()).isEqualTo(
+        assertThat(userWallets).containsOnly(
             UserBlockChainWallet(
                 id = id,
                 userAccountId = userAccountId,

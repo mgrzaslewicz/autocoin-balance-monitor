@@ -1,6 +1,6 @@
 package autocoin.balance.wallet.blockchain
 
-import autocoin.balance.api.controller.UpdateWalletRequestDto
+import autocoin.balance.api.controller.UpdateBlockchainWalletRequestDto
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.eth.EthService
 import com.nhaarman.mockitokotlin2.*
@@ -135,7 +135,7 @@ class UserBlockChainWalletServiceTest {
         val newWalletAddress = "wallet-address-2"
         val updateResult = tested.updateWallet(
             userAccountId,
-            UpdateWalletRequestDto(
+            UpdateBlockchainWalletRequestDto(
                 id = walletId,
                 walletAddress = newWalletAddress,
                 description = "sample description",
@@ -229,7 +229,7 @@ class UserBlockChainWalletServiceTest {
         // when
         val updateResult = tested.updateWallet(
             userAccountId,
-            UpdateWalletRequestDto(
+            UpdateBlockchainWalletRequestDto(
                 id = walletId,
                 walletAddress = "new wallet address",
                 description = "sample description",
@@ -266,7 +266,7 @@ class UserBlockChainWalletServiceTest {
         // when
         val updateResult = tested.updateWallet(
             userAccountId,
-            UpdateWalletRequestDto(
+            UpdateBlockchainWalletRequestDto(
                 id = walletId,
                 walletAddress = newWalletAddress,
                 description = "sample description",

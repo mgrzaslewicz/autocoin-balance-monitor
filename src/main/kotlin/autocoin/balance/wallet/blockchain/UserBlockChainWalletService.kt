@@ -1,6 +1,6 @@
 package autocoin.balance.wallet.blockchain
 
-import autocoin.balance.api.controller.UpdateWalletRequestDto
+import autocoin.balance.api.controller.UpdateBlockchainWalletRequestDto
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import mu.KLogging
 
@@ -32,7 +32,7 @@ class UserBlockChainWalletService(
         }
     }
 
-    fun updateWallet(userAccountId: String, walletUpdateRequest: UpdateWalletRequestDto): WalletUpdateResult {
+    fun updateWallet(userAccountId: String, walletUpdateRequest: UpdateBlockchainWalletRequestDto): WalletUpdateResult {
         var userAlreadyHasWalletWithThisAddress = false
         var userHasNoWalletWithGivenId = false
         if (!userBlockChainWalletRepository().existsByUserAccountIdAndId(userAccountId, walletUpdateRequest.id)) {
