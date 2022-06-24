@@ -40,6 +40,7 @@ class UserExchangeWalletLastRefreshRepositoryIT {
             userAccountId = userAccountId,
             exchange = "bittrex",
             exchangeUserId = exchangeUserId,
+            exchangeUserName = "john",
             errorMessage = "API key expired",
             insertTime = Timestamp(System.currentTimeMillis()),
         )
@@ -59,6 +60,7 @@ class UserExchangeWalletLastRefreshRepositoryIT {
             userAccountId = userAccountId,
             exchange = "bittrex",
             exchangeUserId = "exchangeUserId1",
+            exchangeUserName = "john1",
             errorMessage = "API key expired",
             insertTime = Timestamp(System.currentTimeMillis()),
         )
@@ -66,6 +68,7 @@ class UserExchangeWalletLastRefreshRepositoryIT {
             userAccountId = userAccountId,
             exchange = "bittrex",
             exchangeUserId = "exchangeUserId2",
+            exchangeUserName = "john2",
             errorMessage = "API key expired",
             insertTime = Timestamp(System.currentTimeMillis()),
         )
@@ -73,6 +76,7 @@ class UserExchangeWalletLastRefreshRepositoryIT {
             userAccountId = UUID.randomUUID().toString(),
             exchange = "bittrex",
             exchangeUserId = "exchangeUserId3",
+            exchangeUserName = "john3",
             errorMessage = null,
             insertTime = Timestamp(System.currentTimeMillis()),
         )

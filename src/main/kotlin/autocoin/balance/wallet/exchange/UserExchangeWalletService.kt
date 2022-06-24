@@ -32,15 +32,17 @@ class UserExchangeWalletService(
         val userExchangeWalletLastRefreshRepository = userExchangeWalletLastRefreshRepository()
         userExchangeWalletRepository.deleteByUserAccountId(userAccountId)
         userExchangeWalletLastRefreshRepository.deleteByUserAccountId(userAccountId)
+        val currentTimeMillis = timeMillisProvider.now()
         exchangeUserBalances.forEach { currencyBalances ->
             currencyBalances.exchangeBalances.forEach { exchangeBalance ->
                 userExchangeWalletLastRefreshRepository.insertWalletLastRefresh(
                     UserExchangeWalletLastRefresh(
                         userAccountId = userAccountId,
                         exchangeUserId = currencyBalances.exchangeUserId,
+                        exchangeUserName = currencyBalances.exchangeUserName,
                         exchange = exchangeBalance.exchangeName,
                         errorMessage = exchangeBalance.errorMessage,
-                        insertTime = Timestamp(timeMillisProvider.now()),
+                        insertTime = Timestamp(currentTimeMillis),
                     )
                 )
                 exchangeBalance.currencyBalances.forEach { currencyBalance ->
@@ -69,16 +71,18 @@ class UserExchangeWalletService(
     fun getWalletBalances(userAccountId: String): ExchangeWalletBalancesDto {
         val userExchangeWallets = userExchangeWalletRepository().findManyByUserAccountId(userAccountId)
         val userExchangeWalletsLastRefresh = userExchangeWalletLastRefreshRepository().findManyByUserAccountId(userAccountId)
-        val userExchangeWalletsLastRefreshGroupedByExchangeUser = userExchangeWalletsLastRefresh.groupBy { it.exchangeUserId }
+        val userExchangeWalletsLastRefreshGroupedByExchangeUserId = userExchangeWalletsLastRefresh.groupBy { it.exchangeUserId }
         val userExchangeWalletsGroupedByExchangeUser = userExchangeWallets.groupBy { it.exchangeUserId }
         return ExchangeWalletBalancesDto(
             refreshTimeMillis = userExchangeWalletsLastRefresh.firstOrNull()?.insertTime?.time,
-            exchangeCurrencyBalances = userExchangeWalletsLastRefreshGroupedByExchangeUser.map { userExchangeWalletsLastRefresh ->
+            exchangeCurrencyBalances = userExchangeWalletsLastRefreshGroupedByExchangeUserId.map { userExchangeWalletsLastRefresh ->
                 val userExchangeWallets = userExchangeWalletsGroupedByExchangeUser[userExchangeWalletsLastRefresh.key]
                 val userExchangeWalletsGroupedByExchange = userExchangeWallets?.groupBy { it.exchange } ?: emptyMap()
-                val userExchangeId = userExchangeWalletsLastRefresh.key
+                val exchangeUserId = userExchangeWalletsLastRefresh.key
+                val exchangeUserName = userExchangeWalletsLastRefresh.value.first().exchangeUserName
                 ExchangeCurrencyBalancesDto(
-                    exchangeUserId = userExchangeId,
+                    exchangeUserId = exchangeUserId,
+                    exchangeUserName = exchangeUserName,
                     exchangeBalances = userExchangeWalletsLastRefresh.value.map { userExchangeWalletLastRefresh ->
                         ExchangeBalanceDto(
                             exchangeName = userExchangeWalletLastRefresh.exchange,

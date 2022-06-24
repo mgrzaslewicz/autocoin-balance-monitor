@@ -28,11 +28,12 @@ create table user_exchange_wallet
 
 create table user_exchange_wallet_last_refresh
 (
-    id               varchar(36) primary key,
-    user_account_id  varchar(36)  not null,
-    exchange         varchar(255) not null,
-    exchange_user_id varchar(36)  not null,
-    error_message    varchar(1024),
-    insert_time      timestamp,
+    id                 varchar(36) primary key,
+    user_account_id    varchar(36)  not null,
+    exchange           varchar(255) not null,
+    exchange_user_id   varchar(36)  not null,
+    exchange_user_name varchar(128) not null,
+    error_message      varchar(1024),
+    insert_time        timestamp,
     constraint uq_user_account_id_exchange_exchange_user_id unique (user_account_id, exchange, exchange_user_id)
 );
