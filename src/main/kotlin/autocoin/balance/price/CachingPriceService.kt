@@ -9,8 +9,8 @@ import java.time.temporal.ChronoUnit
 
 class CachingPriceService(
     private val decorated: PriceService,
-    private val maxPriceCacheAgeNanos: Long = Duration.of(1, ChronoUnit.HOURS).toNanos(),
-    private val maxPriceCacheNullValueAgeNanos: Long = Duration.of(1, ChronoUnit.MINUTES).toNanos(),
+    private val maxPriceCacheAgeNanos: Long = Duration.of(24, ChronoUnit.HOURS).toNanos(),
+    private val maxPriceCacheNullValueAgeNanos: Long = Duration.of(1, ChronoUnit.HOURS).toNanos(),
 ) : PriceService {
 
     private val nullValueMarker = -BigDecimal.ONE
@@ -38,6 +38,7 @@ class CachingPriceService(
             }
 
         })
+        .refreshAfterWrite(Duration.of(1, ChronoUnit.HOURS))
         .build()
 
     override fun getUsdPrice(currencyCode: String): BigDecimal {
