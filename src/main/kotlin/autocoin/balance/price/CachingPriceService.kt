@@ -1,8 +1,8 @@
 package autocoin.balance.price
 
-import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
+import com.github.benmanes.caffeine.cache.LoadingCache
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.temporal.ChronoUnit
@@ -18,7 +18,7 @@ class CachingPriceService(
     /**
      * When getting price failed, keep null value cached much shorter than successfully fetched price
      */
-    private val priceCache: Cache<String, BigDecimal> = Caffeine.newBuilder()
+    private val priceCache: LoadingCache<String, BigDecimal> = Caffeine.newBuilder()
         .expireAfter(object : Expiry<String, BigDecimal> {
 
             override fun expireAfterCreate(key: String, value: BigDecimal, currentTime: Long): Long {
@@ -39,16 +39,18 @@ class CachingPriceService(
 
         })
         .refreshAfterWrite(Duration.of(1, ChronoUnit.HOURS))
-        .build()
+        .build { decorated.getUsdPriceOrNull(it.toUsdPriceCacheKey()) ?: nullValueMarker }
+
+    private fun String.toUsdPriceCacheKey() = "$this/USD"
 
     override fun getUsdPrice(currencyCode: String): BigDecimal {
-        return priceCache.get("$currencyCode/USD") {
+        return priceCache.get(currencyCode.toUsdPriceCacheKey()) {
             decorated.getUsdPrice(currencyCode)
         }
     }
 
     override fun getUsdPriceOrNull(currencyCode: String): BigDecimal? {
-        val usdPrice = priceCache.get("$currencyCode/USD") {
+        val usdPrice = priceCache.get(currencyCode.toUsdPriceCacheKey()) {
             decorated.getUsdPriceOrNull(currencyCode) ?: nullValueMarker
         }
         return if (usdPrice === nullValueMarker) {
