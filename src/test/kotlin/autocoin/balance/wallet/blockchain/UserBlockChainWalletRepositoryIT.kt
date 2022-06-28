@@ -80,10 +80,12 @@ class UserBlockChainWalletRepositoryIT {
         repository.insertWallet(ethWallet.copy(id = UUID.randomUUID().toString(), walletAddress = "test2", balance = BigDecimal("10.0")))
         repository.insertWallet(ethWallet.copy(id = UUID.randomUUID().toString(), walletAddress = "test3", balance = null, currency = "BTC"))
         repository.insertWallet(ethWallet.copy(id = UUID.randomUUID().toString(), walletAddress = "test4", balance = BigDecimal("15.8"), currency = "BTC"))
+        repository.insertWallet(ethWallet.copy(id = UUID.randomUUID().toString(), walletAddress = "test5", balance = null, currency = "ABC"))
         // then
         val currencyBalances = repository.selectUserCurrencyBalance(userAccountId)
         assertThat(currencyBalances).containsExactlyInAnyOrder(
             UserCurrencyBalance(currency = "ETH", balance = BigDecimal("20.6")),
+            UserCurrencyBalance(currency = "ABC", balance = null),
             UserCurrencyBalance(currency = "BTC", balance = BigDecimal("15.8"))
         )
     }
