@@ -166,6 +166,13 @@
             <version>4.0.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- For MoreExecutors -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.1-jre</version>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>

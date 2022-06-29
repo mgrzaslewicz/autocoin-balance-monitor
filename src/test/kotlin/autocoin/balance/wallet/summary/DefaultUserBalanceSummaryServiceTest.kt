@@ -3,14 +3,18 @@ package autocoin.balance.wallet.summary
 import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.blockchain.UserBlockChainWallet
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
+import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
 import autocoin.balance.wallet.exchange.UserExchangeWallet
 import autocoin.balance.wallet.exchange.UserExchangeWalletRepository
+import autocoin.balance.wallet.exchange.UserExchangeWalletService
+import com.google.common.util.concurrent.MoreExecutors
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 import java.util.*
@@ -30,6 +34,12 @@ class DefaultUserBalanceSummaryServiceTest {
     @Mock
     private lateinit var priceService: PriceService
 
+    @Mock
+    private lateinit var userBlockChainWalletService: UserBlockChainWalletService
+
+    @Mock
+    private lateinit var userExchangeWalletService: UserExchangeWalletService
+
     private lateinit var tested: UserBalanceSummaryService
 
     @BeforeEach
@@ -39,7 +49,21 @@ class DefaultUserBalanceSummaryServiceTest {
             userBalanceSummaryRepository = { userBalanceSummaryRepository },
             userBlockChainWalletRepository = { userBlockChainWalletRepository },
             priceService = priceService,
+            userBlockChainWalletService = userBlockChainWalletService,
+            userExchangeWalletService = userExchangeWalletService,
+            executorService = MoreExecutors.newDirectExecutorService(),
         )
+    }
+
+    @Test
+    fun shouldRefreshBalances() {
+        // given
+        whenever(userBalanceSummaryRepository.findUniqueUserCurrencies("user1")).thenReturn(emptyList())
+        // when
+        tested.refreshBalanceSummary("user1")
+        // then
+        verify(userBlockChainWalletService).refreshWalletBalances("user1")
+        verify(userExchangeWalletService).refreshWalletBalances("user1")
     }
 
     @Test

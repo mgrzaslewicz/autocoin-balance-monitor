@@ -9,6 +9,7 @@ import autocoin.balance.wallet.summary.ExchangeCurrencySummary
 import autocoin.balance.wallet.summary.UserBalanceSummaryService
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.internal.EMPTY_REQUEST
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 
@@ -106,4 +108,30 @@ class BalanceSummaryControllerIT {
             )
         )
     }
+
+    @Test
+    fun shouldRefreshBalanceSummary() {
+        // given
+        val userBalanceSummaryService = mock<UserBalanceSummaryService>().apply {
+            whenever(this.getCurrencyBalanceSummary(userAccountId)).thenReturn(emptyList())
+        }
+        val balanceSummaryController = BalanceSummaryController(
+            objectMapper = objectMapper,
+            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
+            userBalanceSummaryService = userBalanceSummaryService,
+        )
+        startedServer = TestServer.startTestServer(balanceSummaryController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/balance/summary")
+            .post(EMPTY_REQUEST)
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        verify(userBalanceSummaryService).refreshBalanceSummary(userAccountId)
+        verify(userBalanceSummaryService).getCurrencyBalanceSummary(userAccountId)
+        assertThat(response.code).isEqualTo(200)
+        assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java).currencyBalances).isEmpty()
+    }
+
 }
