@@ -33,6 +33,10 @@ interface UserBlockChainWalletRepository {
     @RegisterKotlinMapper(UserBlockChainWallet::class)
     fun findManyByUserAccountId(@Bind("userAccountId") userAccountId: String): List<UserBlockChainWallet>
 
+    @SqlQuery("SELECT * FROM user_blockchain_wallet WHERE user_account_id = :userAccountId AND currency = :currency")
+    @RegisterKotlinMapper(UserBlockChainWallet::class)
+    fun findManyByUserAccountIdAndCurrency(@Bind("userAccountId") userAccountId: String, @Bind("currency") currency: String): List<UserBlockChainWallet>
+
     @SqlQuery("SELECT * FROM user_blockchain_wallet WHERE id = :id")
     @RegisterKotlinMapper(UserBlockChainWallet::class)
     fun findOneById(@Bind("id") id: String): UserBlockChainWallet

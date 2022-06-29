@@ -16,7 +16,7 @@ interface UserExchangeWalletRepository {
     )
     fun insertWallet(@BindKotlin userExchangeWallet: UserExchangeWallet)
 
-    @SqlUpdate( "UPDATE user_exchange_wallet set  balance = :balance WHERE id = :id" )
+    @SqlUpdate("UPDATE user_exchange_wallet set  balance = :balance WHERE id = :id")
     fun updateWalletBalance(@BindKotlin userExchangeWallet: UserExchangeWallet): Int
 
     @SqlQuery("SELECT currency, SUM(balance) as balance FROM user_exchange_wallet WHERE user_account_id = :userAccountId GROUP BY currency")
@@ -30,6 +30,10 @@ interface UserExchangeWalletRepository {
     @SqlQuery("SELECT * FROM user_exchange_wallet WHERE user_account_id = :userAccountId")
     @RegisterKotlinMapper(UserExchangeWallet::class)
     fun findManyByUserAccountId(@Bind("userAccountId") userAccountId: String): List<UserExchangeWallet>
+
+    @SqlQuery("SELECT * FROM user_exchange_wallet WHERE user_account_id = :userAccountId AND currency = :currency")
+    @RegisterKotlinMapper(UserExchangeWallet::class)
+    fun findManyByUserAccountIdAndCurrency(@Bind("userAccountId") userAccountId: String, @Bind("currency") currency: String): List<UserExchangeWallet>
 
     @SqlUpdate("DELETE FROM user_exchange_wallet WHERE user_account_id = :userAccountId")
     fun deleteByUserAccountId(userAccountId: String): Int

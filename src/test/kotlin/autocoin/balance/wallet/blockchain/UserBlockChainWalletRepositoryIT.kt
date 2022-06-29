@@ -215,4 +215,48 @@ class UserBlockChainWalletRepositoryIT {
         // when-then
         assertThrows<UnableToExecuteStatementException> { repository.insertWallet(newWallet) }
     }
+
+    @Test
+    fun shouldFindUserWalletsByUserAccountIdAndCurrency() {
+        // given
+        val userAccountId = UUID.randomUUID().toString()
+        val repository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
+        val wallet1 = UserBlockChainWallet(
+            walletAddress = "test1",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description",
+            balance = BigDecimal("10.6"),
+        )
+        val wallet2 = UserBlockChainWallet(
+            walletAddress = "test2",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description2",
+            balance = BigDecimal("12.6"),
+        )
+        val wallet3 = UserBlockChainWallet(
+            walletAddress = "test3",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description3",
+            balance = BigDecimal("14.6"),
+        )
+        val wallet4 = UserBlockChainWallet(
+            walletAddress = "test4",
+            currency = "BTC",
+            userAccountId = userAccountId,
+            description = null,
+            balance = null,
+        )
+
+        repository.insertWallet(wallet1)
+        repository.insertWallet(wallet2)
+        repository.insertWallet(wallet3)
+        repository.insertWallet(wallet4)
+        // when
+        val result = repository.findManyByUserAccountIdAndCurrency(userAccountId, "ETH")
+        // then
+        assertThat(result).contains(wallet1, wallet2, wallet3)
+    }
 }

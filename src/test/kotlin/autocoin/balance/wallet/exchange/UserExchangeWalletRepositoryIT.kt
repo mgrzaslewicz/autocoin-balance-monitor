@@ -96,4 +96,55 @@ class UserExchangeWalletRepositoryIT {
         assertThat(userWallets).isEmpty()
     }
 
+    @Test
+    fun shouldFindManyByUserAccountIdAndCurrency() {
+        // given
+        val userAccountId = UUID.randomUUID().toString()
+        val repository = jdbi.onDemand(UserExchangeWalletRepository::class.java)
+        val wallet1 = UserExchangeWallet(
+            currency = "ETH",
+            userAccountId = userAccountId,
+            balance = BigDecimal("10.6"),
+            exchange = "bittrex",
+            exchangeUserId = UUID.randomUUID().toString(),
+            amountInOrders = BigDecimal("1.7"),
+            amountAvailable = BigDecimal("8.9"),
+        )
+        val wallet2 = UserExchangeWallet(
+            currency = "BTC",
+            userAccountId = userAccountId,
+            balance = BigDecimal("15.6"),
+            exchange = "bittrex",
+            exchangeUserId = UUID.randomUUID().toString(),
+            amountInOrders = BigDecimal("1.8"),
+            amountAvailable = BigDecimal("8.8"),
+        )
+        val wallet3 = UserExchangeWallet(
+            currency = "BTC",
+            userAccountId = UUID.randomUUID().toString(),
+            balance = BigDecimal("15.6"),
+            exchange = "bittrex",
+            exchangeUserId = UUID.randomUUID().toString(),
+            amountInOrders = BigDecimal("1.9"),
+            amountAvailable = BigDecimal("8.7"),
+        )
+        val wallet4 = UserExchangeWallet(
+            currency = "BTC",
+            userAccountId = userAccountId,
+            balance = BigDecimal("15.6"),
+            exchange = "bittrex",
+            exchangeUserId = UUID.randomUUID().toString(),
+            amountInOrders = BigDecimal("1.9"),
+            amountAvailable = BigDecimal("8.7"),
+        )
+        repository.insertWallet(wallet1)
+        repository.insertWallet(wallet2)
+        repository.insertWallet(wallet3)
+        repository.insertWallet(wallet4)
+        // when
+        val result = repository.findManyByUserAccountIdAndCurrency(userAccountId, "BTC")
+        // then
+        assertThat(result).containsOnly(wallet2, wallet4)
+    }
+
 }

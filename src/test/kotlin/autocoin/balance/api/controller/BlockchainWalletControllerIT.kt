@@ -3,33 +3,16 @@ package autocoin.balance.api.controller
 import autocoin.StartedServer
 import autocoin.TestDb
 import autocoin.TestServer
-import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.app.ObjectMapperProvider
 import autocoin.balance.app.createJdbi
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.blockchain.btc.BtcWalletAddressValidator
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
-import autocoin.balance.oauth.server.UserAccount
 import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.blockchain.UserBlockChainWallet
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
-import io.undertow.security.api.AuthenticationMechanism
-import io.undertow.security.api.AuthenticationMechanism.AuthenticationMechanismOutcome
-import io.undertow.security.api.AuthenticationMechanism.ChallengeResult
-import io.undertow.security.api.AuthenticationMode
-import io.undertow.security.api.SecurityContext
-import io.undertow.security.handlers.AuthenticationCallHandler
-import io.undertow.security.handlers.AuthenticationConstraintHandler
-import io.undertow.security.handlers.AuthenticationMechanismsHandler
-import io.undertow.security.handlers.SecurityInitialHandler
-import io.undertow.security.idm.Account
-import io.undertow.security.idm.Credential
-import io.undertow.security.idm.IdentityManager
-import io.undertow.server.HttpHandler
-import io.undertow.server.HttpServerExchange
-import io.undertow.util.StatusCodes
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -58,38 +41,6 @@ class BlockchainWalletControllerIT {
     private val sampleEthAddress2 = "0x19ce8df35f56bcabb8426d145b8e7984bef90a23"
     private val sampleBtcAddress1 = "bc1qhq66uyw53n7sfk200czg556mdmdg8t7nvgdkdd"
 
-    class AuthenticatedHttpHandlerWrapper : HttpHandlerWrapper {
-        private val userAccount = UserAccount(
-            userName = "some-user@non-existing-domain",
-            userAccountId = UUID.randomUUID().toString(),
-            authorities = emptySet(),
-        )
-        val userAccountId = userAccount.userAccountId
-
-        override fun wrap(next: HttpHandler): HttpHandler {
-            return SecurityInitialHandler(
-                AuthenticationMode.PRO_ACTIVE,
-                object : IdentityManager {
-                    override fun verify(account: Account) = account
-                    override fun verify(id: String?, credential: Credential?) = null
-                    override fun verify(credential: Credential?) = null
-                },
-                AuthenticationMechanismsHandler(
-                    AuthenticationConstraintHandler(AuthenticationCallHandler(next)),
-                    listOf(object : AuthenticationMechanism {
-                        override fun authenticate(exchange: HttpServerExchange?, securityContext: SecurityContext?): AuthenticationMechanismOutcome {
-                            securityContext?.authenticationComplete(userAccount, "test authentication", false)
-                            return AuthenticationMechanismOutcome.AUTHENTICATED
-                        }
-
-                        override fun sendChallenge(exchange: HttpServerExchange?, securityContext: SecurityContext?): ChallengeResult {
-                            return ChallengeResult(true, StatusCodes.UNAUTHORIZED)
-                        }
-                    })
-                )
-            )
-        }
-    }
 
     private val authenticatedHttpHandlerWrapper = AuthenticatedHttpHandlerWrapper()
 

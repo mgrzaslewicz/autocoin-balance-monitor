@@ -1,10 +1,7 @@
 package autocoin.balance.app
 
 import autocoin.balance.api.ServerBuilder
-import autocoin.balance.api.controller.BlockchainWalletController
-import autocoin.balance.api.controller.EthWalletController
-import autocoin.balance.api.controller.ExchangeWalletController
-import autocoin.balance.api.controller.HealthController
+import autocoin.balance.api.controller.*
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.blockchain.btc.BtcService
@@ -31,6 +28,8 @@ import autocoin.balance.wallet.exchange.RestExchangeMediatorWalletService
 import autocoin.balance.wallet.exchange.UserExchangeWalletLastRefreshRepository
 import autocoin.balance.wallet.exchange.UserExchangeWalletRepository
 import autocoin.balance.wallet.exchange.UserExchangeWalletService
+import autocoin.balance.wallet.summary.UserBalanceSummaryRepository
+import autocoin.balance.wallet.summary.UserBalanceSummaryService
 import autocoin.metrics.JsonlFileStatsDClient
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
@@ -243,14 +242,27 @@ class AppContext(private val appConfig: AppConfig) {
         priceService = priceService,
     )
 
+    val userBalanceSummaryService = UserBalanceSummaryService(
+        priceService = priceService,
+        userBalanceSummaryRepository = { jdbi.get().onDemand(UserBalanceSummaryRepository::class.java) },
+        userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
+        userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
+    )
+
+    val balanceSummaryController = BalanceSummaryController(
+        objectMapper = objectMapper,
+        oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
+        userBalanceSummaryService = userBalanceSummaryService,
+    )
+
     val controllers = listOf(
         healthController,
         ethWalletController,
         blockchainWalletController,
-        exchangeWalletController
+        exchangeWalletController,
+        balanceSummaryController,
     )
 
     val server = ServerBuilder(appConfig.appServerPort, controllers, metricsService).build()
-
 
 }
