@@ -5,9 +5,9 @@ import automate.profit.autocoin.exchange.time.TimeMillisProvider
 import automate.profit.autocoin.exchange.wallet.ExchangeBalanceDto
 import automate.profit.autocoin.exchange.wallet.ExchangeCurrencyBalanceDto
 import automate.profit.autocoin.exchange.wallet.ExchangeCurrencyBalancesDto
-import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.*
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*

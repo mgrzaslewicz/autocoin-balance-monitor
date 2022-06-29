@@ -4,12 +4,12 @@ import autocoin.TestServer.Companion.startTestServer
 import autocoin.balance.app.ObjectMapperProvider
 import autocoin.balance.blockchain.eth.EthService
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 
 class EthWalletControllerIT {
