@@ -16,7 +16,7 @@ import java.math.BigDecimal
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
-class UserBalanceSummaryServiceTest {
+class DefaultUserBalanceSummaryServiceTest {
 
     @Mock
     private lateinit var userBlockChainWalletRepository: UserBlockChainWalletRepository
@@ -34,7 +34,7 @@ class UserBalanceSummaryServiceTest {
 
     @BeforeEach
     fun setup() {
-        tested = UserBalanceSummaryService(
+        tested = DefaultUserBalanceSummaryService(
             userExchangeWalletRepository = { userExchangeWalletRepository },
             userBalanceSummaryRepository = { userBalanceSummaryRepository },
             userBlockChainWalletRepository = { userBlockChainWalletRepository },
