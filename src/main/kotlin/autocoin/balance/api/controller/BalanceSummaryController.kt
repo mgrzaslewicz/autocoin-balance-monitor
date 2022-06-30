@@ -4,6 +4,7 @@ import autocoin.balance.api.ApiController
 import autocoin.balance.api.ApiEndpoint
 import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.oauth.server.authorizeWithOauth2
+import autocoin.balance.oauth.server.isUserInProPlan
 import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.wallet.summary.BlockchainWalletCurrencySummary
 import autocoin.balance.wallet.summary.CurrencyBalanceSummary
@@ -56,6 +57,7 @@ fun CurrencyBalanceSummary.toDto() = CurrencyBalanceSummaryDto(
 )
 
 data class BalanceSummaryResponseDto(
+    val isShowingRealBalance: Boolean,
     val currencyBalances: List<CurrencyBalanceSummaryDto>,
 )
 
@@ -63,8 +65,16 @@ class BalanceSummaryController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
     private val userBalanceSummaryService: UserBalanceSummaryService,
+    private val isUserInProPlanFunction: (httpServerExchange: HttpServerExchange) -> Boolean = { it -> it.isUserInProPlan() },
+    private val freePlanBalanceSummaryResponseDto: BalanceSummaryResponseDto = objectMapper.readValue(
+        this::class.java.getResource("/freePlanBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
+    ),
 ) : ApiController {
     private companion object : KLogging()
+
+    private val freePlanBalanceSummaryResponseJson: String by lazy {
+        objectMapper.writeValueAsString(freePlanBalanceSummaryResponseDto)
+    }
 
     private fun getUserBalanceSummary() = object : ApiEndpoint {
         override val method = Methods.GET
@@ -73,9 +83,14 @@ class BalanceSummaryController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            logger.info { "User $userAccountId is requesting balance summary" }
-            val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
-            httpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList)
+            val isProPlan = isUserInProPlanFunction(httpServerExchange)
+            logger.info { "User $userAccountId is requesting balance summary (isProPlan=$isProPlan" }
+            if (isProPlan) {
+                val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
+                httpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList)
+            } else {
+                httpServerExchange.responseSender.send(freePlanBalanceSummaryResponseJson)
+            }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -83,6 +98,7 @@ class BalanceSummaryController(
         this.responseSender.send(
             objectMapper.writeValueAsString(
                 BalanceSummaryResponseDto(
+                    isShowingRealBalance = true,
                     currencyBalances = currencyBalanceSummaryList.map { it.toDto() }
                 )
             )
@@ -96,11 +112,16 @@ class BalanceSummaryController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            logger.info { "User $userAccountId is requesting balance refresh" }
-            userBalanceSummaryService.refreshBalanceSummary(userAccountId)
-            logger.info { "User $userAccountId is refreshed balance" }
-            val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
-            httpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList)
+            val isProPlan = isUserInProPlanFunction(httpServerExchange)
+            logger.info { "User $userAccountId is requesting balance refresh (isProPlan=$isProPlan)" }
+            if (isProPlan) {
+                userBalanceSummaryService.refreshBalanceSummary(userAccountId)
+                logger.info { "User $userAccountId refreshed balance" }
+                val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
+                httpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList)
+            } else {
+                httpServerExchange.responseSender.send(freePlanBalanceSummaryResponseJson)
+            }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 

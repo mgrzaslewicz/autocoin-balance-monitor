@@ -14,6 +14,7 @@ import java.util.*
 
 data class ExchangeWalletBalancesDto(
     val refreshTimeMillis: Long?,
+    val isShowingRealBalance: Boolean,
     val exchangeCurrencyBalances: List<ExchangeCurrencyBalancesDto>,
 )
 
@@ -74,6 +75,7 @@ class UserExchangeWalletService(
         val userExchangeWalletsLastRefreshGroupedByExchangeUserId = userExchangeWalletsLastRefresh.groupBy { it.exchangeUserId }
         val userExchangeWalletsGroupedByExchangeUser = userExchangeWallets.groupBy { it.exchangeUserId }
         return ExchangeWalletBalancesDto(
+            isShowingRealBalance = true,
             refreshTimeMillis = userExchangeWalletsLastRefresh.firstOrNull()?.insertTime?.time,
             exchangeCurrencyBalances = userExchangeWalletsLastRefreshGroupedByExchangeUserId.map { userExchangeWalletsLastRefresh ->
                 val userExchangeWallets = userExchangeWalletsGroupedByExchangeUser[userExchangeWalletsLastRefresh.key]

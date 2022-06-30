@@ -1,0 +1,561 @@
+{
+  "isShowingRealBalance": false,
+  "refreshTimeMillis": 1656142174676,
+  "exchangeCurrencyBalances": [
+    {
+      "exchangeUserId": "6625c210-3737-45ba-8c5c-9821e42c8886",
+      "exchangeUserName": "my exchanges",
+      "exchangeBalances": [
+        {
+          "exchangeName": "binance",
+          "currencyBalances": [
+            {
+              "currencyCode": "BCX",
+              "amountAvailable": "0.04280000",
+              "totalAmount": "0.04280000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.000013248370946322735360000"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "ADD",
+              "amountAvailable": "74.10438500",
+              "totalAmount": "74.10438500",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "1.858179921538738957652000"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "SBTC",
+              "amountAvailable": "0.00000428",
+              "totalAmount": "0.00000428",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.0000017310542853167666032"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "EON",
+              "amountAvailable": "148.20877000",
+              "totalAmount": "148.20877000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": null
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "EOP",
+              "amountAvailable": "148.20877000",
+              "totalAmount": "148.20877000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": null
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "1INCH",
+              "amountAvailable": "0.08800000",
+              "totalAmount": "0.08800000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.060431199982735005600000"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BNB",
+              "amountAvailable": "20.70159297",
+              "totalAmount": "20.70159297",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "4438.6104454664948753726424"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "ETH",
+              "amountAvailable": "0.00007360",
+              "totalAmount": "0.00007360",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.0762611953614253440"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "TRX",
+              "amountAvailable": "0.95840819",
+              "totalAmount": "0.95840819",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.061168945150465491090044"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "NFT",
+              "amountAvailable": "1770187.115428",
+              "totalAmount": "1770187.115428",
+              "amountInOrders": "0.000000",
+              "valueInOtherCurrency": {
+                "USD": "1.0597266812141251638999671816"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BTC",
+              "amountAvailable": "0.01042592",
+              "totalAmount": "0.01042592",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "199.6956399863761382976"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "REEF",
+              "amountAvailable": "129.00000000",
+              "totalAmount": "129.00000000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.424079930321407503600000000"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "ONX",
+              "amountAvailable": "12.65184370",
+              "totalAmount": "12.65184370",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "10.73963907684930086188170"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "MEETONE",
+              "amountAvailable": "74.10438500",
+              "totalAmount": "74.10438500",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.173288073467078403174039500"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "ATD",
+              "amountAvailable": "148.20877000",
+              "totalAmount": "148.20877000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "19.0399288542278718680402000"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "ZEC",
+              "amountAvailable": "0.00028000",
+              "totalAmount": "0.00028000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.0149812056617891556000"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "USDT",
+              "amountAvailable": "20.52330000",
+              "totalAmount": "20.52330000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "20.500583147480196809580000"
+              },
+              "priceInOtherCurrency": null
+            }
+          ],
+          "errorMessage": null
+        },
+        {
+          "exchangeName": "bitstamp",
+          "currencyBalances": [
+            {
+              "currencyCode": "USD",
+              "amountAvailable": "0.01",
+              "totalAmount": "0.01",
+              "amountInOrders": "0.00",
+              "valueInOtherCurrency": {
+                "USD": "0.01"
+              },
+              "priceInOtherCurrency": null
+            }
+          ],
+          "errorMessage": null
+        },
+        {
+          "exchangeName": "bittrex",
+          "currencyBalances": [
+            {
+              "currencyCode": "CRO",
+              "amountAvailable": "2738.67893611",
+              "totalAmount": "2738.67893611",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "306.0921276087538642739366939"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BCHA",
+              "amountAvailable": "0.13190203",
+              "totalAmount": "0.13190203",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": null
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BTXCRD",
+              "amountAvailable": "1522.58874809",
+              "totalAmount": "1522.58874809",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": null
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BTC",
+              "amountAvailable": "0.00000007",
+              "totalAmount": "0.00000007",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.0013407636735219846"
+              },
+              "priceInOtherCurrency": null
+            }
+          ],
+          "errorMessage": null
+        },
+        {
+          "exchangeName": "gateio",
+          "currencyBalances": [
+            {
+              "currencyCode": "BTC",
+              "amountAvailable": "0.56154736",
+              "totalAmount": "0.56154736",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "10755.7471607167479155808"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "CRO",
+              "amountAvailable": "9960.5000557",
+              "totalAmount": "9960.5000557",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "1113.248659379862050531487293"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "SUPER",
+              "amountAvailable": "0.00012945",
+              "totalAmount": "0.00012945",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "0.0000153214126830146636055"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BSV",
+              "amountAvailable": "0.000006",
+              "totalAmount": "0.000006",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "0.0003278774727899262"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BCH",
+              "amountAvailable": "0.000606",
+              "totalAmount": "0.000606",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "0.06074090689739972892"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BNB",
+              "amountAvailable": "4.45646195",
+              "totalAmount": "4.45646195",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "955.5061095906565112978440"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "USD",
+              "amountAvailable": "0.0096224",
+              "totalAmount": "0.0096224",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "0.0096224"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "ETH",
+              "amountAvailable": "9.38048638",
+              "totalAmount": "9.38048638",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "9719.6617447061089236252"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "USDT",
+              "amountAvailable": "0.0661541",
+              "totalAmount": "0.0661541",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "0.06608087527818234337366"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "TFUEL",
+              "amountAvailable": "0.00092475",
+              "totalAmount": "0.00092475",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "0.00004266650080399158732600"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "LTC",
+              "amountAvailable": "0.00005239",
+              "totalAmount": "0.00005239",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "0.00270517255213453646554"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "THETA",
+              "amountAvailable": "0.00004749",
+              "totalAmount": "0.00004749",
+              "amountInOrders": "0",
+              "valueInOtherCurrency": {
+                "USD": "0.000055400310043163711682"
+              },
+              "priceInOtherCurrency": null
+            }
+          ],
+          "errorMessage": null
+        },
+        {
+          "exchangeName": "kucoin",
+          "currencyBalances": [
+            {
+              "currencyCode": "BTCP",
+              "amountAvailable": "0.00001247",
+              "totalAmount": "0.00001247",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.000012660267244930002506"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "DRGN",
+              "amountAvailable": "0.00005935",
+              "totalAmount": "0.00005935",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.00000095160119665804508470"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "USDT",
+              "amountAvailable": "0.00005791",
+              "totalAmount": "0.00005791",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.000057845900516514312866"
+              },
+              "priceInOtherCurrency": null
+            }
+          ],
+          "errorMessage": null
+        },
+        {
+          "exchangeName": "poloniex",
+          "currencyBalances": [],
+          "errorMessage": null
+        }
+      ]
+    },
+    {
+      "exchangeUserId": "0dab9ffa-4fe0-4844-9359-d1c0d11fc7d2",
+      "exchangeUserName": "my wife",
+      "exchangeBalances": [
+        {
+          "exchangeName": "binance",
+          "currencyBalances": [
+            {
+              "currencyCode": "EOS",
+              "amountAvailable": "41.01894000",
+              "totalAmount": "41.01894000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "37.024387964646614097228000"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "ETH",
+              "amountAvailable": "0.00000406",
+              "totalAmount": "0.00000406",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.0042067996354264524"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "BTC",
+              "amountAvailable": "0.00000035",
+              "totalAmount": "0.00000035",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "0.0067038183676099230"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "USDT",
+              "amountAvailable": "127.90860666",
+              "totalAmount": "127.90860666",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "127.767027043003282311127116"
+              },
+              "priceInOtherCurrency": null
+            }
+          ],
+          "errorMessage": null
+        },
+        {
+          "exchangeName": "bittrex",
+          "currencyBalances": [
+            {
+              "currencyCode": "BTC",
+              "amountAvailable": "0.00178776",
+              "totalAmount": "0.00178776",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "34.2423380710809026928"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "LSK",
+              "amountAvailable": "25.60589687",
+              "totalAmount": "25.60589687",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "27.155419578335879591253452"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "XRP",
+              "amountAvailable": "31.00000000",
+              "totalAmount": "31.00000000",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "9.893369179093982200000000"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "GLM",
+              "amountAvailable": "422.91695175",
+              "totalAmount": "422.91695175",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "93.347922454332300346674975"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "EXP",
+              "amountAvailable": "98.80216595",
+              "totalAmount": "98.80216595",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "1.38140970744362435838660590"
+              },
+              "priceInOtherCurrency": null
+            }
+          ],
+          "errorMessage": null
+        },
+        {
+          "exchangeName": "kucoin",
+          "currencyBalances": [
+            {
+              "currencyCode": "BTC",
+              "amountAvailable": "0.00553074",
+              "totalAmount": "0.00553074",
+              "amountInOrders": "0.00000000",
+              "valueInOtherCurrency": {
+                "USD": "105.9345039956425872372"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "WTC",
+              "amountAvailable": "276.438408",
+              "totalAmount": "276.438408",
+              "amountInOrders": "0.000000",
+              "valueInOtherCurrency": {
+                "USD": "48.26322483017185352809056"
+              },
+              "priceInOtherCurrency": null
+            },
+            {
+              "currencyCode": "XRP",
+              "amountAvailable": "0.000032",
+              "totalAmount": "0.000032",
+              "amountInOrders": "0.000000",
+              "valueInOtherCurrency": {
+                "USD": "0.0000102125101203550784"
+              },
+              "priceInOtherCurrency": null
+            }
+          ],
+          "errorMessage": null
+        }
+      ]
+    }
+  ]
+}

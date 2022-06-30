@@ -16,3 +16,5 @@ data class UserAccount(
     override fun getRoles() = authorities
     override fun getPrincipal() = Principal { userAccountId }
 }
+
+fun HttpServerExchange.isUserInProPlan() = this.securityContext.authenticatedAccount.roles.contains("ROLE_PRO_USER")

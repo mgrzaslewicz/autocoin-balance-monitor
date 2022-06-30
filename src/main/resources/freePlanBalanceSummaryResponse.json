@@ -1,0 +1,714 @@
+{
+  "isShowingRealBalance": false,
+  "currencyBalances": [
+    {
+      "currency": "1INCH",
+      "balance": "0.08800000",
+      "valueInOtherCurrency": {
+        "USD": "0.060431199982735005600000"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "0.08800000",
+          "valueInOtherCurrency": {
+            "USD": "0.060431199982735005600000"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "ADD",
+      "balance": "74.10438500",
+      "valueInOtherCurrency": {
+        "USD": "1.858179921538738957652000"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "74.10438500",
+          "valueInOtherCurrency": {
+            "USD": "1.858179921538738957652000"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "ATD",
+      "balance": "148.20877000",
+      "valueInOtherCurrency": {
+        "USD": "19.0399288542278718680402000"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "148.20877000",
+          "valueInOtherCurrency": {
+            "USD": "19.0399288542278718680402000"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "BCH",
+      "balance": "0.000606",
+      "valueInOtherCurrency": {
+        "USD": "0.06074090689739972892"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "gateio",
+          "balance": "0.000606",
+          "valueInOtherCurrency": {
+            "USD": "0.06074090689739972892"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "BCHA",
+      "balance": "0.13190203",
+      "valueInOtherCurrency": {
+        "USD": null
+      },
+      "exchanges": [
+        {
+          "exchangeName": "bittrex",
+          "balance": "0.13190203",
+          "valueInOtherCurrency": {
+            "USD": null
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "BCX",
+      "balance": "0.04280000",
+      "valueInOtherCurrency": {
+        "USD": "0.000013248370946322735360000"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "0.04280000",
+          "valueInOtherCurrency": {
+            "USD": "0.000013248370946322735360000"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "BNB",
+      "balance": "25.15805492",
+      "valueInOtherCurrency": {
+        "USD": "5394.1165550571513866704864"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "20.70159297",
+          "valueInOtherCurrency": {
+            "USD": "4438.6104454664948753726424"
+          }
+        },
+        {
+          "exchangeName": "gateio",
+          "balance": "4.45646195",
+          "valueInOtherCurrency": {
+            "USD": "955.5061095906565112978440"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "BSV",
+      "balance": "0.000006",
+      "valueInOtherCurrency": {
+        "USD": "0.0003278774727899262"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "gateio",
+          "balance": "0.000006",
+          "valueInOtherCurrency": {
+            "USD": "0.0003278774727899262"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "BTC",
+      "balance": "0.57972536",
+      "valueInOtherCurrency": {
+        "USD": "11103.9243329636427164208"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "kucoin",
+          "balance": "0.00553074",
+          "valueInOtherCurrency": {
+            "USD": "105.9345039956425872372"
+          }
+        },
+        {
+          "exchangeName": "binance",
+          "balance": "0.00000035",
+          "valueInOtherCurrency": {
+            "USD": "0.0067038183676099230"
+          }
+        },
+        {
+          "exchangeName": "bittrex",
+          "balance": "0.00178776",
+          "valueInOtherCurrency": {
+            "USD": "34.2423380710809026928"
+          }
+        },
+        {
+          "exchangeName": "binance",
+          "balance": "0.01042592",
+          "valueInOtherCurrency": {
+            "USD": "199.6956399863761382976"
+          }
+        },
+        {
+          "exchangeName": "gateio",
+          "balance": "0.56154736",
+          "valueInOtherCurrency": {
+            "USD": "10755.7471607167479155808"
+          }
+        },
+        {
+          "exchangeName": "bittrex",
+          "balance": "0.00000007",
+          "valueInOtherCurrency": {
+            "USD": "0.0013407636735219846"
+          }
+        }
+      ],
+      "wallets": [
+        {
+          "walletAddress": "bc1qhxycdau56zv7duqm020lllahjxzam8ypvmavgu",
+          "balance": "0.00043316",
+          "valueInOtherCurrency": {
+            "USD": "8.2966456117540407048"
+          }
+        }
+      ]
+    },
+    {
+      "currency": "BTCP",
+      "balance": "0.00001247",
+      "valueInOtherCurrency": {
+        "USD": "0.000012660267244930002506"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "kucoin",
+          "balance": "0.00001247",
+          "valueInOtherCurrency": {
+            "USD": "0.000012660267244930002506"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "BTXCRD",
+      "balance": "1522.58874809",
+      "valueInOtherCurrency": {
+        "USD": null
+      },
+      "exchanges": [
+        {
+          "exchangeName": "bittrex",
+          "balance": "1522.58874809",
+          "valueInOtherCurrency": {
+            "USD": null
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "CRO",
+      "balance": "12699.17899181",
+      "valueInOtherCurrency": {
+        "USD": "1419.3407869886159148054239869"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "gateio",
+          "balance": "9960.5000557",
+          "valueInOtherCurrency": {
+            "USD": "1113.248659379862050531487293"
+          }
+        },
+        {
+          "exchangeName": "bittrex",
+          "balance": "2738.67893611",
+          "valueInOtherCurrency": {
+            "USD": "306.0921276087538642739366939"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "DRGN",
+      "balance": "0.00005935",
+      "valueInOtherCurrency": {
+        "USD": "0.00000095160119665804508470"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "kucoin",
+          "balance": "0.00005935",
+          "valueInOtherCurrency": {
+            "USD": "0.00000095160119665804508470"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "EON",
+      "balance": "148.20877000",
+      "valueInOtherCurrency": {
+        "USD": null
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "148.20877000",
+          "valueInOtherCurrency": {
+            "USD": null
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "EOP",
+      "balance": "148.20877000",
+      "valueInOtherCurrency": {
+        "USD": null
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "148.20877000",
+          "valueInOtherCurrency": {
+            "USD": null
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "EOS",
+      "balance": "41.01894000",
+      "valueInOtherCurrency": {
+        "USD": "37.024387964646614097228000"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "41.01894000",
+          "valueInOtherCurrency": {
+            "USD": "37.024387964646614097228000"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "ETH",
+      "balance": "9.39486038",
+      "valueInOtherCurrency": {
+        "USD": "9734.5554732675916395852"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "0.00000406",
+          "valueInOtherCurrency": {
+            "USD": "0.0042067996354264524"
+          }
+        },
+        {
+          "exchangeName": "binance",
+          "balance": "0.00007360",
+          "valueInOtherCurrency": {
+            "USD": "0.0762611953614253440"
+          }
+        },
+        {
+          "exchangeName": "gateio",
+          "balance": "9.38048638",
+          "valueInOtherCurrency": {
+            "USD": "9719.6617447061089236252"
+          }
+        }
+      ],
+      "wallets": [
+        {
+          "walletAddress": "0x445c9d791b782a7b181194950e0c0ee8c14468f1",
+          "balance": "0.01429634",
+          "valueInOtherCurrency": {
+            "USD": "14.8132605664858641636"
+          }
+        }
+      ]
+    },
+    {
+      "currency": "EXP",
+      "balance": "98.80216595",
+      "valueInOtherCurrency": {
+        "USD": "1.38140970744362435838660590"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "bittrex",
+          "balance": "98.80216595",
+          "valueInOtherCurrency": {
+            "USD": "1.38140970744362435838660590"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "GLM",
+      "balance": "422.91695175",
+      "valueInOtherCurrency": {
+        "USD": "93.347922454332300346674975"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "bittrex",
+          "balance": "422.91695175",
+          "valueInOtherCurrency": {
+            "USD": "93.347922454332300346674975"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "LSK",
+      "balance": "25.60589687",
+      "valueInOtherCurrency": {
+        "USD": "27.155419578335879591253452"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "bittrex",
+          "balance": "25.60589687",
+          "valueInOtherCurrency": {
+            "USD": "27.155419578335879591253452"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "LTC",
+      "balance": "0.00005239",
+      "valueInOtherCurrency": {
+        "USD": "0.00270517255213453646554"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "gateio",
+          "balance": "0.00005239",
+          "valueInOtherCurrency": {
+            "USD": "0.00270517255213453646554"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "MEETONE",
+      "balance": "74.10438500",
+      "valueInOtherCurrency": {
+        "USD": "0.173288073467078403174039500"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "74.10438500",
+          "valueInOtherCurrency": {
+            "USD": "0.173288073467078403174039500"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "NFT",
+      "balance": "1770187.115428",
+      "valueInOtherCurrency": {
+        "USD": "1.0597266812141251638999671816"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "1770187.115428",
+          "valueInOtherCurrency": {
+            "USD": "1.0597266812141251638999671816"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "ONX",
+      "balance": "12.65184370",
+      "valueInOtherCurrency": {
+        "USD": "10.73963907684930086188170"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "12.65184370",
+          "valueInOtherCurrency": {
+            "USD": "10.73963907684930086188170"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "REEF",
+      "balance": "129.00000000",
+      "valueInOtherCurrency": {
+        "USD": "0.424079930321407503600000000"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "129.00000000",
+          "valueInOtherCurrency": {
+            "USD": "0.424079930321407503600000000"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "SBTC",
+      "balance": "0.00000428",
+      "valueInOtherCurrency": {
+        "USD": "0.0000017310542853167666032"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "0.00000428",
+          "valueInOtherCurrency": {
+            "USD": "0.0000017310542853167666032"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "SUPER",
+      "balance": "0.00012945",
+      "valueInOtherCurrency": {
+        "USD": "0.0000153214126830146636055"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "gateio",
+          "balance": "0.00012945",
+          "valueInOtherCurrency": {
+            "USD": "0.0000153214126830146636055"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "TFUEL",
+      "balance": "0.00092475",
+      "valueInOtherCurrency": {
+        "USD": "0.00004266650080399158732600"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "gateio",
+          "balance": "0.00092475",
+          "valueInOtherCurrency": {
+            "USD": "0.00004266650080399158732600"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "THETA",
+      "balance": "0.00004749",
+      "valueInOtherCurrency": {
+        "USD": "0.000055400310043163711682"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "gateio",
+          "balance": "0.00004749",
+          "valueInOtherCurrency": {
+            "USD": "0.000055400310043163711682"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "TRX",
+      "balance": "0.95840819",
+      "valueInOtherCurrency": {
+        "USD": "0.061168945150465491090044"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "0.95840819",
+          "valueInOtherCurrency": {
+            "USD": "0.061168945150465491090044"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "USD",
+      "balance": "0.0196224",
+      "valueInOtherCurrency": {
+        "USD": "0.0196224"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "bitstamp",
+          "balance": "0.01",
+          "valueInOtherCurrency": {
+            "USD": "0.01"
+          }
+        },
+        {
+          "exchangeName": "gateio",
+          "balance": "0.0096224",
+          "valueInOtherCurrency": {
+            "USD": "0.0096224"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "USDT",
+      "balance": "148.49811867",
+      "valueInOtherCurrency": {
+        "USD": "148.333748911662177978393642"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "127.90860666",
+          "valueInOtherCurrency": {
+            "USD": "127.767027043003282311127116"
+          }
+        },
+        {
+          "exchangeName": "binance",
+          "balance": "20.52330000",
+          "valueInOtherCurrency": {
+            "USD": "20.500583147480196809580000"
+          }
+        },
+        {
+          "exchangeName": "kucoin",
+          "balance": "0.00005791",
+          "valueInOtherCurrency": {
+            "USD": "0.000057845900516514312866"
+          }
+        },
+        {
+          "exchangeName": "gateio",
+          "balance": "0.0661541",
+          "valueInOtherCurrency": {
+            "USD": "0.06608087527818234337366"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "WTC",
+      "balance": "276.438408",
+      "valueInOtherCurrency": {
+        "USD": "48.26322483017185352809056"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "kucoin",
+          "balance": "276.438408",
+          "valueInOtherCurrency": {
+            "USD": "48.26322483017185352809056"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "XRP",
+      "balance": "31.00003200",
+      "valueInOtherCurrency": {
+        "USD": "9.893379391604102555078400"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "kucoin",
+          "balance": "0.000032",
+          "valueInOtherCurrency": {
+            "USD": "0.0000102125101203550784"
+          }
+        },
+        {
+          "exchangeName": "bittrex",
+          "balance": "31.00000000",
+          "valueInOtherCurrency": {
+            "USD": "9.893369179093982200000000"
+          }
+        }
+      ],
+      "wallets": []
+    },
+    {
+      "currency": "ZEC",
+      "balance": "0.00028000",
+      "valueInOtherCurrency": {
+        "USD": "0.0149812056617891556000"
+      },
+      "exchanges": [
+        {
+          "exchangeName": "binance",
+          "balance": "0.00028000",
+          "valueInOtherCurrency": {
+            "USD": "0.0149812056617891556000"
+          }
+        }
+      ],
+      "wallets": []
+    }
+  ]
+}

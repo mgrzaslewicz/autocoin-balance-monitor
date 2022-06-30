@@ -31,6 +31,7 @@ import autocoin.balance.wallet.exchange.UserExchangeWalletService
 import autocoin.balance.wallet.summary.DefaultUserBalanceSummaryService
 import autocoin.balance.wallet.summary.UserBalanceSummaryRepository
 import autocoin.metrics.JsonlFileStatsDClient
+import automate.profit.autocoin.exchange.time.SystemTimeMillisProvider
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -217,13 +218,16 @@ class AppContext(private val appConfig: AppConfig) {
         exchangeMediatorApiUrl = appConfig.exchangeMediatorApiBaseUrl,
     )
 
+    private val timeMillisProvider = SystemTimeMillisProvider()
 
     val userExchangeWalletService = UserExchangeWalletService(
         exchangeMediatorWalletService = exchangeMediatorWalletService,
         userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
         userExchangeWalletLastRefreshRepository = { jdbi.get().onDemand(UserExchangeWalletLastRefreshRepository::class.java) },
         priceService = priceService,
+        timeMillisProvider = timeMillisProvider,
     )
+
 
     val exchangeWalletController = ExchangeWalletController(
         objectMapper = objectMapper,
@@ -231,6 +235,7 @@ class AppContext(private val appConfig: AppConfig) {
         userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
         userExchangeWalletService = userExchangeWalletService,
         priceService = priceService,
+        timeMillisProvider = timeMillisProvider,
     )
 
     val blockchainWalletController = BlockchainWalletController(
