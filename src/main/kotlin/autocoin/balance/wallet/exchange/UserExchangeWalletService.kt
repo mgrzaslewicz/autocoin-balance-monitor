@@ -65,7 +65,7 @@ class UserExchangeWalletService(
     }
 
     private fun getUsdValueOrNull(currency: String, amount: BigDecimal): BigDecimal? {
-        val usdPrice = priceService.getUsdValueOrNull(currency, amount)
+        val usdPrice = priceService.getUsdValue(currency, amount)
         return usdPrice
     }
 

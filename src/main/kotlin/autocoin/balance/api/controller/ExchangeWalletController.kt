@@ -58,7 +58,7 @@ class ExchangeWalletController(
 
     private fun tryGetUsdValue(currency: String, currencyBalance: BigDecimal?): BigDecimal? {
         return if (currencyBalance != null) {
-            priceService.getUsdValueOrNull(currency, currencyBalance)
+            priceService.getUsdValue(currency, currencyBalance)
         } else {
             null
         }
