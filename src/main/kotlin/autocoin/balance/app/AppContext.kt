@@ -24,6 +24,8 @@ import autocoin.balance.scheduled.HealthMetricsScheduler
 import autocoin.balance.scheduled.PriceRefreshScheduler
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
+import autocoin.balance.wallet.currency.UserCurrencyAssetRepository
+import autocoin.balance.wallet.currency.UserCurrencyAssetService
 import autocoin.balance.wallet.exchange.RestExchangeMediatorWalletService
 import autocoin.balance.wallet.exchange.UserExchangeWalletLastRefreshRepository
 import autocoin.balance.wallet.exchange.UserExchangeWalletRepository
@@ -263,12 +265,25 @@ class AppContext(private val appConfig: AppConfig) {
         userBalanceSummaryService = userBalanceSummaryService,
     )
 
+    val userCurrencyAssetService = UserCurrencyAssetService(
+        currencyAssetRepository = { jdbi.get().onDemand(UserCurrencyAssetRepository::class.java) },
+        priceService = priceService,
+    )
+
+    val userCurrencyAssetController = UserCurrencyAssetController(
+        objectMapper = objectMapper,
+        oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
+        userCurrencyAssetService = userCurrencyAssetService,
+        userCurrencyAssetRepository = { jdbi.get().onDemand(UserCurrencyAssetRepository::class.java) },
+    )
+
     val controllers = listOf(
         healthController,
         ethWalletController,
         blockchainWalletController,
         exchangeWalletController,
         balanceSummaryController,
+        userCurrencyAssetController,
     )
 
     val server = ServerBuilder(appConfig.appServerPort, controllers, metricsService).build()
