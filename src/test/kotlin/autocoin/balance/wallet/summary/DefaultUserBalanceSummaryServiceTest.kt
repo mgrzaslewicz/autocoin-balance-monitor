@@ -4,6 +4,9 @@ import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.blockchain.UserBlockChainWallet
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
+import autocoin.balance.wallet.currency.UserCurrencyAsset
+import autocoin.balance.wallet.currency.UserCurrencyAssetService
+import autocoin.balance.wallet.currency.UserCurrencyAssetWithValue
 import autocoin.balance.wallet.exchange.UserExchangeWallet
 import autocoin.balance.wallet.exchange.UserExchangeWalletRepository
 import autocoin.balance.wallet.exchange.UserExchangeWalletService
@@ -32,6 +35,9 @@ class DefaultUserBalanceSummaryServiceTest {
     private lateinit var userBalanceSummaryRepository: UserBalanceSummaryRepository
 
     @Mock
+    private lateinit var userCurrencyAssetService: UserCurrencyAssetService
+
+    @Mock
     private lateinit var priceService: PriceService
 
     @Mock
@@ -48,6 +54,7 @@ class DefaultUserBalanceSummaryServiceTest {
             userExchangeWalletRepository = { userExchangeWalletRepository },
             userBalanceSummaryRepository = { userBalanceSummaryRepository },
             userBlockChainWalletRepository = { userBlockChainWalletRepository },
+            userCurrencyAssetService = userCurrencyAssetService,
             priceService = priceService,
             userBlockChainWalletService = userBlockChainWalletService,
             userExchangeWalletService = userExchangeWalletService,
@@ -69,7 +76,7 @@ class DefaultUserBalanceSummaryServiceTest {
     @Test
     fun shouldGetCurrencyBalanceSummary() {
         val userAccountId = UUID.randomUUID().toString()
-        whenever(userBalanceSummaryRepository.findUniqueUserCurrencies(userAccountId)).thenReturn(listOf("BTC", "ETH", "LTC"))
+        whenever(userBalanceSummaryRepository.findUniqueUserCurrencies(userAccountId)).thenReturn(listOf("BTC", "ETH", "LTC", "XYZ"))
         whenever(userBlockChainWalletRepository.findManyByUserAccountIdAndCurrency(userAccountId, "BTC"))
             .thenReturn(
                 listOf(
@@ -131,11 +138,31 @@ class DefaultUserBalanceSummaryServiceTest {
                     )
                 )
             )
+        val currencyAssetLtc = UserCurrencyAssetWithValue(
+            userCurrencyAsset = UserCurrencyAsset(
+                userAccountId = userAccountId,
+                balance = BigDecimal("13.53"),
+                currency = "LTC",
+                description = null,
+            ),
+            valueInOtherCurrency = mapOf("USD" to BigDecimal("20"))
+        )
+        val currencyAssetXyz = UserCurrencyAssetWithValue(
+            userCurrencyAsset = UserCurrencyAsset(
+                userAccountId = userAccountId,
+                balance = BigDecimal("0.031"),
+                currency = "XYZ",
+                description = null,
+            ),
+            valueInOtherCurrency = mapOf("USD" to BigDecimal("30"))
+        )
+        whenever(userCurrencyAssetService.getUserCurrencyAssets(userAccountId)).thenReturn(listOf(currencyAssetLtc, currencyAssetXyz))
         whenever(priceService.getUsdValue("ETH", "15.6".toBigDecimal())).thenReturn("50000".toBigDecimal())
-        whenever(priceService.getUsdValue("LTC", "318.70".toBigDecimal())).thenReturn("200".toBigDecimal())
+        whenever(priceService.getUsdValue("LTC", "332.23".toBigDecimal())).thenReturn("200".toBigDecimal())
         whenever(priceService.getUsdValue("LTC", "0.5".toBigDecimal())).thenReturn("1".toBigDecimal())
         whenever(priceService.getUsdValue("LTC", "218.15".toBigDecimal())).thenReturn("100".toBigDecimal())
         whenever(priceService.getUsdValue("LTC", "100.05".toBigDecimal())).thenReturn("50".toBigDecimal())
+        whenever(priceService.getUsdValue("XYZ", "0.031".toBigDecimal())).thenReturn("30".toBigDecimal())
         // when
         val currencyBalanceSummaryList = tested.getCurrencyBalanceSummary(userAccountId)
         // then
@@ -151,7 +178,8 @@ class DefaultUserBalanceSummaryServiceTest {
                         balance = "15.6".toBigDecimal(),
                         valueInOtherCurrency = mapOf("USD" to "50000".toBigDecimal())
                     ),
-                )
+                ),
+                currencyAssets = emptyList(),
             ),
             CurrencyBalanceSummary(
                 currency = "BTC",
@@ -164,11 +192,12 @@ class DefaultUserBalanceSummaryServiceTest {
                         balance = null,
                         valueInOtherCurrency = mapOf("USD" to null)
                     ),
-                )
+                ),
+                currencyAssets = emptyList(),
             ),
             CurrencyBalanceSummary(
                 currency = "LTC",
-                balance = "318.70".toBigDecimal(),
+                balance = "332.23".toBigDecimal(),
                 valueInOtherCurrency = mapOf("USD" to 200.toBigDecimal()),
                 exchanges = listOf(
                     ExchangeCurrencySummary(
@@ -189,6 +218,15 @@ class DefaultUserBalanceSummaryServiceTest {
                         valueInOtherCurrency = mapOf("USD" to 1.toBigDecimal())
                     ),
                 ),
+                currencyAssets = listOf(currencyAssetLtc),
+            ),
+            CurrencyBalanceSummary(
+                currency = "XYZ",
+                balance = "0.031".toBigDecimal(),
+                valueInOtherCurrency = mapOf("USD" to 30.toBigDecimal()),
+                exchanges = emptyList(),
+                wallets = emptyList(),
+                currencyAssets = listOf(currencyAssetXyz),
             ),
         )
     }

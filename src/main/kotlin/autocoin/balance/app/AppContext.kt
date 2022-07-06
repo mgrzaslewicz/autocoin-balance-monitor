@@ -249,11 +249,17 @@ class AppContext(private val appConfig: AppConfig) {
         priceService = priceService,
     )
 
+    val userCurrencyAssetService = UserCurrencyAssetService(
+        currencyAssetRepository = { jdbi.get().onDemand(UserCurrencyAssetRepository::class.java) },
+        priceService = priceService,
+    )
+
     val userBalanceSummaryService = DefaultUserBalanceSummaryService(
         priceService = priceService,
         userBalanceSummaryRepository = { jdbi.get().onDemand(UserBalanceSummaryRepository::class.java) },
         userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
         userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
+        userCurrencyAssetService = userCurrencyAssetService,
         executorService = Executors.newCachedThreadPool(),
         userExchangeWalletService = userExchangeWalletService,
         userBlockChainWalletService = userBlockChainWalletService,
@@ -265,10 +271,6 @@ class AppContext(private val appConfig: AppConfig) {
         userBalanceSummaryService = userBalanceSummaryService,
     )
 
-    val userCurrencyAssetService = UserCurrencyAssetService(
-        currencyAssetRepository = { jdbi.get().onDemand(UserCurrencyAssetRepository::class.java) },
-        priceService = priceService,
-    )
 
     val userCurrencyAssetController = UserCurrencyAssetController(
         objectMapper = objectMapper,

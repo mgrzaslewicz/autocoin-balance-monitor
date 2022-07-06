@@ -3,6 +3,8 @@ package autocoin.balance.api.controller
 import autocoin.StartedServer
 import autocoin.TestServer
 import autocoin.balance.app.ObjectMapperProvider
+import autocoin.balance.wallet.currency.UserCurrencyAsset
+import autocoin.balance.wallet.currency.UserCurrencyAssetWithValue
 import autocoin.balance.wallet.summary.BlockchainWalletCurrencySummary
 import autocoin.balance.wallet.summary.CurrencyBalanceSummary
 import autocoin.balance.wallet.summary.ExchangeCurrencySummary
@@ -65,6 +67,17 @@ class BalanceSummaryControllerIT {
                                 valueInOtherCurrency = mapOf("EUR" to 8000.toBigDecimal()),
                             )
                         ),
+                        currencyAssets = listOf(
+                            UserCurrencyAssetWithValue(
+                                userCurrencyAsset = UserCurrencyAsset(
+                                    userAccountId = userAccountId,
+                                    balance = BigDecimal("0.001353"),
+                                    currency = "ABC",
+                                    description = "hardware wallet",
+                                ),
+                                valueInOtherCurrency = mapOf("EUR" to 20.toBigDecimal())
+                            )
+                        ),
                     )
                 )
             )
@@ -106,6 +119,13 @@ class BalanceSummaryControllerIT {
                                 valueInOtherCurrency = mapOf("EUR" to "8000"),
                             )
                         ),
+                        currencyAssets = listOf(
+                            CurrencyAssetSummaryDto(
+                                balance = "0.001353",
+                                description = "hardware wallet",
+                                valueInOtherCurrency = mapOf("EUR" to "20"),
+                            ),
+                        )
                     )
                 )
             )

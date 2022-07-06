@@ -6,6 +6,7 @@ import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.isUserInProPlan
 import autocoin.balance.oauth.server.userAccountId
+import autocoin.balance.wallet.currency.UserCurrencyAssetWithValue
 import autocoin.balance.wallet.summary.BlockchainWalletCurrencySummary
 import autocoin.balance.wallet.summary.CurrencyBalanceSummary
 import autocoin.balance.wallet.summary.ExchangeCurrencySummary
@@ -28,6 +29,12 @@ data class BlockchainWalletCurrencySummaryDto(
     val valueInOtherCurrency: Map<String, String?>?,
 )
 
+data class CurrencyAssetSummaryDto(
+    val balance: String,
+    val description: String?,
+    val valueInOtherCurrency: Map<String, String?>,
+)
+
 fun ExchangeCurrencySummary.toDto() = ExchangeCurrencySummaryDto(
     exchangeName = this.exchangeName,
     balance = this.balance.toPlainString(),
@@ -40,12 +47,19 @@ fun BlockchainWalletCurrencySummary.toDto() = BlockchainWalletCurrencySummaryDto
     valueInOtherCurrency = this.valueInOtherCurrency.map { entry -> entry.key to entry.value?.toPlainString() }.toMap(),
 )
 
+fun UserCurrencyAssetWithValue.toSummaryDto() = CurrencyAssetSummaryDto(
+    balance = this.userCurrencyAsset.balance.toPlainString(),
+    description = this.userCurrencyAsset.description,
+    valueInOtherCurrency = this.valueInOtherCurrency.map { entry -> entry.key to entry.value?.toPlainString() }.toMap(),
+)
+
 data class CurrencyBalanceSummaryDto(
     val currency: String,
     val balance: String?,
     val valueInOtherCurrency: Map<String, String?>?,
     val exchanges: List<ExchangeCurrencySummaryDto>,
     val wallets: List<BlockchainWalletCurrencySummaryDto>,
+    val currencyAssets: List<CurrencyAssetSummaryDto>,
 )
 
 fun CurrencyBalanceSummary.toDto() = CurrencyBalanceSummaryDto(
@@ -54,6 +68,7 @@ fun CurrencyBalanceSummary.toDto() = CurrencyBalanceSummaryDto(
     valueInOtherCurrency = this.valueInOtherCurrency?.map { entry -> entry.key to entry.value?.toPlainString() }?.toMap(),
     exchanges = this.exchanges.map { it.toDto() },
     wallets = this.wallets.map { it.toDto() },
+    currencyAssets = this.currencyAssets.map { it.toSummaryDto() },
 )
 
 data class BalanceSummaryResponseDto(
