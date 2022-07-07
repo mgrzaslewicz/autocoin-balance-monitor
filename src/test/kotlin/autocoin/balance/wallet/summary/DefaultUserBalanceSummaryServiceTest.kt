@@ -157,6 +157,8 @@ class DefaultUserBalanceSummaryServiceTest {
             valueInOtherCurrency = mapOf("USD" to BigDecimal("30"))
         )
         whenever(userCurrencyAssetService.getUserCurrencyAssets(userAccountId)).thenReturn(listOf(currencyAssetLtc, currencyAssetXyz))
+        whenever(priceService.getUsdPrice("ETH")).thenReturn("1400.2".toBigDecimal())
+        whenever(priceService.getUsdPrice("BTC")).thenReturn("22500.1".toBigDecimal())
         whenever(priceService.getUsdValue("ETH", "15.6".toBigDecimal())).thenReturn("50000".toBigDecimal())
         whenever(priceService.getUsdValue("LTC", "332.23".toBigDecimal())).thenReturn("200".toBigDecimal())
         whenever(priceService.getUsdValue("LTC", "0.5".toBigDecimal())).thenReturn("1".toBigDecimal())
@@ -171,6 +173,7 @@ class DefaultUserBalanceSummaryServiceTest {
                 currency = "ETH",
                 balance = "15.6".toBigDecimal(),
                 valueInOtherCurrency = mapOf("USD" to "50000".toBigDecimal()),
+                priceInOtherCurrency = mapOf("USD" to "1400.2".toBigDecimal()),
                 exchanges = emptyList(),
                 wallets = listOf(
                     BlockchainWalletCurrencySummary(
@@ -185,6 +188,7 @@ class DefaultUserBalanceSummaryServiceTest {
                 currency = "BTC",
                 balance = null,
                 valueInOtherCurrency = mapOf("USD" to null),
+                priceInOtherCurrency = mapOf("USD" to "22500.1".toBigDecimal()),
                 exchanges = emptyList(),
                 wallets = listOf(
                     BlockchainWalletCurrencySummary(
@@ -199,6 +203,7 @@ class DefaultUserBalanceSummaryServiceTest {
                 currency = "LTC",
                 balance = "332.23".toBigDecimal(),
                 valueInOtherCurrency = mapOf("USD" to 200.toBigDecimal()),
+                priceInOtherCurrency = mapOf("USD" to null),
                 exchanges = listOf(
                     ExchangeCurrencySummary(
                         exchangeName = "bittrex",
@@ -224,6 +229,7 @@ class DefaultUserBalanceSummaryServiceTest {
                 currency = "XYZ",
                 balance = "0.031".toBigDecimal(),
                 valueInOtherCurrency = mapOf("USD" to 30.toBigDecimal()),
+                priceInOtherCurrency = mapOf("USD" to null),
                 exchanges = emptyList(),
                 wallets = emptyList(),
                 currencyAssets = listOf(currencyAssetXyz),

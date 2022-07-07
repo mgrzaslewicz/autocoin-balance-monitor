@@ -66,19 +66,20 @@ class UserCurrencyAssetControllerIT {
                 listOf(
                     UserCurrencyAssetWithValue(
                         userCurrencyAsset = sampleUserCurrencyAsset.copy(id = userCurrencyAssetId),
-                        valueInOtherCurrency = mapOf("USD" to BigDecimal.TEN)
+                        valueInOtherCurrency = mapOf("USD" to BigDecimal.TEN),
                     )
                 )
             )
         whenever(userCurrencyAssetService.getUserCurrencyAssetsSummary(authenticatedHttpHandlerWrapper.userAccountId))
             .thenReturn(
                 listOf(
-                    UserCurrencyAssetSummaryWithValue(
+                    UserCurrencyAssetSummaryWithPriceAndValue(
                         userCurrencyAssetSummary = UserCurrencyAssetSummary(
                             currency = "BTC",
                             balance = BigDecimal.ONE,
                         ),
-                        valueInOtherCurrency = mapOf("USD" to BigDecimal.TEN)
+                        valueInOtherCurrency = mapOf("USD" to BigDecimal.TEN),
+                        priceInOtherCurrency = mapOf("USD" to BigDecimal("2.4")),
                     )
                 )
             )
@@ -96,14 +97,15 @@ class UserCurrencyAssetControllerIT {
                     currency = "BTC",
                     balance = "1",
                     description = "sample description",
-                    valueInOtherCurrency = mapOf("USD" to "10")
+                    valueInOtherCurrency = mapOf("USD" to "10"),
                 )
             ),
             userCurrencyAssetsSummary = listOf(
                 UserCurrencyAssetSummaryResponseDto(
                     currency = "BTC",
                     balance = "1",
-                    valueInOtherCurrency = mapOf("USD" to "10")
+                    valueInOtherCurrency = mapOf("USD" to "10"),
+                    priceInOtherCurrency = mapOf("USD" to "2.4"),
                 )
             )
         )

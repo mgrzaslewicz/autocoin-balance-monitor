@@ -235,6 +235,8 @@ class UserExchangeWalletServiceTest {
         val priceService = mock<PriceService>().apply {
             whenever(this.getUsdValue("ETH", "20".toBigDecimal())).thenReturn("100.0".toBigDecimal())
             whenever(this.getUsdValue("BTC", "31".toBigDecimal())).thenReturn("2000.0".toBigDecimal())
+            whenever(this.getUsdPrice("BTC")).thenReturn("20000.0".toBigDecimal())
+            whenever(this.getUsdPrice("ETH")).thenReturn("1400.4".toBigDecimal())
         }
         val tested = UserExchangeWalletService(
             userExchangeWalletLastRefreshRepository = { userExchangeWalletLastRefreshRepository },
@@ -250,6 +252,7 @@ class UserExchangeWalletServiceTest {
             ExchangeWalletBalancesDto(
                 isShowingRealBalance = true,
                 refreshTimeMillis = currentTimeMillis,
+                pricesInOtherCurrencies = mapOf("ETH" to mapOf("USD" to "1400.4"), "BTC" to mapOf("USD" to "20000.0"), "XRP" to mapOf("USD" to null)),
                 exchangeCurrencyBalances = listOf(
                     ExchangeCurrencyBalancesDto(
                         exchangeUserId = "exchangeUserId1",

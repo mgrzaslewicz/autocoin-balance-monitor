@@ -53,6 +53,7 @@ class BalanceSummaryControllerIT {
                         currency = "ABC",
                         balance = BigDecimal.TEN,
                         valueInOtherCurrency = mapOf("EUR" to BigDecimal.ONE),
+                        priceInOtherCurrency = mapOf("EUR" to BigDecimal("0.11")),
                         exchanges = listOf(
                             ExchangeCurrencySummary(
                                 exchangeName = "bittrex",
@@ -105,6 +106,7 @@ class BalanceSummaryControllerIT {
                         currency = "ABC",
                         balance = "10",
                         valueInOtherCurrency = mapOf("EUR" to "1"),
+                        priceInOtherCurrency = mapOf("EUR" to "0.11"),
                         exchanges = listOf(
                             ExchangeCurrencySummaryDto(
                                 exchangeName = "bittrex",

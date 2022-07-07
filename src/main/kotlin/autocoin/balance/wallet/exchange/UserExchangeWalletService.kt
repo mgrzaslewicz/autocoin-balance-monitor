@@ -7,7 +7,6 @@ import automate.profit.autocoin.exchange.wallet.ExchangeBalanceDto
 import automate.profit.autocoin.exchange.wallet.ExchangeCurrencyBalanceDto
 import automate.profit.autocoin.exchange.wallet.ExchangeCurrencyBalancesDto
 import mu.KLogging
-import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
 
@@ -15,6 +14,7 @@ import java.util.*
 data class ExchangeWalletBalancesDto(
     val refreshTimeMillis: Long?,
     val isShowingRealBalance: Boolean,
+    val pricesInOtherCurrencies: Map<String, Map<String, String?>>,
     val exchangeCurrencyBalances: List<ExchangeCurrencyBalancesDto>,
 )
 
@@ -64,19 +64,16 @@ class UserExchangeWalletService(
         }
     }
 
-    private fun getUsdValueOrNull(currency: String, amount: BigDecimal): BigDecimal? {
-        val usdPrice = priceService.getUsdValue(currency, amount)
-        return usdPrice
-    }
-
     fun getWalletBalances(userAccountId: String): ExchangeWalletBalancesDto {
         val userExchangeWallets = userExchangeWalletRepository().findManyByUserAccountId(userAccountId)
         val userExchangeWalletsLastRefresh = userExchangeWalletLastRefreshRepository().findManyByUserAccountId(userAccountId)
         val userExchangeWalletsLastRefreshGroupedByExchangeUserId = userExchangeWalletsLastRefresh.groupBy { it.exchangeUserId }
         val userExchangeWalletsGroupedByExchangeUser = userExchangeWallets.groupBy { it.exchangeUserId }
+        val uniqueCurrenciesInWallets = userExchangeWallets.map { it.currency }.toSet()
         return ExchangeWalletBalancesDto(
             isShowingRealBalance = true,
             refreshTimeMillis = userExchangeWalletsLastRefresh.firstOrNull()?.insertTime?.time,
+            pricesInOtherCurrencies = uniqueCurrenciesInWallets.associateWith { mapOf("USD" to priceService.getUsdPrice(it)?.toPlainString()) },
             exchangeCurrencyBalances = userExchangeWalletsLastRefreshGroupedByExchangeUserId.map { userExchangeWalletsLastRefresh ->
                 val userExchangeWallets = userExchangeWalletsGroupedByExchangeUser[userExchangeWalletsLastRefresh.key]
                 val userExchangeWalletsGroupedByExchange = userExchangeWallets?.groupBy { it.exchange } ?: emptyMap()
@@ -95,7 +92,7 @@ class UserExchangeWalletService(
                                     amountAvailable = it.amountAvailable.toPlainString(),
                                     totalAmount = it.balance.toPlainString(),
                                     amountInOrders = it.amountInOrders.toPlainString(),
-                                    valueInOtherCurrency = mapOf("USD" to getUsdValueOrNull(it.currency, it.balance)?.toPlainString())
+                                    valueInOtherCurrency = mapOf("USD" to priceService.getUsdValue(it.currency, it.balance)?.toPlainString()),
                                 )
                             } ?: emptyList()
                         )

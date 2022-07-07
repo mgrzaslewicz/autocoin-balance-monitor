@@ -72,13 +72,15 @@ fun CreateBlockchainWalletRequestDto.toUserBlockChainWallet(userAccountId: Strin
 data class UserCurrencyBalanceResponseDto(
     val currency: String,
     val balance: String?,
-    val usdBalance: String?, // in case of with getting usd price, better send anything
+    val usdBalance: String?,
+    val usdPrice: String?,
 )
 
-fun UserCurrencyBalance.toDto(usdBalance: BigDecimal?) = UserCurrencyBalanceResponseDto(
+fun UserCurrencyBalance.toDto(usdBalance: BigDecimal?, usdPrice: BigDecimal?) = UserCurrencyBalanceResponseDto(
     currency = this.currency,
     balance = this.balance?.stripTrailingZeros()?.toPlainString(),
     usdBalance = usdBalance?.stripTrailingZeros()?.toPlainString(),
+    usdPrice = usdPrice?.toPlainString(),
 )
 
 class BlockchainWalletController(
@@ -240,7 +242,8 @@ class BlockchainWalletController(
             val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
             httpServerExchange.sendJson(currencyBalance.map {
                 val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                it.toDto(usdBalance)
+                val usdPrice = priceService.getUsdPrice(it.currency)
+                it.toDto(usdBalance, usdPrice)
             })
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
