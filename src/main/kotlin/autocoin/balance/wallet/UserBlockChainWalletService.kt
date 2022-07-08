@@ -1,7 +1,7 @@
 package autocoin.balance.wallet
 
 import autocoin.balance.api.controller.UpdateWalletRequestDto
-import autocoin.balance.blockchain.eth.EthService
+import autocoin.balance.blockchain.MultiBlockchainWalletService
 import mu.KLogging
 
 data class WalletUpdateResult(
@@ -11,9 +11,13 @@ data class WalletUpdateResult(
     fun isSuccessful() = !userAlreadyHasWalletWithThisAddress && !userHasNoWalletWithGivenId
 }
 
+data class WalletAddResult(
+    val userAlreadyHasWalletWithThisAddress: Boolean,
+)
+
 class UserBlockChainWalletService(
     private val userBlockChainWalletRepository: () -> UserBlockChainWalletRepository,
-    private val ethService: EthService
+    private val multiBlockchainWalletService: MultiBlockchainWalletService
 ) {
 
     companion object : KLogging()
@@ -21,7 +25,7 @@ class UserBlockChainWalletService(
     fun refreshWalletBalances(userAccountId: String) {
         val userWallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
         userWallets.forEach { wallet ->
-            val newBalance = ethService.getEthBalance(wallet.walletAddress)
+            val newBalance = multiBlockchainWalletService.getBalance(wallet.currency, wallet.walletAddress)
             if (newBalance != null) {
                 userBlockChainWalletRepository().updateWallet(wallet.copy(balance = newBalance))
             }
@@ -46,7 +50,7 @@ class UserBlockChainWalletService(
                     walletAddress = walletUpdateRequest.walletAddress
                 )
                 userBlockChainWalletRepository().updateWallet(walletToUpdate)
-                val newBalance = ethService.getEthBalance(walletToUpdate.walletAddress)
+                val newBalance = multiBlockchainWalletService.getBalance(walletToUpdate.currency, walletToUpdate.walletAddress)
                 if (newBalance != null) {
                     userBlockChainWalletRepository().updateWallet(walletToUpdate.copy(balance = newBalance))
                 }
@@ -56,6 +60,19 @@ class UserBlockChainWalletService(
             userHasNoWalletWithGivenId = userHasNoWalletWithGivenId,
             userAlreadyHasWalletWithThisAddress = userAlreadyHasWalletWithThisAddress,
         )
+    }
+
+    fun addWallet(userAccountId: String, walletToAdd: UserBlockChainWallet): WalletAddResult {
+        return if (userBlockChainWalletRepository().existsByUserAccountIdAndWalletAddress(userAccountId, walletToAdd.walletAddress)) {
+            WalletAddResult(userAlreadyHasWalletWithThisAddress = true)
+        } else {
+            userBlockChainWalletRepository().insertWallet(walletToAdd)
+            val newBalance = multiBlockchainWalletService.getBalance(walletToAdd.currency, walletToAdd.walletAddress)
+            if (newBalance != null) {
+                userBlockChainWalletRepository().updateWallet(walletToAdd.copy(balance = newBalance))
+            }
+            WalletAddResult(userAlreadyHasWalletWithThisAddress = false)
+        }
     }
 
 }

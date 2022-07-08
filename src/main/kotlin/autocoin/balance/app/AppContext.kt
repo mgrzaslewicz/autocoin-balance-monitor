@@ -4,6 +4,9 @@ import autocoin.balance.api.ServerBuilder
 import autocoin.balance.api.controller.EthWalletController
 import autocoin.balance.api.controller.HealthController
 import autocoin.balance.api.controller.WalletController
+import autocoin.balance.blockchain.MultiBlockchainWalletService
+import autocoin.balance.blockchain.MultiWalletAddressValidator
+import autocoin.balance.blockchain.btc.BtcWalletAddressValidator
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.blockchain.eth.Web3EthService
 import autocoin.balance.health.HealthService
@@ -48,12 +51,11 @@ fun createJdbi(datasource: DataSource): Jdbi {
 }
 
 fun createLiquibase(datasource: DataSource): Liquibase {
-    val liquibase =
-        Liquibase(
-            /* changeLogFile = */ "dbschema.sql",
-            /* resourceAccessor = */ ClassLoaderResourceAccessor(),
-            /* conn = */ JdbcConnection(datasource.connection)
-        )
+    val liquibase = Liquibase(
+        /* changeLogFile = */ "dbschema.sql",
+        /* resourceAccessor = */ ClassLoaderResourceAccessor(),
+        /* conn = */ JdbcConnection(datasource.connection)
+    )
     return liquibase
 }
 
@@ -152,6 +154,7 @@ class AppContext(private val appConfig: AppConfig) {
     val ethService = Web3EthService(ethNodeUrl = appConfig.ethNodeUrl)
 
     val ethWalletAddressValidator = EthWalletAddressValidator()
+    val btcWalletAddressValidator = BtcWalletAddressValidator()
 
     val ethWalletController = EthWalletController(
         objectMapper = objectMapper,
@@ -165,9 +168,18 @@ class AppContext(private val appConfig: AppConfig) {
         objectMapper = objectMapper,
     )
 
+    val multiBlockchainWalletService = MultiBlockchainWalletService(
+        blockchainWalletServices = listOf(ethService)
+    )
+    val multiWalletAddressValidator = MultiWalletAddressValidator(
+        walletAddressValidators = listOf(
+            ethWalletAddressValidator,
+        )
+    )
+
     val userBlockChainWalletService = UserBlockChainWalletService(
         userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
-        ethService = ethService,
+        multiBlockchainWalletService = multiBlockchainWalletService,
     )
 
     val priceService = CachingPriceService(
@@ -183,8 +195,7 @@ class AppContext(private val appConfig: AppConfig) {
         objectMapper = objectMapper,
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
         userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
-        ethService = ethService,
-        ethWalletAddressValidator = ethWalletAddressValidator,
+        walletAddressValidator = multiWalletAddressValidator,
         userBlockChainWalletService = userBlockChainWalletService,
         priceService = priceService,
     )

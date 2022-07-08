@@ -3,8 +3,7 @@ package autocoin.balance.api.controller
 import autocoin.balance.api.ApiController
 import autocoin.balance.api.ApiEndpoint
 import autocoin.balance.api.HttpHandlerWrapper
-import autocoin.balance.blockchain.eth.EthService
-import autocoin.balance.blockchain.eth.EthWalletAddressValidator
+import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.price.PriceResponseException
@@ -87,8 +86,7 @@ class WalletController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
     private val userBlockChainWalletRepository: () -> UserBlockChainWalletRepository,
-    private val ethService: EthService,
-    private val ethWalletAddressValidator: EthWalletAddressValidator,
+    private val walletAddressValidator: MultiWalletAddressValidator,
     private val userBlockChainWalletService: UserBlockChainWalletService,
     private val priceService: PriceService,
 ) : ApiController {
@@ -109,16 +107,13 @@ class WalletController(
             val invalidAddresses = mutableListOf<String>()
             addWalletsRequest.forEach {
                 val walletToAdd = it.toUserBlockChainWallet(userAccountId)
-                if (!ethWalletAddressValidator.isWalletAddressValid(walletToAdd.walletAddress)) {
+                if (!walletAddressValidator.isWalletAddressValid(walletToAdd.currency, walletToAdd.walletAddress)) {
                     invalidAddresses += walletToAdd.walletAddress
                 } else {
                     try {
-                        if (userBlockChainWalletRepository().existsByUserAccountIdAndWalletAddress(userAccountId, walletToAdd.walletAddress)) {
+                        val walletAddResult = userBlockChainWalletService.addWallet(userAccountId, walletToAdd)
+                        if (walletAddResult.userAlreadyHasWalletWithThisAddress) {
                             duplicatedWalletAddresses += walletToAdd.walletAddress
-                        } else {
-                            userBlockChainWalletRepository().insertWallet(walletToAdd)
-                            val walletBalance = ethService.getEthBalance(walletToAdd.walletAddress)
-                            userBlockChainWalletRepository().updateWallet(walletToAdd.copy(balance = walletBalance))
                         }
                     } catch (e: Exception) {
                         logger.error(e) { "Could not add wallet $walletToAdd" }
@@ -153,7 +148,7 @@ class WalletController(
             val userAccountId = httpServerExchange.userAccountId()
             val walletUpdateRequest = httpServerExchange.inputStreamToObject(UpdateWalletRequestDto::class.java)
             logger.info { "User $userAccountId is updating wallet: $walletUpdateRequest" }
-            if (!ethWalletAddressValidator.isWalletAddressValid(walletUpdateRequest.walletAddress)) {
+            if (!walletAddressValidator.isWalletAddressValid(walletUpdateRequest.currency, walletUpdateRequest.walletAddress)) {
                 httpServerExchange.statusCode = 400
                 httpServerExchange.sendJson(UpdateWalletErrorResponseDto(isAddressInvalid = true))
             } else try {

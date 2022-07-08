@@ -6,7 +6,8 @@ import autocoin.TestServer
 import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.app.ObjectMapperProvider
 import autocoin.balance.app.createJdbi
-import autocoin.balance.blockchain.eth.EthService
+import autocoin.balance.blockchain.MultiBlockchainWalletService
+import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.oauth.server.UserAccount
 import autocoin.balance.price.PriceService
@@ -90,7 +91,7 @@ class WalletControllerIT {
     private lateinit var startedDatabase: TestDb.StartedDatabase
     private lateinit var jdbi: Jdbi
     private lateinit var walletRepository: UserBlockChainWalletRepository
-    private lateinit var ethService: EthService
+    private lateinit var multiBlockchainWalletService: MultiBlockchainWalletService
     private lateinit var walletController: WalletController
     private lateinit var walletService: UserBlockChainWalletService
     private lateinit var startedServer: StartedServer
@@ -101,18 +102,19 @@ class WalletControllerIT {
         startedDatabase = TestDb.startDatabase()
         jdbi = createJdbi(startedDatabase.datasource)
         walletRepository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
-        ethService = mock()
+        multiBlockchainWalletService = mock()
         priceService = mock()
         walletService = UserBlockChainWalletService(
             userBlockChainWalletRepository = { walletRepository },
-            ethService = ethService
+            multiBlockchainWalletService = multiBlockchainWalletService
         )
         walletController = WalletController(
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBlockChainWalletRepository = { walletRepository },
-            ethWalletAddressValidator = EthWalletAddressValidator(),
-            ethService = ethService,
+            walletAddressValidator = MultiWalletAddressValidator(
+                walletAddressValidators = listOf(EthWalletAddressValidator())
+            ),
             userBlockChainWalletService = walletService,
             priceService = priceService,
         )
@@ -128,7 +130,7 @@ class WalletControllerIT {
     @Test
     fun shouldAddWallets() {
         // given
-        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
         startedServer = TestServer.startTestServer(walletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallets")
@@ -159,7 +161,7 @@ class WalletControllerIT {
     @Test
     fun shouldRespondWithDuplicatedWallets() {
         // given
-        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
         startedServer = TestServer.startTestServer(walletController)
         val duplicatedWalletAddress = sampleEthAddress1
         val request = Request.Builder()
@@ -188,7 +190,7 @@ class WalletControllerIT {
     @Test
     fun shouldRespondWithInvalidWallets() {
         // given
-        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
         startedServer = TestServer.startTestServer(walletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallets")
@@ -392,7 +394,7 @@ class WalletControllerIT {
     @Test
     fun shouldRefreshWalletsBalances() {
         // given
-        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
@@ -436,7 +438,7 @@ class WalletControllerIT {
     @Test
     fun shouldUpdateWallet() {
         // given
-        whenever(ethService.getEthBalance(any())).thenReturn(BigDecimal("0.56"))
+        whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
         val walletId = UUID.randomUUID().toString()
         val expectedWallet = UserBlockChainWallet(
             userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
