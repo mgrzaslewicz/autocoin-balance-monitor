@@ -21,6 +21,7 @@ data class UserExchangeWalletLastRefresh(
    val userAccountId: String,
    val exchange: String,
    val exchangeUserId: String,
+   val exchangeUserName: String,
    val errorMessage: String?,
    val insertTime: Timestamp,
 )

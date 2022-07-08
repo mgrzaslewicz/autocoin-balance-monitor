@@ -9,8 +9,8 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate
 interface UserExchangeWalletLastRefreshRepository {
     @SqlUpdate(
         """
-        INSERT INTO user_exchange_wallet_last_refresh (id, user_account_id, exchange, exchange_user_id, error_message, insert_time)
-        VALUES (:id, :userAccountId, :exchange, :exchangeUserId, :errorMessage, :insertTime)
+        INSERT INTO user_exchange_wallet_last_refresh (id, user_account_id, exchange, exchange_user_id, exchange_user_name, error_message, insert_time)
+        VALUES (:id, :userAccountId, :exchange, :exchangeUserId, :exchangeUserName, :errorMessage, :insertTime)
         """
     )
     fun insertWalletLastRefresh(@BindKotlin userExchangeWalletLastRefresh: UserExchangeWalletLastRefresh)

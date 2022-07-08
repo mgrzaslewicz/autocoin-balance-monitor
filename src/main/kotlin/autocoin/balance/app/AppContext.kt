@@ -205,7 +205,8 @@ class AppContext(private val appConfig: AppConfig) {
 
     val exchangeMediatorWalletService = RestExchangeMediatorWalletService(
         objectMapper = objectMapper,
-        httpClient = oauth2HttpClient,
+        // it might be a long operation to get all wallets from many exchanges
+        httpClient = oauth2HttpClient.newBuilder().callTimeout(1, TimeUnit.MINUTES).build(),
         exchangeMediatorApiUrl = appConfig.exchangeMediatorApiBaseUrl,
     )
 

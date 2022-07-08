@@ -52,6 +52,7 @@ class UserExchangeWalletServiceTest {
                 listOf(
                     ExchangeCurrencyBalancesDto(
                         exchangeUserId = "exchangeUserId1",
+                        exchangeUserName = "john1",
                         exchangeBalances = listOf(
                             ExchangeBalanceDto(
                                 exchangeName = "bittrex",
@@ -111,6 +112,7 @@ class UserExchangeWalletServiceTest {
                 listOf(
                     ExchangeCurrencyBalancesDto(
                         exchangeUserId = "exchangeUserId1",
+                        exchangeUserName = "john1",
                         exchangeBalances = listOf(
                             ExchangeBalanceDto(
                                 exchangeName = "binance",
@@ -121,6 +123,7 @@ class UserExchangeWalletServiceTest {
                     ),
                     ExchangeCurrencyBalancesDto(
                         exchangeUserId = "exchangeUserId2",
+                        exchangeUserName = "john2",
                         exchangeBalances = listOf(
                             ExchangeBalanceDto(
                                 exchangeName = "bittrex",
@@ -147,6 +150,7 @@ class UserExchangeWalletServiceTest {
             this.userAccountId == userAccountId
                     && this.exchange == "binance"
                     && this.exchangeUserId == "exchangeUserId1"
+                    && this.exchangeUserName == "john1"
                     && this.errorMessage == "API key expired"
                     && this.insertTime.time == currentTimeMillis
         })
@@ -154,6 +158,7 @@ class UserExchangeWalletServiceTest {
             this.userAccountId == userAccountId
                     && this.exchange == "bittrex"
                     && this.exchangeUserId == "exchangeUserId2"
+                    && this.exchangeUserName == "john2"
                     && this.errorMessage == null
                     && this.insertTime.time == currentTimeMillis
         })
@@ -172,6 +177,7 @@ class UserExchangeWalletServiceTest {
                         exchange = "poloniex",
                         errorMessage = "API key expired",
                         exchangeUserId = "exchangeUserId1",
+                        exchangeUserName = "john1",
                         insertTime = Timestamp(currentTimeMillis),
                     ),
                     UserExchangeWalletLastRefresh(
@@ -179,6 +185,7 @@ class UserExchangeWalletServiceTest {
                         exchange = "bittrex",
                         errorMessage = null,
                         exchangeUserId = "exchangeUserId1",
+                        exchangeUserName = "john1",
                         insertTime = Timestamp(currentTimeMillis),
                     ),
                     UserExchangeWalletLastRefresh(
@@ -186,6 +193,7 @@ class UserExchangeWalletServiceTest {
                         exchange = "bittrex",
                         errorMessage = null,
                         exchangeUserId = "exchangeUserId2",
+                        exchangeUserName = "john2",
                         insertTime = Timestamp(currentTimeMillis),
                     ),
                 )
@@ -244,6 +252,7 @@ class UserExchangeWalletServiceTest {
                 exchangeCurrencyBalances = listOf(
                     ExchangeCurrencyBalancesDto(
                         exchangeUserId = "exchangeUserId1",
+                        exchangeUserName = "john1",
                         exchangeBalances = listOf(
                             ExchangeBalanceDto(
                                 exchangeName = "poloniex",
@@ -274,6 +283,7 @@ class UserExchangeWalletServiceTest {
                     ),
                     ExchangeCurrencyBalancesDto(
                         exchangeUserId = "exchangeUserId2",
+                        exchangeUserName = "john2",
                         exchangeBalances = listOf(
                             ExchangeBalanceDto(
                                 exchangeName = "bittrex",
