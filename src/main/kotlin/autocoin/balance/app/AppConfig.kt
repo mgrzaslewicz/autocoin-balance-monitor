@@ -1,8 +1,6 @@
 package autocoin.balance.app
 
 import java.io.File
-import java.lang.System.getProperty
-import java.lang.System.getenv
 
 /**
  * Informational marker that configuration is related to some service within autocoin infrastructure that you can control
@@ -16,8 +14,18 @@ annotation class InternalDependency
 @Retention(AnnotationRetention.SOURCE)
 annotation class ExternalDependency
 
-data class AppConfig(
 
+/**
+ * Use it to start own container and fill it with sample data. When set to true,
+ * db connection parameters will be set as required JVM properties
+ */
+val shouldStartOwnDbContainer: Boolean by lazy { getPropertyThenEnv("START_OWN_DB_CONTAINER", "false").toBoolean() }
+
+private const val JDBC_URL_PARAMETER = "JDBC_URL"
+private const val DB_USERNAME_PARAMETER = "DB_USERNAME"
+private const val DB_PASSWORD_PARAMETER = "DB_PASSWORD"
+
+data class AppConfig(
     val appServerPort: Int = getPropertyThenEnv("APP_SERVER_PORT", "10022").toInt(),
     val serviceName: String = getPropertyThenEnv("SERVICE_NAME"),
 
@@ -38,19 +46,34 @@ data class AppConfig(
     val useMetrics: Boolean = getPropertyThenEnv("USE_METRICS", "true").toBoolean(),
 
     @InternalDependency
-    val telegrafHostname: String = getPropertyThenEnv("TELEGRAF_HOSTNAME", "telegraf")
-)
+    val telegrafHostname: String = getPropertyThenEnv("TELEGRAF_HOSTNAME", "telegraf"),
+
+    @InternalDependency
+    val jdbcUrl: String = getPropertyThenEnv(JDBC_URL_PARAMETER),
+    @InternalDependency
+    val dbUsername: String = getPropertyThenEnv(DB_USERNAME_PARAMETER),
+    @InternalDependency
+    val dbPassword: String = getPropertyThenEnv(DB_PASSWORD_PARAMETER),
+) {
+    companion object {
+        fun setJvmPropertiesForDbConnection(jdbcUrl: String, dbUsername: String, dbPassword: String) {
+            System.setProperty(JDBC_URL_PARAMETER, jdbcUrl)
+            System.setProperty(DB_USERNAME_PARAMETER, dbUsername)
+            System.setProperty(DB_PASSWORD_PARAMETER, dbPassword)
+        }
+    }
+}
 
 fun loadConfig(): AppConfig {
     return AppConfig()
 }
 
 private fun getPropertyThenEnv(propertyName: String): String {
-    return getProperty(propertyName, getenv(propertyName))
+    return System.getProperty(propertyName, System.getenv(propertyName))
 }
 
 private fun <T> getPropertyThenEnv(propertyName: String, existingPropertyParser: (String) -> T, defaultValue: T): T {
-    val propertyValue = getProperty(propertyName, getenv(propertyName))
+    val propertyValue = System.getProperty(propertyName, System.getenv(propertyName))
     return if (propertyValue != null) {
         existingPropertyParser(propertyValue)
     } else {
@@ -59,7 +82,7 @@ private fun <T> getPropertyThenEnv(propertyName: String, existingPropertyParser:
 }
 
 private fun getPropertyThenEnv(propertyName: String, defaultValue: String): String {
-    return getProperty(propertyName, getenv(propertyName).orElse(defaultValue))
+    return System.getProperty(propertyName, System.getenv(propertyName).orElse(defaultValue))
 }
 
 private fun String?.orElse(value: String) = this ?: value
