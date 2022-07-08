@@ -15,10 +15,6 @@ import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.blockchain.UserBlockChainWallet
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
 import io.undertow.security.api.AuthenticationMechanism
 import io.undertow.security.api.AuthenticationMechanism.AuthenticationMechanismOutcome
 import io.undertow.security.api.AuthenticationMechanism.ChallengeResult
@@ -44,9 +40,16 @@ import org.jdbi.v3.core.Jdbi
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 import java.util.*
 
+@ExtendWith(MockitoExtension::class)
 class BlockchainWalletControllerIT {
 
     private val httpClientWithoutAuthorization = OkHttpClient()
@@ -93,10 +96,14 @@ class BlockchainWalletControllerIT {
     private lateinit var startedDatabase: TestDb.StartedDatabase
     private lateinit var jdbi: Jdbi
     private lateinit var walletRepository: UserBlockChainWalletRepository
+
+    @Mock
     private lateinit var multiBlockchainWalletService: MultiBlockchainWalletService
     private lateinit var blockchainWalletController: BlockchainWalletController
     private lateinit var walletService: UserBlockChainWalletService
     private lateinit var startedServer: StartedServer
+
+    @Mock
     private lateinit var priceService: PriceService
 
     @BeforeEach
@@ -104,8 +111,6 @@ class BlockchainWalletControllerIT {
         startedDatabase = TestDb.startDatabase()
         jdbi = createJdbi(startedDatabase.datasource)
         walletRepository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
-        multiBlockchainWalletService = mock()
-        priceService = mock()
         walletService = UserBlockChainWalletService(
             userBlockChainWalletRepository = { walletRepository },
             multiBlockchainWalletService = multiBlockchainWalletService
@@ -192,7 +197,6 @@ class BlockchainWalletControllerIT {
     @Test
     fun shouldRespondWithInvalidWallets() {
         // given
-        whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/blockchain/wallets")

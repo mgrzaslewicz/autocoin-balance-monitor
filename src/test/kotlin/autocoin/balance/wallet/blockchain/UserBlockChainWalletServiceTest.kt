@@ -3,9 +3,9 @@ package autocoin.balance.wallet.blockchain
 import autocoin.balance.api.controller.UpdateBlockchainWalletRequestDto
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.eth.EthService
-import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.*
 import java.math.BigDecimal
 
 class UserBlockChainWalletServiceTest {

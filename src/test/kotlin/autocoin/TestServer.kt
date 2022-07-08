@@ -2,9 +2,9 @@ package autocoin
 
 import autocoin.balance.api.ApiController
 import autocoin.balance.api.ServerBuilder
-import com.nhaarman.mockitokotlin2.mock
 import io.undertow.Undertow
 import me.alexpanov.net.FreePortFinder
+import org.mockito.kotlin.mock
 
 data class StartedServer(
     val port: Int,
