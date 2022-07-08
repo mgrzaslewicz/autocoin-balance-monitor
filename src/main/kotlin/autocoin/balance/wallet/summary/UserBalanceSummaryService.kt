@@ -25,20 +25,24 @@ data class CurrencyBalanceSummary(
     val wallets: List<BlockchainWalletCurrencySummary>,
 )
 
+interface UserBalanceSummaryService {
+    fun getCurrencyBalanceSummary(userAccountId: String): List<CurrencyBalanceSummary>
 
-class UserBalanceSummaryService(
+}
+
+class DefaultUserBalanceSummaryService(
     private val userBlockChainWalletRepository: () -> UserBlockChainWalletRepository,
     private val userExchangeWalletRepository: () -> UserExchangeWalletRepository,
     private val userBalanceSummaryRepository: () -> UserBalanceSummaryRepository,
     private val priceService: PriceService,
-) {
-    fun getCurrencyBalanceSummary(userAccountId: String): List<CurrencyBalanceSummary> {
+) : UserBalanceSummaryService {
+    override fun getCurrencyBalanceSummary(userAccountId: String): List<CurrencyBalanceSummary> {
         return userBalanceSummaryRepository().findUniqueUserCurrencies(userAccountId).map { currency ->
 
             val userBlockChainWallets = userBlockChainWalletRepository().findManyByUserAccountIdAndCurrency(userAccountId, currency = currency)
             val userExchangeWallets = userExchangeWalletRepository().findManyByUserAccountIdAndCurrency(userAccountId, currency = currency)
 
-            val sumOfBalances = if (userBlockChainWallets.all { it.balance == null }) {
+            val sumOfBalances = if (userBlockChainWallets.all { it.balance == null } && userExchangeWallets.isEmpty()) {
                 null
             } else {
                 userBlockChainWallets.fold(BigDecimal.ZERO) { acc, it ->

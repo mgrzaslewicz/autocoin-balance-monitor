@@ -28,8 +28,8 @@ import autocoin.balance.wallet.exchange.RestExchangeMediatorWalletService
 import autocoin.balance.wallet.exchange.UserExchangeWalletLastRefreshRepository
 import autocoin.balance.wallet.exchange.UserExchangeWalletRepository
 import autocoin.balance.wallet.exchange.UserExchangeWalletService
+import autocoin.balance.wallet.summary.DefaultUserBalanceSummaryService
 import autocoin.balance.wallet.summary.UserBalanceSummaryRepository
-import autocoin.balance.wallet.summary.UserBalanceSummaryService
 import autocoin.metrics.JsonlFileStatsDClient
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
@@ -242,7 +242,7 @@ class AppContext(private val appConfig: AppConfig) {
         priceService = priceService,
     )
 
-    val userBalanceSummaryService = UserBalanceSummaryService(
+    val userBalanceSummaryService = DefaultUserBalanceSummaryService(
         priceService = priceService,
         userBalanceSummaryRepository = { jdbi.get().onDemand(UserBalanceSummaryRepository::class.java) },
         userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
