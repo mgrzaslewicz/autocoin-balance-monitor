@@ -8,6 +8,7 @@ import autocoin.balance.app.ObjectMapperProvider
 import autocoin.balance.app.createJdbi
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
+import autocoin.balance.blockchain.btc.BtcWalletAddressValidator
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.oauth.server.UserAccount
 import autocoin.balance.price.PriceService
@@ -52,6 +53,7 @@ class WalletControllerIT {
     private val objectMapper = ObjectMapperProvider().createObjectMapper()
     private val sampleEthAddress1 = "0x19ce8df35f56bcabb8426d145b8e7984bef90a22"
     private val sampleEthAddress2 = "0x19ce8df35f56bcabb8426d145b8e7984bef90a23"
+    private val sampleBtcAddress1 = "bc1qhq66uyw53n7sfk200czg556mdmdg8t7nvgdkdd"
 
     class AuthenticatedHttpHandlerWrapper : HttpHandlerWrapper {
         private val userAccount = UserAccount(
@@ -113,7 +115,7 @@ class WalletControllerIT {
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBlockChainWalletRepository = { walletRepository },
             walletAddressValidator = MultiWalletAddressValidator(
-                walletAddressValidators = listOf(EthWalletAddressValidator())
+                walletAddressValidators = listOf(BtcWalletAddressValidator(), EthWalletAddressValidator())
             ),
             userBlockChainWalletService = walletService,
             priceService = priceService,
@@ -223,7 +225,7 @@ class WalletControllerIT {
     @Test
     fun shouldGetWallets() {
         // given
-        whenever(priceService.getUsdValue(eq("ETH"), eq(BigDecimal("2.78")))).thenReturn(BigDecimal("10.5"))
+        whenever(priceService.getUsdValueOrNull(eq("ETH"), eq(BigDecimal("2.78")))).thenReturn(BigDecimal("10.5"))
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
@@ -275,7 +277,7 @@ class WalletControllerIT {
     @Test
     fun shouldGetCurrencyBalance() {
         // given
-        whenever(priceService.getUsdValue("ETH", BigDecimal("5.65"))).thenReturn(BigDecimal("2000.0"))
+        whenever(priceService.getUsdValueOrNull("ETH", BigDecimal("5.65"))).thenReturn(BigDecimal("2000.0"))
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
@@ -458,7 +460,7 @@ class WalletControllerIT {
                 objectMapper.writeValueAsString(
                     UpdateWalletRequestDto(
                         id = walletId,
-                        walletAddress = sampleEthAddress2,
+                        walletAddress = sampleBtcAddress1,
                         description = "new description",
                         currency = "BTC",
                     )
@@ -470,7 +472,7 @@ class WalletControllerIT {
         // then
         assertThat(response.code).isEqualTo(200)
         val updatedWallet = walletRepository.findOneById(walletId)
-        assertThat(updatedWallet.walletAddress).isEqualTo(sampleEthAddress2)
+        assertThat(updatedWallet.walletAddress).isEqualTo(sampleBtcAddress1)
         assertThat(updatedWallet.description).isEqualTo("new description")
         assertThat(updatedWallet.currency).isEqualTo("BTC")
         assertThat(updatedWallet.balance).isEqualTo(BigDecimal("0.56"))

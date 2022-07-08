@@ -6,6 +6,7 @@ import autocoin.balance.api.controller.HealthController
 import autocoin.balance.api.controller.WalletController
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
+import autocoin.balance.blockchain.btc.BtcService
 import autocoin.balance.blockchain.btc.BtcWalletAddressValidator
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.blockchain.eth.Web3EthService
@@ -152,6 +153,7 @@ class AppContext(private val appConfig: AppConfig) {
     val oauth2BearerTokenAuthHandlerWrapper = Oauth2BearerTokenAuthHandlerWrapper(oauth2AuthenticationMechanism)
 
     val ethService = Web3EthService(ethNodeUrl = appConfig.ethNodeUrl)
+    val btcService = BtcService(httpClient = httpClientWithoutAuthorization)
 
     val ethWalletAddressValidator = EthWalletAddressValidator()
     val btcWalletAddressValidator = BtcWalletAddressValidator()
@@ -169,10 +171,15 @@ class AppContext(private val appConfig: AppConfig) {
     )
 
     val multiBlockchainWalletService = MultiBlockchainWalletService(
-        blockchainWalletServices = listOf(ethService)
+        blockchainWalletServices = listOf(
+            btcService,
+            ethService,
+        )
     )
+
     val multiWalletAddressValidator = MultiWalletAddressValidator(
         walletAddressValidators = listOf(
+            btcWalletAddressValidator,
             ethWalletAddressValidator,
         )
     )

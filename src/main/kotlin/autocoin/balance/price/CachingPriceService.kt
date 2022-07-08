@@ -1,49 +1,74 @@
 package autocoin.balance.price
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.Expiry
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.ConcurrentHashMap
 
 class CachingPriceService(
     private val decorated: PriceService,
-    private val maxPriceCacheAgeMs: Long = Duration.of(1, ChronoUnit.HOURS).toMillis(),
-    private val currentTimeMillisFunction: () -> Long = System::currentTimeMillis,
+    private val maxPriceCacheAgeNanos: Long = Duration.of(1, ChronoUnit.HOURS).toNanos(),
+    private val maxPriceCacheNullValueAgeNanos: Long = Duration.of(1, ChronoUnit.MINUTES).toNanos(),
 ) : PriceService {
 
-    private data class ValueWithTimestamp(
-        val value: BigDecimal,
-        val calculatedAtMillis: Long
-    )
+    private val nullValueMarker = -BigDecimal.ONE
 
-    private val priceCache = ConcurrentHashMap<String, ValueWithTimestamp>()
-    private val currencyLocks = ConcurrentHashMap<String, String>()
+    /**
+     * When getting price failed, keep null value cached much shorter than successfully fetched price
+     */
+    private val usdPriceCache: Cache<String, BigDecimal> = Caffeine.newBuilder()
+        .expireAfter(object : Expiry<String, BigDecimal> {
 
-    override fun getUsdPrice(currencyCode: String): BigDecimal {
-        synchronized(currencyLocks.computeIfAbsent(currencyCode) { currencyCode }) {
-            if (priceCache.containsKey(currencyCode)) {
-                val valueWithTimestamp = priceCache[currencyCode]!!
-                if (isOlderThanMaxCacheAge(valueWithTimestamp.calculatedAtMillis)) {
-                    priceCache.remove(currencyCode)
+            override fun expireAfterCreate(key: String, value: BigDecimal, currentTime: Long): Long {
+                return if (value === nullValueMarker) {
+                    maxPriceCacheNullValueAgeNanos
+                } else {
+                    maxPriceCacheAgeNanos
                 }
             }
 
-            priceCache.computeIfAbsent(currencyCode) {
-                ValueWithTimestamp(
-                    calculatedAtMillis = currentTimeMillisFunction(),
-                    value = decorated.getUsdPrice(currencyCode)
-                )
+            override fun expireAfterUpdate(key: String, value: BigDecimal, currentTime: Long, currentDuration: Long): Long {
+                return currentDuration
             }
+
+            override fun expireAfterRead(key: String, value: BigDecimal, currentTime: Long, currentDuration: Long): Long {
+                return currentDuration
+            }
+
+        })
+        .build()
+
+    override fun getUsdPrice(currencyCode: String): BigDecimal {
+        return usdPriceCache.get(currencyCode) {
+            decorated.getUsdPrice(currencyCode)
         }
-        return priceCache.getValue(currencyCode).value
+    }
+
+    override fun getUsdPriceOrNull(currencyCode: String): BigDecimal? {
+        val usdPrice = usdPriceCache.get(currencyCode) {
+            decorated.getUsdPriceOrNull(currencyCode) ?: nullValueMarker
+        }
+        return if (usdPrice === nullValueMarker) {
+            null
+        } else {
+            usdPrice
+        }
     }
 
     override fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal {
-        val price = getUsdPrice(currencyCode)
-        return amount.multiply(price)
+        val usdPrice = getUsdPrice(currencyCode)
+        return amount.multiply(usdPrice)
     }
 
-    private fun isOlderThanMaxCacheAge(calculatedAtMillis: Long): Boolean {
-        return currentTimeMillisFunction() - calculatedAtMillis > maxPriceCacheAgeMs
+    override fun getUsdValueOrNull(currencyCode: String, amount: BigDecimal): BigDecimal? {
+        val usdPrice = getUsdPriceOrNull(currencyCode)
+        return if (usdPrice == null) {
+            null
+        } else {
+            amount.multiply(usdPrice)
+        }
     }
+
 }
