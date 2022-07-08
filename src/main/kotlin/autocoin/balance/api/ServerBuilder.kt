@@ -15,7 +15,7 @@ class ServerBuilder(
     fun build(): Undertow {
         val routingHandler = RoutingHandler()
         apiControllers.forEach {
-            it.apiHandlers().forEach { handler ->
+            it.apiEndpoints().forEach { handler ->
                 routingHandler.add(handler.method, handler.urlTemplate, handler.httpHandler)
             }
         }

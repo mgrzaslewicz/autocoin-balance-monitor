@@ -21,5 +21,5 @@ class HealthController(
         }
     }
 
-    override fun apiHandlers(): List<ApiEndpoint> = listOf(getHealth())
+    override fun apiEndpoints(): List<ApiEndpoint> = listOf(getHealth())
 }
