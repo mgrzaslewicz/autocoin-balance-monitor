@@ -37,3 +37,13 @@ create table user_exchange_wallet_last_refresh
     insert_time        timestamp,
     constraint uq_user_account_id_exchange_exchange_user_id unique (user_account_id, exchange, exchange_user_id)
 );
+
+--changeset mgrzaslewicz:3-add-currency-asset
+create table user_currency_asset
+(
+    id              varchar(36) primary key,
+    user_account_id varchar(36)  not null,
+    currency        varchar(255) not null,
+    balance         numeric      not null,
+    description     varchar(1024)
+);
