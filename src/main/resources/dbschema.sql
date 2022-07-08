@@ -8,5 +8,6 @@ create table user_blockchain_wallet
     currency        varchar(255) not null,
     wallet_address  varchar(255) not null,
     balance         numeric,
-    description     varchar(1024)
+    description     varchar(1024),
+    constraint uq_user_account_id_wallet_address unique (user_account_id, wallet_address)
 );
