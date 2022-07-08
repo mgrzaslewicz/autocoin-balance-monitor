@@ -38,25 +38,26 @@ data class CurrencyAssetSummaryDto(
 fun ExchangeCurrencySummary.toDto() = ExchangeCurrencySummaryDto(
     exchangeName = this.exchangeName,
     balance = this.balance.toPlainString(),
-    valueInOtherCurrency = this.valueInOtherCurrency?.map { entry -> entry.key to entry.value?.toPlainString() }?.toMap(),
+    valueInOtherCurrency = this.valueInOtherCurrency?.toStringValueMap(),
 )
 
 fun BlockchainWalletCurrencySummary.toDto() = BlockchainWalletCurrencySummaryDto(
     walletAddress = this.walletAddress,
     balance = this.balance?.toPlainString(),
-    valueInOtherCurrency = this.valueInOtherCurrency.map { entry -> entry.key to entry.value?.toPlainString() }.toMap(),
+    valueInOtherCurrency = this.valueInOtherCurrency.toStringValueMap(),
 )
 
 fun UserCurrencyAssetWithValue.toSummaryDto() = CurrencyAssetSummaryDto(
     balance = this.userCurrencyAsset.balance.toPlainString(),
     description = this.userCurrencyAsset.description,
-    valueInOtherCurrency = this.valueInOtherCurrency.map { entry -> entry.key to entry.value?.toPlainString() }.toMap(),
+    valueInOtherCurrency = this.valueInOtherCurrency.toStringValueMap(),
 )
 
 data class CurrencyBalanceSummaryDto(
     val currency: String,
     val balance: String?,
     val valueInOtherCurrency: Map<String, String?>?,
+    val priceInOtherCurrency: Map<String, String?>?,
     val exchanges: List<ExchangeCurrencySummaryDto>,
     val wallets: List<BlockchainWalletCurrencySummaryDto>,
     val currencyAssets: List<CurrencyAssetSummaryDto>,
@@ -65,7 +66,8 @@ data class CurrencyBalanceSummaryDto(
 fun CurrencyBalanceSummary.toDto() = CurrencyBalanceSummaryDto(
     currency = this.currency,
     balance = this.balance?.toPlainString(),
-    valueInOtherCurrency = this.valueInOtherCurrency?.map { entry -> entry.key to entry.value?.toPlainString() }?.toMap(),
+    valueInOtherCurrency = this.valueInOtherCurrency?.toStringValueMap(),
+    priceInOtherCurrency = this.priceInOtherCurrency?.toStringValueMap(),
     exchanges = this.exchanges.map { it.toDto() },
     wallets = this.wallets.map { it.toDto() },
     currencyAssets = this.currencyAssets.map { it.toSummaryDto() },

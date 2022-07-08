@@ -69,6 +69,7 @@ class UserCurrencyAssetServiceTest {
         val tested = UserCurrencyAssetService(
             priceService = priceService.apply {
                 whenever(this.getUsdValue("BTC", BigDecimal("10.5"))).thenReturn(BigDecimal("20000"))
+                whenever(this.getUsdPrice("BTC")).thenReturn(BigDecimal("26000"))
             },
             currencyAssetRepository = {
                 userCurrencyAssetRepository.apply {
@@ -80,8 +81,16 @@ class UserCurrencyAssetServiceTest {
         val userCurrencyAssetsSummary = tested.getUserCurrencyAssetsSummary(userAccountId)
         // then
         assertThat(userCurrencyAssetsSummary).containsExactlyInAnyOrder(
-            UserCurrencyAssetSummaryWithValue(userCurrencyAssetSummary = currencyAssetSummary1, valueInOtherCurrency = mapOf("USD" to BigDecimal("20000"))),
-            UserCurrencyAssetSummaryWithValue(userCurrencyAssetSummary = currencyAssetSummary2, valueInOtherCurrency = mapOf("USD" to null))
+            UserCurrencyAssetSummaryWithPriceAndValue(
+                userCurrencyAssetSummary = currencyAssetSummary1,
+                valueInOtherCurrency = mapOf("USD" to BigDecimal("20000")),
+                priceInOtherCurrency = mapOf("USD" to BigDecimal("26000")),
+            ),
+            UserCurrencyAssetSummaryWithPriceAndValue(
+                userCurrencyAssetSummary = currencyAssetSummary2,
+                valueInOtherCurrency = mapOf("USD" to null),
+                priceInOtherCurrency = mapOf("USD" to null),
+            )
         )
     }
 

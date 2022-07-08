@@ -15,8 +15,8 @@ data class CurrencyPriceDto(
 )
 
 interface PriceService {
-    fun getUsdPrice(currencyCode: String): BigDecimal? = getPrice(currencyCode, "USD")
-    fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal? = getPrice(currencyCode, "USD")?.multiply(amount)
+    fun getUsdPrice(currencyCode: String): BigDecimal? = getPrice(currencyCode, counterCurrency = "USD")
+    fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal? = getPrice(currencyCode, counterCurrency = "USD")?.multiply(amount)
 
     fun getPrice(baseCurrency: String, counterCurrency: String): BigDecimal?
     fun getValue(baseCurrency: String, counterCurrency: String, baseCurrencyAmount: BigDecimal): BigDecimal? = getPrice(baseCurrency, counterCurrency)?.multiply(baseCurrencyAmount)
@@ -35,7 +35,11 @@ class RestPriceService(
     private companion object : KLogging()
 
     override fun getPrice(baseCurrency: String, counterCurrency: String): BigDecimal? {
-        return tryFetchPrice(baseCurrency, counterCurrency)
+        return if (baseCurrency == counterCurrency) {
+            return BigDecimal.ONE
+        } else {
+            tryFetchPrice(baseCurrency, counterCurrency)
+        }
     }
 
     private fun tryFetchPrice(baseCurrency: String, counterCurrency: String): BigDecimal? {

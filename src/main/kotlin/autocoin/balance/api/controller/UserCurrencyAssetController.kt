@@ -26,6 +26,7 @@ data class UserCurrencyAssetSummaryResponseDto(
     val currency: String,
     val balance: String,
     val valueInOtherCurrency: Map<String, String?>,
+    val priceInOtherCurrency: Map<String, String?>,
 )
 
 data class UserCurrencyAssetsResponseDto(
@@ -38,13 +39,14 @@ fun UserCurrencyAssetWithValue.toDto() = UserCurrencyAssetResponseDto(
     currency = this.userCurrencyAsset.currency,
     description = this.userCurrencyAsset.description,
     balance = this.userCurrencyAsset.balance.toPlainString(),
-    valueInOtherCurrency = this.valueInOtherCurrency.map { entry -> entry.key to entry.value?.toPlainString() }.toMap(),
+    valueInOtherCurrency = this.valueInOtherCurrency.toStringValueMap(),
 )
 
-fun UserCurrencyAssetSummaryWithValue.toDto() = UserCurrencyAssetSummaryResponseDto(
+fun UserCurrencyAssetSummaryWithPriceAndValue.toDto() = UserCurrencyAssetSummaryResponseDto(
     currency = this.userCurrencyAssetSummary.currency,
     balance = this.userCurrencyAssetSummary.balance.toPlainString(),
-    valueInOtherCurrency = this.valueInOtherCurrency.map { entry -> entry.key to entry.value?.toPlainString() }.toMap(),
+    valueInOtherCurrency = this.valueInOtherCurrency.toStringValueMap(),
+    priceInOtherCurrency = this.priceInOtherCurrency.toStringValueMap(),
 )
 
 

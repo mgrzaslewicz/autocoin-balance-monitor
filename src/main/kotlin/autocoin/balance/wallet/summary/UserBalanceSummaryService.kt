@@ -26,6 +26,7 @@ data class CurrencyBalanceSummary(
     val currency: String,
     val balance: BigDecimal?,
     val valueInOtherCurrency: Map<String, BigDecimal?>?,
+    val priceInOtherCurrency: Map<String, BigDecimal?>?,
     val exchanges: List<ExchangeCurrencySummary>,
     val wallets: List<BlockchainWalletCurrencySummary>,
     val currencyAssets: List<UserCurrencyAssetWithValue>
@@ -68,6 +69,7 @@ class DefaultUserBalanceSummaryService(
                 currency = currency,
                 balance = sumOfBalances,
                 valueInOtherCurrency = mapOf("USD" to if (sumOfBalances == null) null else priceService.getUsdValue(currency, sumOfBalances)),
+                priceInOtherCurrency = mapOf("USD" to priceService.getUsdPrice(currency)),
                 exchanges = userExchangeWallets.map {
                     ExchangeCurrencySummary(
                         exchangeName = it.exchange,

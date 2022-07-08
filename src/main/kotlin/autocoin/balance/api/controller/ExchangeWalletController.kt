@@ -76,7 +76,8 @@ class ExchangeWalletController(
                 val currencyBalance = userExchangeWalletRepository().selectUserCurrencyBalance(userAccountId)
                 httpServerExchange.sendJson(currencyBalance.map {
                     val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                    it.toDto(usdBalance)
+                    val usdPrice = priceService.getUsdPrice(it.currency)
+                    it.toDto(usdBalance, usdPrice)
                 })
             } else {
                 httpServerExchange.sendJson(emptyList<UserCurrencyBalance>())
