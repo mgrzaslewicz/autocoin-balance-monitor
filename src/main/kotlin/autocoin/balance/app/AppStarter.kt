@@ -16,7 +16,7 @@ class AppStarter(private val appContext: AppContext) {
 
         with(appContext) {
             logger.info { "Running DB migrations" }
-            appContext.createAndSetDbConnection()
+            appContext.createDatasource()
             appContext.liquibase.update(Contexts())
 
             logger.info { "Scheduling jobs" }

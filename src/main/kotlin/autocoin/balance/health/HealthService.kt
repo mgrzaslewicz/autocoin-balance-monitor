@@ -3,6 +3,7 @@ package autocoin.balance.health
 import mu.KLogging
 import java.sql.Connection
 import java.util.concurrent.atomic.AtomicReference
+import javax.sql.DataSource
 
 data class Health(
     val healthy: Boolean,
@@ -10,14 +11,14 @@ data class Health(
     val unhealthyReasons: List<String>,
 )
 
-class HealthService(private val dbConnection: AtomicReference<Connection>) {
+class HealthService(private val datasource: AtomicReference<DataSource>) {
 
     private companion object : KLogging()
 
     private fun isDbConnectionAlive(): Boolean {
         return try {
-            if (dbConnection.get() != null) {
-                dbConnection.get().prepareStatement("select 1").execute()
+            if (datasource.get() != null) {
+                datasource.get().connection.prepareStatement("select 1").execute()
                 true
             } else {
                 false
