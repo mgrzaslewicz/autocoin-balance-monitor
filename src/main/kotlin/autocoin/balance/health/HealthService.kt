@@ -1,42 +1,36 @@
 package autocoin.balance.health
 
 import mu.KLogging
-import java.sql.Connection
-import java.util.concurrent.atomic.AtomicReference
-import javax.sql.DataSource
 
 data class Health(
     val healthy: Boolean,
-    val connectedToDb: Boolean,
+    val healthChecks: List<HealthCheckResult>,
+) {
+    fun findHealthCheckResult(healthCheckClass: Class<out HealthCheck>): HealthCheckResult {
+        return healthChecks.first { it.healthCheckClass == healthCheckClass }
+    }
+}
+
+data class HealthCheckResult(
+    val description: String,
+    val healthy: Boolean,
+    val healthCheckClass: Class<HealthCheck>,
     val unhealthyReasons: List<String>,
 )
 
-class HealthService(private val datasource: AtomicReference<DataSource>) {
+interface HealthCheck {
+    fun doHealthCheck(): HealthCheckResult
+}
+
+class HealthService(private val healthChecks: List<HealthCheck>) {
 
     private companion object : KLogging()
 
-    private fun isDbConnectionAlive(): Boolean {
-        return try {
-            if (datasource.get() != null) {
-                datasource.get().connection.prepareStatement("select 1").execute()
-                true
-            } else {
-                false
-            }
-        } catch (e: Exception) {
-            logger.error(e) { "DB connection issue" }
-            false
-        }
-    }
-
     fun getHealth(): Health {
-        val connectedToDb = isDbConnectionAlive()
+        val healthCheckResults = healthChecks.map { it.doHealthCheck() }
         val health = Health(
-            healthy = connectedToDb,
-            connectedToDb = connectedToDb,
-            unhealthyReasons = listOfNotNull(
-                if (!connectedToDb) "DB connection issue" else null
-            )
+            healthy = healthCheckResults.all { it.healthy },
+            healthChecks = healthCheckResults,
         )
         return health
     }
