@@ -8,6 +8,6 @@ data class UserBlockChainWallet(
    val userAccountId: String,
    val walletAddress: String,
    val currency: String,
-   val balance: BigDecimal? = null,
-   val description: String? = null,
+   val balance: BigDecimal?,
+   val description: String?,
 )
