@@ -15,10 +15,11 @@ data class CurrencyPriceDto(
 )
 
 interface PriceService {
-    fun getUsdPrice(currencyCode: String): BigDecimal
-    fun getUsdPriceOrNull(currencyCode: String): BigDecimal?
-    fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal
-    fun getUsdValueOrNull(currencyCode: String, amount: BigDecimal): BigDecimal?
+    fun getUsdPrice(currencyCode: String): BigDecimal? = getPrice(currencyCode, "USD")
+    fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal? = getPrice(currencyCode, "USD")?.multiply(amount)
+
+    fun getPrice(baseCurrency: String, counterCurrency: String): BigDecimal?
+    fun getValue(baseCurrency: String, counterCurrency: String, baseCurrencyAmount: BigDecimal): BigDecimal? = getPrice(baseCurrency, counterCurrency)?.multiply(baseCurrencyAmount)
 }
 
 class PriceResponseException(message: String) : IllegalStateException(message)
@@ -33,52 +34,36 @@ class RestPriceService(
 
     private companion object : KLogging()
 
-    override fun getUsdPrice(currencyCode: String): BigDecimal {
-        if (currencyCode == "USD") {
-            return BigDecimal.ONE
-        }
-        return fetchUsdPrice(currencyCode)
+    override fun getPrice(baseCurrency: String, counterCurrency: String): BigDecimal? {
+        return tryFetchPrice(baseCurrency, counterCurrency)
     }
 
-    override fun getUsdPriceOrNull(currencyCode: String): BigDecimal? {
+    private fun tryFetchPrice(baseCurrency: String, counterCurrency: String): BigDecimal? {
         return try {
-            getUsdPrice(currencyCode)
+            fetchPrice(baseCurrency, counterCurrency)
         } catch (e: Exception) {
-            logger.error(e) { "[$currencyCode/USD] Could not get price" }
+            logger.error(e) { "Could not get $baseCurrency/$counterCurrency price" }
             null
         }
     }
 
-    override fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal {
-        val price = getUsdPrice(currencyCode)
-        return amount.multiply(price)
-    }
-
-    override fun getUsdValueOrNull(currencyCode: String, amount: BigDecimal): BigDecimal? {
-        return try {
-            getUsdValue(currencyCode, amount)
-        } catch (e: Exception) {
-            logger.error(e) { "[$currencyCode/USD] Could not get price" }
-            null
-        }
-    }
-
-    private fun fetchUsdPrice(currencyCode: String): BigDecimal {
-        logger.info { "[$currencyCode/USD] Fetching price" }
+    private fun fetchPrice(baseCurrency: String, counterCurrency: String): BigDecimal {
+        val currencyPair = "$baseCurrency/$counterCurrency"
+        logger.info { "[$currencyPair] Fetching price" }
         val millisBefore = currentTimeMillisFunction()
         val request = Request.Builder()
-            .url("$priceApiUrl/prices/USD?currencyCodes=${currencyCode}")
+            .url("$priceApiUrl/prices/$counterCurrency?currencyCodes=${baseCurrency}")
             .get()
             .build()
         val priceResponse = httpClient.newCall(request).execute()
         priceResponse.use {
-            metricsService.recordFetchPriceTime(currentTimeMillisFunction() - millisBefore, "currencyCode=$currencyCode,statusCode=${priceResponse.code}")
+            metricsService.recordFetchPriceTime(currentTimeMillisFunction() - millisBefore, "currencyCode=$baseCurrency,statusCode=${priceResponse.code}")
             if (!priceResponse.isSuccessful) {
-                throw PriceResponseException("[$currencyCode/USD] Could not get price, status=${priceResponse.code}, body=${priceResponse.body?.string()}, headers=${priceResponse.headers}")
+                throw PriceResponseException("[$currencyPair] Could not get price, status=${priceResponse.code}, body=${priceResponse.body?.string()}, headers=${priceResponse.headers}")
             }
             val priceDto = objectMapper.readValue(priceResponse.body?.string(), Array<CurrencyPriceDto>::class.java)
             if (priceDto.size != 1) {
-                throw PriceResponseException("[$currencyCode/USD] No expected price in response body")
+                throw PriceResponseException("[$currencyPair] No expected price in response body")
             }
             return priceDto.first().price.toBigDecimal()
         }

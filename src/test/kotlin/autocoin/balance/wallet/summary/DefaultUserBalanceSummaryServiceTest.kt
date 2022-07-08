@@ -131,11 +131,11 @@ class DefaultUserBalanceSummaryServiceTest {
                     )
                 )
             )
-        whenever(priceService.getUsdValueOrNull("ETH", "15.6".toBigDecimal())).thenReturn("50000".toBigDecimal())
-        whenever(priceService.getUsdValueOrNull("LTC", "318.70".toBigDecimal())).thenReturn("200".toBigDecimal())
-        whenever(priceService.getUsdValueOrNull("LTC", "0.5".toBigDecimal())).thenReturn("1".toBigDecimal())
-        whenever(priceService.getUsdValueOrNull("LTC", "218.15".toBigDecimal())).thenReturn("100".toBigDecimal())
-        whenever(priceService.getUsdValueOrNull("LTC", "100.05".toBigDecimal())).thenReturn("50".toBigDecimal())
+        whenever(priceService.getUsdValue("ETH", "15.6".toBigDecimal())).thenReturn("50000".toBigDecimal())
+        whenever(priceService.getUsdValue("LTC", "318.70".toBigDecimal())).thenReturn("200".toBigDecimal())
+        whenever(priceService.getUsdValue("LTC", "0.5".toBigDecimal())).thenReturn("1".toBigDecimal())
+        whenever(priceService.getUsdValue("LTC", "218.15".toBigDecimal())).thenReturn("100".toBigDecimal())
+        whenever(priceService.getUsdValue("LTC", "100.05".toBigDecimal())).thenReturn("50".toBigDecimal())
         // when
         val currencyBalanceSummaryList = tested.getCurrencyBalanceSummary(userAccountId)
         // then

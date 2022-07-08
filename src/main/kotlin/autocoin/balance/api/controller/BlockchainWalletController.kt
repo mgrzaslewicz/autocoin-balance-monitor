@@ -182,7 +182,7 @@ class BlockchainWalletController(
 
     private fun HttpServerExchange.sendUserWallet(walletId: String) {
         val wallet = userBlockChainWalletRepository().findOneById(walletId)
-        val usdBalance = if (wallet.balance == null) null else priceService.getUsdValueOrNull(wallet.currency, wallet.balance)
+        val usdBalance = if (wallet.balance == null) null else priceService.getUsdValue(wallet.currency, wallet.balance)
         this.sendJson(wallet.toDto(usdBalance))
     }
 
@@ -224,7 +224,7 @@ class BlockchainWalletController(
 
     private fun tryGetUsdValue(currency: String, currencyBalance: BigDecimal?): BigDecimal? {
         return if (currencyBalance != null) {
-            priceService.getUsdValueOrNull(currency, currencyBalance)
+            priceService.getUsdValue(currency, currencyBalance)
         } else {
             null
         }

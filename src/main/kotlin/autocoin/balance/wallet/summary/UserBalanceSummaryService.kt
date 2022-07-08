@@ -61,19 +61,19 @@ class DefaultUserBalanceSummaryService(
             CurrencyBalanceSummary(
                 currency = currency,
                 balance = sumOfBalances,
-                valueInOtherCurrency = mapOf("USD" to if (sumOfBalances == null) null else priceService.getUsdValueOrNull(currency, sumOfBalances)),
+                valueInOtherCurrency = mapOf("USD" to if (sumOfBalances == null) null else priceService.getUsdValue(currency, sumOfBalances)),
                 exchanges = userExchangeWallets.map {
                     ExchangeCurrencySummary(
                         exchangeName = it.exchange,
                         balance = it.balance,
-                        valueInOtherCurrency = mapOf("USD" to priceService.getUsdValueOrNull(currency, it.balance))
+                        valueInOtherCurrency = mapOf("USD" to priceService.getUsdValue(currency, it.balance))
                     )
                 },
                 wallets = userBlockChainWallets.map {
                     BlockchainWalletCurrencySummary(
                         walletAddress = it.walletAddress,
                         balance = it.balance,
-                        valueInOtherCurrency = mapOf("USD" to if (it.balance == null) null else priceService.getUsdValueOrNull(currency, it.balance))
+                        valueInOtherCurrency = mapOf("USD" to if (it.balance == null) null else priceService.getUsdValue(currency, it.balance))
                     )
                 },
             )

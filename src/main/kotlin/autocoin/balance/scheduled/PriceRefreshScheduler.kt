@@ -29,7 +29,7 @@ class PriceRefreshScheduler(
                 if (firstTime) {
                     logger.info { "Got ${uniqueCurrencies.size} prices to refresh" }
                 }
-                cachingPriceService.refreshCurrencyPrices(uniqueCurrencies)
+                cachingPriceService.refreshUsdPrices(uniqueCurrencies)
                 if (firstTime) {
                     logger.info { "Refreshed ${uniqueCurrencies.size} prices" }
                 }

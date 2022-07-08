@@ -42,41 +42,22 @@ class CachingPriceService(
 
     private fun String.toUsdPriceCacheKey() = "$this/USD"
 
-    override fun getUsdPrice(currencyCode: String): BigDecimal {
-        return priceCache.get(currencyCode.toUsdPriceCacheKey()) {
-            decorated.getUsdPrice(currencyCode)
+    override fun getPrice(baseCurrency: String, counterCurrency: String): BigDecimal? {
+        val cacheKey = "$baseCurrency/$counterCurrency"
+        val price = priceCache.get(cacheKey) {
+            decorated.getPrice(baseCurrency, counterCurrency) ?: nullValueMarker
         }
-    }
-
-    override fun getUsdPriceOrNull(currencyCode: String): BigDecimal? {
-        val usdPrice = priceCache.get(currencyCode.toUsdPriceCacheKey()) {
-            decorated.getUsdPriceOrNull(currencyCode) ?: nullValueMarker
-        }
-        return if (usdPrice === nullValueMarker) {
+        return if (price === nullValueMarker) {
             null
         } else {
-            usdPrice
+            price
         }
     }
 
-    override fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal {
-        val usdPrice = getUsdPrice(currencyCode)
-        return amount.multiply(usdPrice)
-    }
-
-    override fun getUsdValueOrNull(currencyCode: String, amount: BigDecimal): BigDecimal? {
-        val usdPrice = getUsdPriceOrNull(currencyCode)
-        return if (usdPrice == null) {
-            null
-        } else {
-            amount.multiply(usdPrice)
-        }
-    }
-
-    fun refreshCurrencyPrices(currencies: List<String>) {
+    fun refreshUsdPrices(currencies: List<String>) {
         currencies.forEach {
             priceCache.invalidate(it.toUsdPriceCacheKey())
-            getUsdPriceOrNull(it)
+            getUsdPrice(it)
         }
     }
 

@@ -180,7 +180,7 @@ class BlockchainWalletControllerIT {
     @Test
     fun shouldGetWallets() {
         // given
-        whenever(priceService.getUsdValueOrNull(eq("ETH"), eq(BigDecimal("2.78")))).thenReturn(BigDecimal("10.5"))
+        whenever(priceService.getUsdValue(eq("ETH"), eq(BigDecimal("2.78")))).thenReturn(BigDecimal("10.5"))
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
@@ -232,7 +232,7 @@ class BlockchainWalletControllerIT {
     @Test
     fun shouldGetCurrencyBalance() {
         // given
-        whenever(priceService.getUsdValueOrNull("ETH", BigDecimal("5.65"))).thenReturn(BigDecimal("2000.0"))
+        whenever(priceService.getUsdValue("ETH", BigDecimal("5.65"))).thenReturn(BigDecimal("2000.0"))
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,

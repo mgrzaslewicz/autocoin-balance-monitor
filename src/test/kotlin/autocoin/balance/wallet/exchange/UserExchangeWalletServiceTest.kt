@@ -233,8 +233,8 @@ class UserExchangeWalletServiceTest {
             )
         }
         val priceService = mock<PriceService>().apply {
-            whenever(this.getUsdValueOrNull("ETH", "20".toBigDecimal())).thenReturn("100.0".toBigDecimal())
-            whenever(this.getUsdValueOrNull("BTC", "31".toBigDecimal())).thenReturn("2000.0".toBigDecimal())
+            whenever(this.getUsdValue("ETH", "20".toBigDecimal())).thenReturn("100.0".toBigDecimal())
+            whenever(this.getUsdValue("BTC", "31".toBigDecimal())).thenReturn("2000.0".toBigDecimal())
         }
         val tested = UserExchangeWalletService(
             userExchangeWalletLastRefreshRepository = { userExchangeWalletLastRefreshRepository },
