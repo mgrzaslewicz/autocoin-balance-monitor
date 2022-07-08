@@ -4,7 +4,6 @@ import autocoin.balance.app.createDatasource
 import autocoin.balance.app.createLiquibase
 import liquibase.Contexts
 import org.testcontainers.containers.PostgreSQLContainer
-import java.util.Map
 import javax.sql.DataSource
 
 class TestDb {
@@ -21,7 +20,7 @@ class TestDb {
             dbContainer.withUsername(dbUser)
             dbContainer.withPassword(dbPassword)
             // use in memory storage for faster execution
-            dbContainer.withTmpFs(Map.of("/var/lib/postgresql/data", "rw"))
+            dbContainer.withTmpFs(mapOf("/var/lib/postgresql/data" to "rw"))
             dbContainer.start()
 
             val datasource = createDatasource(dbContainer.jdbcUrl, "sampleUser", "samplePassword")

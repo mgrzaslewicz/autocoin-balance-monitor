@@ -54,7 +54,7 @@ fun createLiquibase(datasource: DataSource): Liquibase {
     return liquibase
 }
 
-fun createDatasource(jdbcUrl: String, username: String, password: String): DataSource {
+fun createDatasource(jdbcUrl: String, username: String, password: String): HikariDataSource {
     val config = HikariConfig().apply {
         this.jdbcUrl = jdbcUrl
         this.username = username
@@ -106,7 +106,7 @@ class AppContext(private val appConfig: AppConfig) {
      * lazy because object creation (AppContext instance) should have no side effects
      * and getConnection actually makes a connection to DB
      */
-    val datasource = AtomicReference<DataSource>()
+    val datasource = AtomicReference<HikariDataSource>()
 
     val jdbi = AtomicReference<Jdbi>()
 

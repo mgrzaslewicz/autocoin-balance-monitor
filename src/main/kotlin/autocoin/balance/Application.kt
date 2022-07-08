@@ -21,7 +21,11 @@ private fun startOwnDbContainer() {
     dbContainer.start()
 
     logger.warn { "Own database container started" }
-    AppConfig.setJvmPropertiesForDbConnection(jdbcUrl = dbContainer.jdbcUrl, dbUsername = dbUser, dbPassword = dbPassword)
+    AppConfig.setJvmPropertiesForDbConnection(
+        jdbcUrl = dbContainer.jdbcUrl,
+        dbUsername = dbUser,
+        dbPassword = dbPassword
+    )
 
 }
 
