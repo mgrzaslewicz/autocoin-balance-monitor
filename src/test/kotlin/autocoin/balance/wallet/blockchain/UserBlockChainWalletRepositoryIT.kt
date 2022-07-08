@@ -1,7 +1,6 @@
 package autocoin.balance.wallet.blockchain
 
 import autocoin.TestDb
-import autocoin.balance.app.createJdbi
 import org.assertj.core.api.Assertions.assertThat
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException
@@ -11,19 +10,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.util.*
-import javax.sql.DataSource
 
 class UserBlockChainWalletRepositoryIT {
 
     private lateinit var startedDatabase: TestDb.StartedDatabase
-    private lateinit var datasource: DataSource
     private lateinit var jdbi: Jdbi
 
     @BeforeEach
     fun setup() {
         startedDatabase = TestDb.startDatabase()
-        datasource = startedDatabase.datasource
-        jdbi = createJdbi(datasource)
+        jdbi = startedDatabase.jdbi
     }
 
     @AfterEach

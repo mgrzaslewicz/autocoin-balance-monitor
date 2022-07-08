@@ -1,7 +1,6 @@
 package autocoin.balance.wallet.exchange
 
 import autocoin.TestDb
-import autocoin.balance.app.createJdbi
 import org.assertj.core.api.Assertions.assertThat
 import org.jdbi.v3.core.Jdbi
 import org.junit.jupiter.api.AfterEach
@@ -9,18 +8,15 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.sql.Timestamp
 import java.util.*
-import javax.sql.DataSource
 
 class UserExchangeWalletLastRefreshRepositoryIT {
     private lateinit var startedDatabase: TestDb.StartedDatabase
-    private lateinit var datasource: DataSource
     private lateinit var jdbi: Jdbi
 
     @BeforeEach
     fun setup() {
         startedDatabase = TestDb.startDatabase()
-        datasource = startedDatabase.datasource
-        jdbi = createJdbi(datasource)
+        jdbi = startedDatabase.jdbi
     }
 
     @AfterEach

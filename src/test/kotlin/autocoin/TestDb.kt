@@ -1,8 +1,10 @@
 package autocoin
 
 import autocoin.balance.app.createDatasource
+import autocoin.balance.app.createJdbi
 import autocoin.balance.app.createLiquibase
 import liquibase.Contexts
+import org.jdbi.v3.core.Jdbi
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
 
@@ -10,6 +12,7 @@ class TestDb {
     data class StartedDatabase(
         val datasource: DataSource,
         val container: PostgreSQLContainer<*>,
+        val jdbi: Jdbi,
     )
 
     companion object {
@@ -29,6 +32,7 @@ class TestDb {
             return StartedDatabase(
                 datasource = datasource,
                 container = dbContainer,
+                jdbi = createJdbi(datasource),
             )
         }
     }
