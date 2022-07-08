@@ -1,7 +1,9 @@
 package autocoin.balance.wallet
 
+import autocoin.balance.api.controller.UpdateWalletRequestDto
 import autocoin.balance.blockchain.eth.EthService
 import com.nhaarman.mockitokotlin2.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -93,6 +95,113 @@ class UserBlockChainWalletServiceTest {
         tested.refreshWalletBalances(userAccountId)
         // then
         verify(walletRepository).findManyByUserAccountId(userAccountId)
+        verify(walletRepository, never()).updateWallet(any())
+    }
+
+    @Test
+    fun shouldUpdateWallet() {
+        // given
+        val userAccountId = "a-2-c"
+        val walletAddress = "wallet-address-1"
+        val walletId = "1-2-3"
+        val wallet = UserBlockChainWallet(
+            id = walletId,
+            userAccountId = userAccountId,
+            balance = BigDecimal("11.2"),
+            description = null,
+            walletAddress = walletAddress,
+            currency = "ETH",
+        )
+        val walletRepository = mock<UserBlockChainWalletRepository>().apply {
+            whenever(this.existsByUserAccountIdAndId(userAccountId, walletId)).thenReturn(true)
+            whenever(this.findOneById(walletId)).thenReturn(wallet)
+        }
+        val tested = UserBlockChainWalletService(userBlockChainWalletRepository = { walletRepository }, ethService = mock())
+        // when
+        val newWalletAddress = "wallet-address-2"
+        val updateResult = tested.updateWallet(
+            userAccountId,
+            UpdateWalletRequestDto(
+                id = walletId,
+                walletAddress = newWalletAddress,
+                description = "sample description",
+                currency = "BTC"
+            )
+        )
+        // then
+        verify(walletRepository).updateWallet(
+            eq(
+                UserBlockChainWallet(
+                    id = walletId,
+                    userAccountId = userAccountId,
+                    balance = BigDecimal("11.2"),
+                    description = "sample description",
+                    walletAddress = newWalletAddress,
+                    currency = "BTC",
+                )
+            )
+        )
+        assertThat(updateResult.isSuccessful()).isTrue
+    }
+
+    @Test
+    fun shouldNotUpdateWalletBelongingToOtherUserOrNonExisting() {
+        // given
+        val userAccountId = "a-2-c"
+        val walletId = "1-2-3"
+        val walletRepository = mock<UserBlockChainWalletRepository>().apply {
+            whenever(this.existsByUserAccountIdAndId(userAccountId, walletId)).thenReturn(false)
+        }
+        val tested = UserBlockChainWalletService(userBlockChainWalletRepository = { walletRepository }, ethService = mock())
+        // when
+        val updateResult = tested.updateWallet(
+            userAccountId,
+            UpdateWalletRequestDto(
+                id = walletId,
+                walletAddress = "new wallet address",
+                description = "sample description",
+                currency = "BTC"
+            )
+        )
+        // then
+        assertThat(updateResult.isSuccessful()).isFalse
+        assertThat(updateResult.userHasNoWalletWithGivenId).isTrue
+        verify(walletRepository, never()).updateWallet(any())
+    }
+    @Test
+    fun shouldNotUpdateWalletWhenUserAlreadyHasAnotherOneWithGivenWalletAddress() {
+        // given
+        val userAccountId = "a-2-c"
+        val walletAddress = "wallet-address-1"
+        val newWalletAddress = "wallet-address-2"
+        val walletId = "1-2-3"
+        val wallet = UserBlockChainWallet(
+            id = walletId,
+            userAccountId = userAccountId,
+            balance = BigDecimal("11.2"),
+            description = null,
+            walletAddress = walletAddress,
+            currency = "ETH",
+        )
+        val walletRepository = mock<UserBlockChainWalletRepository>().apply {
+            whenever(this.existsByUserAccountIdAndId(userAccountId, walletId)).thenReturn(true)
+            whenever(this.findOneById(walletId)).thenReturn(wallet)
+            whenever(this.existsByUserAccountIdAndWalletAddress(userAccountId, newWalletAddress)).thenReturn(true)
+        }
+        val tested = UserBlockChainWalletService(userBlockChainWalletRepository = { walletRepository }, ethService = mock())
+        // when
+        val updateResult = tested.updateWallet(
+            userAccountId,
+            UpdateWalletRequestDto(
+                id = walletId,
+                walletAddress = newWalletAddress,
+                description = "sample description",
+                currency = "BTC"
+            )
+        )
+        // then
+        assertThat(updateResult.isSuccessful()).isFalse
+        assertThat(updateResult.userAlreadyHasWalletWithThisAddress).isTrue
         verify(walletRepository, never()).updateWallet(any())
     }
 }

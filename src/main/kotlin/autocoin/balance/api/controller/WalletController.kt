@@ -149,8 +149,8 @@ class WalletController(
                     httpServerExchange.responseSender.send(
                         objectMapper.writeValueAsString(
                             UpdateWalletErrorResponseDto(
-                                isAddressDuplicated = updateResult.isAddressDuplicated,
-                                isIdInvalid = updateResult.isIdInvalid,
+                                isAddressDuplicated = updateResult.userAlreadyHasWalletWithThisAddress,
+                                isIdInvalid = updateResult.userHasNoWalletWithGivenId,
                             )
                         )
                     )

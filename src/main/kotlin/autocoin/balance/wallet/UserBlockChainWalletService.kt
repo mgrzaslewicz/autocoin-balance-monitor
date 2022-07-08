@@ -5,10 +5,10 @@ import autocoin.balance.blockchain.eth.EthService
 import mu.KLogging
 
 data class WalletUpdateResult(
-    val isAddressDuplicated: Boolean,
-    val isIdInvalid: Boolean,
+    val userHasNoWalletWithGivenId: Boolean,
+    val userAlreadyHasWalletWithThisAddress: Boolean,
 ) {
-    fun isSuccessful() = !isAddressDuplicated && !isIdInvalid
+    fun isSuccessful() = !userAlreadyHasWalletWithThisAddress && !userHasNoWalletWithGivenId
 }
 
 class UserBlockChainWalletService(
@@ -29,28 +29,32 @@ class UserBlockChainWalletService(
     }
 
     fun updateWallet(userAccountId: String, walletUpdateRequest: UpdateWalletRequestDto): WalletUpdateResult {
-        var isWalletAddressDuplicated = false
-        var isWalletIdInvalid = false
-        if (userBlockChainWalletRepository().existsByUserAccountIdAndWalletAddress(userAccountId, walletUpdateRequest.walletAddress)) {
-            isWalletAddressDuplicated = true
-        } else if (!userBlockChainWalletRepository().existsByUserAccountIdAndId(userAccountId, walletUpdateRequest.id)) {
-            isWalletIdInvalid = true
+        var userAlreadyHasWalletWithThisAddress = false
+        var userHasNoWalletWithGivenId = false
+        if (!userBlockChainWalletRepository().existsByUserAccountIdAndId(userAccountId, walletUpdateRequest.id)) {
+            userHasNoWalletWithGivenId = true
         } else {
-            val walletToUpdate = userBlockChainWalletRepository().findOneById(walletUpdateRequest.id)
-                .copy(
+            val walletBeforeUpdate = userBlockChainWalletRepository().findOneById(walletUpdateRequest.id)
+            if (walletBeforeUpdate.walletAddress != walletUpdateRequest.walletAddress &&
+                userBlockChainWalletRepository().existsByUserAccountIdAndWalletAddress(userAccountId, walletUpdateRequest.walletAddress)
+            ) {
+                userAlreadyHasWalletWithThisAddress = true
+            } else {
+                val walletToUpdate = walletBeforeUpdate.copy(
                     description = walletUpdateRequest.description,
                     currency = walletUpdateRequest.currency,
                     walletAddress = walletUpdateRequest.walletAddress
                 )
-            userBlockChainWalletRepository().updateWallet(walletToUpdate)
-            val newBalance = ethService.getEthBalance(walletToUpdate.walletAddress)
-            if (newBalance != null) {
-                userBlockChainWalletRepository().updateWallet(walletToUpdate.copy(balance = newBalance))
+                userBlockChainWalletRepository().updateWallet(walletToUpdate)
+                val newBalance = ethService.getEthBalance(walletToUpdate.walletAddress)
+                if (newBalance != null) {
+                    userBlockChainWalletRepository().updateWallet(walletToUpdate.copy(balance = newBalance))
+                }
             }
         }
         return WalletUpdateResult(
-            isAddressDuplicated = isWalletAddressDuplicated,
-            isIdInvalid = isWalletIdInvalid,
+            userHasNoWalletWithGivenId = userHasNoWalletWithGivenId,
+            userAlreadyHasWalletWithThisAddress = userAlreadyHasWalletWithThisAddress,
         )
     }
 
