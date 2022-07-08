@@ -9,7 +9,7 @@ import java.math.BigDecimal
 
 data class UserCurrencyBalance(
     val currency: String,
-    val balance: BigDecimal,
+    val balance: BigDecimal?,
 )
 
 interface UserBlockChainWalletRepository {

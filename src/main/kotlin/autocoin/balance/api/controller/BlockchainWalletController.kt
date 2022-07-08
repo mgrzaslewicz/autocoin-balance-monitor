@@ -71,13 +71,13 @@ fun CreateBlockchainWalletRequestDto.toUserBlockChainWallet(userAccountId: Strin
 
 data class UserCurrencyBalanceResponseDto(
     val currency: String,
-    val balance: String,
+    val balance: String?,
     val usdBalance: String?, // in case of with getting usd price, better send anything
 )
 
 fun UserCurrencyBalance.toDto(usdBalance: BigDecimal?) = UserCurrencyBalanceResponseDto(
     currency = this.currency,
-    balance = this.balance.stripTrailingZeros().toPlainString(),
+    balance = this.balance?.stripTrailingZeros()?.toPlainString(),
     usdBalance = usdBalance?.stripTrailingZeros()?.toPlainString(),
 )
 
