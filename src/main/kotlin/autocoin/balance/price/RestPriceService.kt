@@ -66,6 +66,7 @@ class RestPriceService(
                 }
                 return priceDto.first().price.toBigDecimal()
             } catch (e: Exception) {
+                logger.error(e) {"[$currencyCode/USD] Could not parse response body"}
                 val errorMessage = "[$currencyCode/USD] Could not parse response body. Exception=${e.message}"
                 throw PriceResponseException(message = errorMessage, reasonTag = "response-parse-error")
             }

@@ -11,7 +11,8 @@ import java.lang.System.setProperty
  */
 fun main() {
     setProperty("SERVICE_NAME", "autocoin-balance-monitor")
-     setProperty("OAUTH2_API_URL", "http://localhost:9002")
+    setProperty("EXCHANGE_MEDIATOR_API_URL", "http://localhost:9001")
+    setProperty("OAUTH2_API_URL", "http://localhost:9002")
     setProperty("OAUTH_CLIENT_SECRET", "changeme")
     setProperty("USE_METRICS", "false")
     setProperty("TELEGRAF_HOSTNAME", "localhost")
