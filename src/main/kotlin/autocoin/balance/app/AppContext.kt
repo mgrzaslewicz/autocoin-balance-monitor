@@ -247,6 +247,9 @@ class AppContext(private val appConfig: AppConfig) {
         userBalanceSummaryRepository = { jdbi.get().onDemand(UserBalanceSummaryRepository::class.java) },
         userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
         userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
+        executorService = Executors.newCachedThreadPool(),
+        userExchangeWalletService = userExchangeWalletService,
+        userBlockChainWalletService = userBlockChainWalletService,
     )
 
     val balanceSummaryController = BalanceSummaryController(

@@ -2,8 +2,11 @@ package autocoin.balance.wallet.summary
 
 import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
+import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
 import autocoin.balance.wallet.exchange.UserExchangeWalletRepository
+import autocoin.balance.wallet.exchange.UserExchangeWalletService
 import java.math.BigDecimal
+import java.util.concurrent.ExecutorService
 
 data class ExchangeCurrencySummary(
     val exchangeName: String,
@@ -27,6 +30,7 @@ data class CurrencyBalanceSummary(
 
 interface UserBalanceSummaryService {
     fun getCurrencyBalanceSummary(userAccountId: String): List<CurrencyBalanceSummary>
+    fun refreshBalanceSummary(userAccountId: String): List<CurrencyBalanceSummary>
 
 }
 
@@ -35,6 +39,9 @@ class DefaultUserBalanceSummaryService(
     private val userExchangeWalletRepository: () -> UserExchangeWalletRepository,
     private val userBalanceSummaryRepository: () -> UserBalanceSummaryRepository,
     private val priceService: PriceService,
+    private val executorService: ExecutorService,
+    private val userBlockChainWalletService: UserBlockChainWalletService,
+    private val userExchangeWalletService: UserExchangeWalletService,
 ) : UserBalanceSummaryService {
     override fun getCurrencyBalanceSummary(userAccountId: String): List<CurrencyBalanceSummary> {
         return userBalanceSummaryRepository().findUniqueUserCurrencies(userAccountId).map { currency ->
@@ -72,4 +79,17 @@ class DefaultUserBalanceSummaryService(
             )
         }
     }
+
+    override fun refreshBalanceSummary(userAccountId: String): List<CurrencyBalanceSummary> {
+        val refreshBlockChainWalletsFuture = executorService.submit {
+            userBlockChainWalletService.refreshWalletBalances(userAccountId)
+        }
+        val refreshExchangeWalletsFuture = executorService.submit {
+            userExchangeWalletService.refreshWalletBalances(userAccountId)
+        }
+        refreshBlockChainWalletsFuture.get()
+        refreshExchangeWalletsFuture.get()
+        return getCurrencyBalanceSummary(userAccountId)
+    }
+
 }

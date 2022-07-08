@@ -11,6 +11,7 @@ import autocoin.balance.wallet.summary.ExchangeCurrencySummary
 import autocoin.balance.wallet.summary.UserBalanceSummaryService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.undertow.server.HttpHandler
+import io.undertow.server.HttpServerExchange
 import io.undertow.util.Methods
 import mu.KLogging
 
@@ -74,18 +75,38 @@ class BalanceSummaryController(
             val userAccountId = httpServerExchange.userAccountId()
             logger.info { "User $userAccountId is requesting balance summary" }
             val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
-            httpServerExchange.responseSender.send(
-                objectMapper.writeValueAsString(
-                    BalanceSummaryResponseDto(
-                        currencyBalances = currencyBalanceSummaryList.map { it.toDto() }
-                    )
+            httpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList)
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
+    private fun HttpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList: List<CurrencyBalanceSummary>) {
+        this.responseSender.send(
+            objectMapper.writeValueAsString(
+                BalanceSummaryResponseDto(
+                    currencyBalances = currencyBalanceSummaryList.map { it.toDto() }
                 )
             )
+        )
+    }
+
+    private fun refreshUserBalanceSummary() = object : ApiEndpoint {
+        override val method = Methods.POST
+        override val urlTemplate = "/balance/summary"
+
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is requesting balance refresh" }
+            userBalanceSummaryService.refreshBalanceSummary(userAccountId)
+            logger.info { "User $userAccountId is refreshed balance" }
+            val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
+            httpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList)
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
     override fun apiEndpoints(): List<ApiEndpoint> = listOf(
-        getUserBalanceSummary()
+        getUserBalanceSummary(),
+        refreshUserBalanceSummary(),
     )
 
 }
