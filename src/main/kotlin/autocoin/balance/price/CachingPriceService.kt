@@ -18,7 +18,7 @@ class CachingPriceService(
     /**
      * When getting price failed, keep null value cached much shorter than successfully fetched price
      */
-    private val usdPriceCache: Cache<String, BigDecimal> = Caffeine.newBuilder()
+    private val priceCache: Cache<String, BigDecimal> = Caffeine.newBuilder()
         .expireAfter(object : Expiry<String, BigDecimal> {
 
             override fun expireAfterCreate(key: String, value: BigDecimal, currentTime: Long): Long {
@@ -41,13 +41,13 @@ class CachingPriceService(
         .build()
 
     override fun getUsdPrice(currencyCode: String): BigDecimal {
-        return usdPriceCache.get(currencyCode) {
+        return priceCache.get("$currencyCode/USD") {
             decorated.getUsdPrice(currencyCode)
         }
     }
 
     override fun getUsdPriceOrNull(currencyCode: String): BigDecimal? {
-        val usdPrice = usdPriceCache.get(currencyCode) {
+        val usdPrice = priceCache.get("$currencyCode/USD") {
             decorated.getUsdPriceOrNull(currencyCode) ?: nullValueMarker
         }
         return if (usdPrice === nullValueMarker) {

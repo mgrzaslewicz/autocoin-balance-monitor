@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.*
 
-class WalletControllerIT {
+class BlockchainWalletControllerIT {
 
     private val httpClientWithoutAuthorization = OkHttpClient()
     private val objectMapper = ObjectMapperProvider().createObjectMapper()
@@ -94,7 +94,7 @@ class WalletControllerIT {
     private lateinit var jdbi: Jdbi
     private lateinit var walletRepository: UserBlockChainWalletRepository
     private lateinit var multiBlockchainWalletService: MultiBlockchainWalletService
-    private lateinit var walletController: WalletController
+    private lateinit var blockchainWalletController: BlockchainWalletController
     private lateinit var walletService: UserBlockChainWalletService
     private lateinit var startedServer: StartedServer
     private lateinit var priceService: PriceService
@@ -110,7 +110,7 @@ class WalletControllerIT {
             userBlockChainWalletRepository = { walletRepository },
             multiBlockchainWalletService = multiBlockchainWalletService
         )
-        walletController = WalletController(
+        blockchainWalletController = BlockchainWalletController(
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBlockChainWalletRepository = { walletRepository },
@@ -133,13 +133,13 @@ class WalletControllerIT {
     fun shouldAddWallets() {
         // given
         whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets")
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
-                        CreateWalletRequestDto(
+                        CreateBlockchainWalletRequestDto(
                             walletAddress = sampleEthAddress1,
                             currency = "ETH",
                             description = "sample description"
@@ -164,14 +164,14 @@ class WalletControllerIT {
     fun shouldRespondWithDuplicatedWallets() {
         // given
         whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val duplicatedWalletAddress = sampleEthAddress1
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets")
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
-                        CreateWalletRequestDto(
+                        CreateBlockchainWalletRequestDto(
                             walletAddress = duplicatedWalletAddress,
                             currency = "ETH",
                             description = "sample description"
@@ -185,7 +185,7 @@ class WalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(400)
-        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), CreateWalletsErrorResponseDto::class.java)
+        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), CreateBlockchainWalletsErrorResponseDto::class.java)
         assertThat(addWalletsErrorResponse.duplicatedAddresses).containsExactly(duplicatedWalletAddress)
     }
 
@@ -193,18 +193,18 @@ class WalletControllerIT {
     fun shouldRespondWithInvalidWallets() {
         // given
         whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets")
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
-                        CreateWalletRequestDto(
+                        CreateBlockchainWalletRequestDto(
                             walletAddress = "invalid address 1",
                             currency = "ETH",
                             description = "sample description"
                         ),
-                        CreateWalletRequestDto(
+                        CreateBlockchainWalletRequestDto(
                             walletAddress = "invalid address 2",
                             currency = "ETH",
                             description = "sample description"
@@ -218,7 +218,7 @@ class WalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(400)
-        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), CreateWalletsErrorResponseDto::class.java)
+        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), CreateBlockchainWalletsErrorResponseDto::class.java)
         assertThat(addWalletsErrorResponse.invalidAddresses).containsExactly("invalid address 1", "invalid address 2")
     }
 
@@ -248,16 +248,16 @@ class WalletControllerIT {
         walletRepository.insertWallet(expectedWallets[0])
         walletRepository.insertWallet(expectedWallets[1])
 
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets")
             .get()
             .build()
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<WalletResponseDto>::class.java)
+        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
         SoftAssertions().apply {
             assertThat(walletsResponse).hasSize(2)
             assertThat(walletsResponse[0].currency).isEqualTo("ETH")
@@ -300,9 +300,9 @@ class WalletControllerIT {
         walletRepository.insertWallet(expectedWallets[0])
         walletRepository.insertWallet(expectedWallets[1])
 
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets/currency/balance")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets/currency/balance")
             .get()
             .build()
         // when
@@ -334,16 +334,16 @@ class WalletControllerIT {
 
         walletRepository.insertWallet(wallet)
 
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets/$walletId")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets/$walletId")
             .get()
             .build()
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val walletsResponse = objectMapper.readValue(response.body?.string(), WalletResponseDto::class.java)
+        val walletsResponse = objectMapper.readValue(response.body?.string(), BlockchainWalletResponseDto::class.java)
         SoftAssertions().apply {
             assertThat(walletsResponse.currency).isEqualTo("ETH")
             assertThat(walletsResponse.description).isEqualTo("sample description 1")
@@ -355,9 +355,9 @@ class WalletControllerIT {
     @Test
     fun shouldReturn404WhenGetNonExistingWallet() {
         // given
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets/nonexistingwallet")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets/nonexistingwallet")
             .get()
             .build()
         // when
@@ -382,9 +382,9 @@ class WalletControllerIT {
 
         walletRepository.insertWallet(wallet)
 
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets/$walletId")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets/$walletId")
             .get()
             .build()
         // when
@@ -419,16 +419,16 @@ class WalletControllerIT {
         walletRepository.insertWallet(expectedWallets[0])
         walletRepository.insertWallet(expectedWallets[1])
 
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallets/balance/refresh")
+            .url("http://localhost:${startedServer.port}/blockchain/wallets/balance/refresh")
             .post(EMPTY_REQUEST)
             .build()
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<WalletResponseDto>::class.java)
+        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
         SoftAssertions().apply {
             assertThat(walletsResponse).hasSize(2)
             assertThat(walletsResponse[0].balance).isEqualTo("0.56")
@@ -453,12 +453,12 @@ class WalletControllerIT {
 
         walletRepository.insertWallet(expectedWallet)
 
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallet")
+            .url("http://localhost:${startedServer.port}/blockchain/wallet")
             .put(
                 objectMapper.writeValueAsString(
-                    UpdateWalletRequestDto(
+                    UpdateBlockchainWalletRequestDto(
                         id = walletId,
                         walletAddress = sampleBtcAddress1,
                         description = "new description",
@@ -492,9 +492,9 @@ class WalletControllerIT {
 
         walletRepository.insertWallet(walletToRemove)
 
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallet/$sampleEthAddress1")
+            .url("http://localhost:${startedServer.port}/blockchain/wallet/$sampleEthAddress1")
             .delete(EMPTY_REQUEST)
             .build()
         // when
@@ -507,7 +507,7 @@ class WalletControllerIT {
     @Test
     fun shouldReturn404WhenDeletingNonExistingWallet() {
         // given
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallet/nonexistingwallet")
             .delete(EMPTY_REQUEST)
@@ -534,7 +534,7 @@ class WalletControllerIT {
 
         walletRepository.insertWallet(wallet)
 
-        startedServer = TestServer.startTestServer(walletController)
+        startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/wallet/$walletId")
             .delete(EMPTY_REQUEST)

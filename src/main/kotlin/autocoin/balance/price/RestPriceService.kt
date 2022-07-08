@@ -31,9 +31,6 @@ class RestPriceService(
     private val currentTimeMillisFunction: () -> Long = System::currentTimeMillis,
 ) : PriceService {
 
-    //    private companion object {
-//        private val logger = PeriodicalLogger(wrapped = KotlinLogging.logger {}).scheduleLogFlush()
-//    }
     private companion object : KLogging()
 
     override fun getUsdPrice(currencyCode: String): BigDecimal {
@@ -77,7 +74,7 @@ class RestPriceService(
         priceResponse.use {
             metricsService.recordFetchPriceTime(currentTimeMillisFunction() - millisBefore, "currencyCode=$currencyCode,statusCode=${priceResponse.code}")
             if (!priceResponse.isSuccessful) {
-                throw PriceResponseException("[$currencyCode/USD] Could not get price, response error code=${priceResponse.code}")
+                throw PriceResponseException("[$currencyCode/USD] Could not get price, status=${priceResponse.code}, body=${priceResponse.body?.string()}, headers=${priceResponse.headers}")
             }
             val priceDto = objectMapper.readValue(priceResponse.body?.string(), Array<CurrencyPriceDto>::class.java)
             if (priceDto.size != 1) {

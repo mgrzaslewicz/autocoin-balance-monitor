@@ -1,9 +1,10 @@
 package autocoin.balance.app
 
 import autocoin.balance.api.ServerBuilder
+import autocoin.balance.api.controller.BlockchainWalletController
 import autocoin.balance.api.controller.EthWalletController
+import autocoin.balance.api.controller.ExchangeWalletController
 import autocoin.balance.api.controller.HealthController
-import autocoin.balance.api.controller.WalletController
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.blockchain.btc.BtcService
@@ -24,6 +25,10 @@ import autocoin.balance.price.RestPriceService
 import autocoin.balance.scheduled.HealthMetricsScheduler
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
+import autocoin.balance.wallet.exchange.RestExchangeMediatorWalletService
+import autocoin.balance.wallet.exchange.UserExchangeWalletLastRefreshRepository
+import autocoin.balance.wallet.exchange.UserExchangeWalletRepository
+import autocoin.balance.wallet.exchange.UserExchangeWalletService
 import autocoin.metrics.JsonlFileStatsDClient
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
@@ -198,7 +203,29 @@ class AppContext(private val appConfig: AppConfig) {
         )
     )
 
-    val walletController = WalletController(
+    val exchangeMediatorWalletService = RestExchangeMediatorWalletService(
+        objectMapper = objectMapper,
+        httpClient = oauth2HttpClient,
+        exchangeMediatorApiUrl = appConfig.exchangeMediatorApiBaseUrl,
+    )
+
+
+    val userExchangeWalletService = UserExchangeWalletService(
+        exchangeMediatorWalletService = exchangeMediatorWalletService,
+        userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
+        userExchangeWalletLastRefreshRepository = { jdbi.get().onDemand(UserExchangeWalletLastRefreshRepository::class.java) },
+        priceService = priceService,
+    )
+
+    val exchangeWalletController = ExchangeWalletController(
+        objectMapper = objectMapper,
+        oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
+        userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
+        userExchangeWalletService = userExchangeWalletService,
+        priceService = priceService,
+    )
+
+    val blockchainWalletController = BlockchainWalletController(
         objectMapper = objectMapper,
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
         userBlockChainWalletRepository = { jdbi.get().onDemand(UserBlockChainWalletRepository::class.java) },
@@ -207,7 +234,12 @@ class AppContext(private val appConfig: AppConfig) {
         priceService = priceService,
     )
 
-    val controllers = listOf(healthController, ethWalletController, walletController)
+    val controllers = listOf(
+        healthController,
+        ethWalletController,
+        blockchainWalletController,
+        exchangeWalletController
+    )
 
     val server = ServerBuilder(appConfig.appServerPort, controllers, metricsService).build()
 
