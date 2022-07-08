@@ -248,6 +248,7 @@ class UserExchangeWalletServiceTest {
         // then
         assertThat(walletBalances).isEqualTo(
             ExchangeWalletBalancesDto(
+                isShowingRealBalance = true,
                 refreshTimeMillis = currentTimeMillis,
                 exchangeCurrencyBalances = listOf(
                     ExchangeCurrencyBalancesDto(

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
@@ -72,6 +73,7 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
+            isUserInProPlanFunction = { true },
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -84,6 +86,7 @@ class BalanceSummaryControllerIT {
         assertThat(response.code).isEqualTo(200)
         assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java)).isEqualTo(
             BalanceSummaryResponseDto(
+                isShowingRealBalance = true,
                 currencyBalances = listOf(
                     CurrencyBalanceSummaryDto(
                         currency = "ABC",
@@ -110,6 +113,28 @@ class BalanceSummaryControllerIT {
     }
 
     @Test
+    fun shouldGetFreePlanBalanceSummary() {
+        // given
+        val userBalanceSummaryService = mock<UserBalanceSummaryService>()
+        val balanceSummaryController = BalanceSummaryController(
+            objectMapper = objectMapper,
+            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
+            userBalanceSummaryService = userBalanceSummaryService,
+            isUserInProPlanFunction = { false },
+        )
+        startedServer = TestServer.startTestServer(balanceSummaryController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/balance/summary")
+            .get()
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(200)
+        assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java)).isEqualTo(getFreePlanBalanceSummaryResponseDto())
+    }
+
+    @Test
     fun shouldRefreshBalanceSummary() {
         // given
         val userBalanceSummaryService = mock<UserBalanceSummaryService>().apply {
@@ -119,6 +144,7 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
+            isUserInProPlanFunction = { true },
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -134,4 +160,33 @@ class BalanceSummaryControllerIT {
         assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java).currencyBalances).isEmpty()
     }
 
+    private fun getFreePlanBalanceSummaryResponseDto(): BalanceSummaryResponseDto {
+        return objectMapper.readValue(
+            this::class.java.getResource("/freePlanBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
+        )
+    }
+
+    @Test
+    fun shouldSendFreePlanResponseWhenRefreshBalanceSummaryInFreePlan() {
+        // given
+        val userBalanceSummaryService = mock<UserBalanceSummaryService>()
+        val balanceSummaryController = BalanceSummaryController(
+            objectMapper = objectMapper,
+            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
+            userBalanceSummaryService = userBalanceSummaryService,
+            isUserInProPlanFunction = { false },
+        )
+        startedServer = TestServer.startTestServer(balanceSummaryController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/balance/summary")
+            .post(EMPTY_REQUEST)
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        verify(userBalanceSummaryService, never()).refreshBalanceSummary(userAccountId)
+        verify(userBalanceSummaryService, never()).getCurrencyBalanceSummary(userAccountId)
+        assertThat(response.code).isEqualTo(200)
+        assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java)).isEqualTo(getFreePlanBalanceSummaryResponseDto())
+    }
 }
