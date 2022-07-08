@@ -17,18 +17,32 @@ import io.undertow.util.Methods.*
 import io.undertow.util.PathTemplateMatch
 import mu.KLogging
 
-data class AddWalletRequestDto(
+data class CreateWalletRequestDto(
     val walletAddress: String,
     val currency: String,
     val description: String?,
 )
 
-data class AddWalletsErrorResponseDto(
+data class UpdateWalletRequestDto(
+    val id: String,
+    val walletAddress: String,
+    val currency: String,
+    val description: String?,
+)
+
+data class UpdateWalletErrorResponseDto(
+    val isAddressDuplicated: Boolean,
+    val isAddressInvalid: Boolean,
+    val isIdInvalid: Boolean,
+)
+
+data class CreateWalletsErrorResponseDto(
     val duplicatedAddresses: List<String>,
     val invalidAddresses: List<String>,
 )
 
 data class WalletResponseDto(
+    val id: String,
     val walletAddress: String,
     val currency: String,
     val description: String?,
@@ -36,13 +50,14 @@ data class WalletResponseDto(
 )
 
 fun UserBlockChainWallet.toDto() = WalletResponseDto(
+    id = this.id,
     walletAddress = this.walletAddress,
     currency = this.currency,
     description = this.description,
     balance = this.balance?.stripTrailingZeros()?.toPlainString(),
 )
 
-fun AddWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserBlockChainWallet(
+fun CreateWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserBlockChainWallet(
     walletAddress = this.walletAddress,
     currency = this.currency,
     userAccountId = userAccountId,
@@ -70,7 +85,7 @@ class WalletController(
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
             httpServerExchange.startBlocking() // in order to user inputStream
-            val addWalletsRequest = objectMapper.readValue(httpServerExchange.inputStream, Array<AddWalletRequestDto>::class.java)
+            val addWalletsRequest = objectMapper.readValue(httpServerExchange.inputStream, Array<CreateWalletRequestDto>::class.java)
             logger.info { "User $userAccountId is adding wallets: $addWalletsRequest" }
             val duplicatedWalletAddresses = mutableListOf<String>()
             val invalidAddresses = mutableListOf<String>()
@@ -97,7 +112,7 @@ class WalletController(
                 httpServerExchange.statusCode = 400
                 httpServerExchange.responseSender.send(
                     objectMapper.writeValueAsString(
-                        AddWalletsErrorResponseDto(
+                        CreateWalletsErrorResponseDto(
                             duplicatedAddresses = duplicatedWalletAddresses,
                             invalidAddresses = invalidAddresses,
                         )
@@ -108,8 +123,57 @@ class WalletController(
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
+    private fun updateWallet() = object : ApiEndpoint {
+        override val method = PUT
+        override val urlTemplate = "/wallet"
+
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            httpServerExchange.startBlocking() // in order to user inputStream
+            val walletUpdateRequest = objectMapper.readValue(httpServerExchange.inputStream, UpdateWalletRequestDto::class.java)
+            var isWalletAddressDuplicated = false
+            var isWalletAddressInvalid = false
+            var isWalletIdInvalid = false
+            logger.info { "User $userAccountId is updating wallet: $walletUpdateRequest" }
+            if (!ethWalletAddressValidator.isWalletAddressValid(walletUpdateRequest.walletAddress)) {
+                isWalletAddressInvalid = true
+            } else if (userBlockChainWalletRepository().existsByUserAccountIdAndWalletAddress(userAccountId, walletUpdateRequest.walletAddress)) {
+                isWalletAddressDuplicated = true
+            } else if (!userBlockChainWalletRepository().existsByUserAccountIdAndId(userAccountId, walletUpdateRequest.id)) {
+                isWalletIdInvalid = true
+            } else try {
+                val walletToUpdate = userBlockChainWalletRepository().findOneById(walletUpdateRequest.id)
+                    .copy(
+                        description = walletUpdateRequest.description,
+                        currency = walletUpdateRequest.currency,
+                        walletAddress = walletUpdateRequest.walletAddress
+                    )
+                userBlockChainWalletRepository().updateWallet(walletToUpdate)
+                val walletBalance = ethService.getEthBalance(walletToUpdate.walletAddress)
+                userBlockChainWalletRepository().updateWallet(walletToUpdate.copy(balance = walletBalance))
+                logger.info { "User $userAccountId updated wallet: $walletUpdateRequest" }
+            } catch (e: Exception) {
+                logger.error(e) { "Could not update wallet $walletUpdateRequest" }
+                throw e
+            }
+            if (isWalletAddressDuplicated || isWalletAddressInvalid || isWalletIdInvalid) {
+                httpServerExchange.statusCode = 400
+                httpServerExchange.responseSender.send(
+                    objectMapper.writeValueAsString(
+                        UpdateWalletErrorResponseDto(
+                            isAddressDuplicated = isWalletAddressDuplicated,
+                            isAddressInvalid = isWalletAddressInvalid,
+                            isIdInvalid = isWalletIdInvalid,
+                        )
+                    )
+                )
+            }
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
     private fun HttpServerExchange.sendUserWallets(userAccountId: String) {
-        val wallets = userBlockChainWalletRepository().findWalletsByUserAccountId(userAccountId)
+        val wallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
             .map { it.toDto() }
         this.responseSender.send(objectMapper.writeValueAsString(wallets))
     }
@@ -152,7 +216,7 @@ class WalletController(
             val userAccountId = httpServerExchange.userAccountId()
             logger.info { "User $userAccountId is deleting wallet $walletAddress" }
             if (walletAddress != null) {
-                val howManyDeleted = userBlockChainWalletRepository().deleteByUserAccountIdAndWalletAddress(userAccountId, walletAddress)
+                val howManyDeleted = userBlockChainWalletRepository().deleteOneByUserAccountIdAndWalletAddress(userAccountId, walletAddress)
                 if (howManyDeleted == 0) {
                     logger.warn { "User $userAccountId tried to delete wallet $walletAddress which was not found. That might be a hack attempt or just missing wallet" }
                     httpServerExchange.statusCode = 404
@@ -165,6 +229,7 @@ class WalletController(
         addMonitoredWallets(),
         getMonitoredWallets(),
         refreshWalletsBalance(),
-        deleteWallet()
+        deleteWallet(),
+        updateWallet(),
     )
 }
