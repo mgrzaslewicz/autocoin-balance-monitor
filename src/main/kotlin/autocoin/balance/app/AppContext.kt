@@ -21,8 +21,10 @@ import autocoin.balance.oauth.server.AccessTokenChecker
 import autocoin.balance.oauth.server.Oauth2AuthenticationMechanism
 import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
 import autocoin.balance.price.CachingPriceService
+import autocoin.balance.price.CurrencyRepository
 import autocoin.balance.price.RestPriceService
 import autocoin.balance.scheduled.HealthMetricsScheduler
+import autocoin.balance.scheduled.PriceRefreshScheduler
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
 import autocoin.balance.wallet.exchange.RestExchangeMediatorWalletService
@@ -201,6 +203,12 @@ class AppContext(private val appConfig: AppConfig) {
             metricsService = metricsService,
             objectMapper = objectMapper
         )
+    )
+
+    val priceRefreshScheduler = PriceRefreshScheduler(
+        currencyRepository = { jdbi.get().onDemand(CurrencyRepository::class.java) },
+        executorService = scheduledJobsxecutorService,
+        cachingPriceService = priceService,
     )
 
     val exchangeMediatorWalletService = RestExchangeMediatorWalletService(

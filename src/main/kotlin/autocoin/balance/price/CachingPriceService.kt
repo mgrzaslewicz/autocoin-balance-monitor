@@ -1,16 +1,16 @@
 package autocoin.balance.price
 
+import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
-import com.github.benmanes.caffeine.cache.LoadingCache
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
 class CachingPriceService(
     private val decorated: PriceService,
-    private val maxPriceCacheAgeNanos: Long = Duration.of(24, ChronoUnit.HOURS).toNanos(),
-    private val maxPriceCacheNullValueAgeNanos: Long = Duration.of(1, ChronoUnit.HOURS).toNanos(),
+    private val maxPriceCacheAgeNanos: Long = Duration.of(1, ChronoUnit.HOURS).toNanos(),
+    private val maxPriceCacheNullValueAgeNanos: Long = Duration.of(1, ChronoUnit.MINUTES).toNanos(),
 ) : PriceService {
 
     private val nullValueMarker = -BigDecimal.ONE
@@ -18,7 +18,7 @@ class CachingPriceService(
     /**
      * When getting price failed, keep null value cached much shorter than successfully fetched price
      */
-    private val priceCache: LoadingCache<String, BigDecimal> = Caffeine.newBuilder()
+    private val priceCache: Cache<String, BigDecimal> = Caffeine.newBuilder()
         .expireAfter(object : Expiry<String, BigDecimal> {
 
             override fun expireAfterCreate(key: String, value: BigDecimal, currentTime: Long): Long {
@@ -38,8 +38,7 @@ class CachingPriceService(
             }
 
         })
-        .refreshAfterWrite(Duration.of(1, ChronoUnit.HOURS))
-        .build { decorated.getUsdPriceOrNull(it.toUsdPriceCacheKey()) ?: nullValueMarker }
+        .build()
 
     private fun String.toUsdPriceCacheKey() = "$this/USD"
 
@@ -71,6 +70,13 @@ class CachingPriceService(
             null
         } else {
             amount.multiply(usdPrice)
+        }
+    }
+
+    fun refreshCurrencyPrices(currencies: List<String>) {
+        currencies.forEach {
+            priceCache.invalidate(it.toUsdPriceCacheKey())
+            getUsdPriceOrNull(it)
         }
     }
 

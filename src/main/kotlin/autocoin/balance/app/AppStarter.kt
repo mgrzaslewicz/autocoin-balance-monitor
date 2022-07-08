@@ -21,6 +21,7 @@ class AppStarter(private val appContext: AppContext) {
 
             logger.info { "Scheduling jobs" }
             healthMetricsScheduler.scheduleSendingMetrics()
+            priceRefreshScheduler.scheduleRefreshingPrices()
 
             logger.info { "Starting server" }
             server.start()

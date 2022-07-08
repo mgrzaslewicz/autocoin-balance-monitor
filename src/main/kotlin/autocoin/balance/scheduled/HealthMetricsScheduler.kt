@@ -15,7 +15,7 @@ class HealthMetricsScheduler(
     private val metricsService: MetricsService,
     private val executorService: ScheduledExecutorService
 ) {
-    companion object : KLogging()
+    private companion object : KLogging()
 
     private fun reportMemoryUsage() {
         metricsService.recordMemory()
