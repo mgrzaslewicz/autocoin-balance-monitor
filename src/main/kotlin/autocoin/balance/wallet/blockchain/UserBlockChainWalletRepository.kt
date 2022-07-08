@@ -1,4 +1,4 @@
-package autocoin.balance.wallet
+package autocoin.balance.wallet.blockchain
 
 import org.jdbi.v3.sqlobject.customizer.Bind
 import org.jdbi.v3.sqlobject.kotlin.BindKotlin

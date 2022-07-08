@@ -1,7 +1,7 @@
-package autocoin.balance.wallet
+package autocoin.balance.wallet.blockchain
 
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 
 data class UserBlockChainWallet(
    val id: String = UUID.randomUUID().toString(),

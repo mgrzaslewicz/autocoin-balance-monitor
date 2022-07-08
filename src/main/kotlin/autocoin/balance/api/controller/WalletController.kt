@@ -7,10 +7,10 @@ import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.price.PriceService
-import autocoin.balance.wallet.UserBlockChainWallet
-import autocoin.balance.wallet.UserBlockChainWalletRepository
-import autocoin.balance.wallet.UserBlockChainWalletService
-import autocoin.balance.wallet.UserCurrencyBalance
+import autocoin.balance.wallet.blockchain.UserBlockChainWallet
+import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
+import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
+import autocoin.balance.wallet.blockchain.UserCurrencyBalance
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.undertow.server.HttpHandler
 import io.undertow.server.HttpServerExchange

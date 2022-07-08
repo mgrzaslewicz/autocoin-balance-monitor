@@ -1,4 +1,4 @@
-package autocoin.balance.wallet
+package autocoin.balance.wallet.blockchain
 
 import autocoin.balance.api.controller.UpdateWalletRequestDto
 import autocoin.balance.blockchain.MultiBlockchainWalletService

@@ -22,8 +22,8 @@ import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
 import autocoin.balance.price.CachingPriceService
 import autocoin.balance.price.RestPriceService
 import autocoin.balance.scheduled.HealthMetricsScheduler
-import autocoin.balance.wallet.UserBlockChainWalletRepository
-import autocoin.balance.wallet.UserBlockChainWalletService
+import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
+import autocoin.balance.wallet.blockchain.UserBlockChainWalletService
 import autocoin.metrics.JsonlFileStatsDClient
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
