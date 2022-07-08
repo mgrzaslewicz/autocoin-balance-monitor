@@ -64,6 +64,32 @@ class UserBlockChainWalletRepositoryTest {
     }
 
     @Test
+    fun shouldSelectUserCurrencyBalance() {
+        // given
+        val userAccountId = UUID.randomUUID().toString()
+        val repository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
+        val ethWallet = UserBlockChainWallet(
+            id = UUID.randomUUID().toString(),
+            walletAddress = "test1",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description",
+            balance = BigDecimal("10.6"),
+        )
+        // when
+        repository.insertWallet(ethWallet)
+        repository.insertWallet(ethWallet.copy(id = UUID.randomUUID().toString(), walletAddress = "test2", balance = BigDecimal("10.0")))
+        repository.insertWallet(ethWallet.copy(id = UUID.randomUUID().toString(), walletAddress = "test3", balance = null, currency = "BTC"))
+        repository.insertWallet(ethWallet.copy(id = UUID.randomUUID().toString(), walletAddress = "test4", balance = BigDecimal("15.8"), currency = "BTC"))
+        // then
+        val currencyBalances = repository.selectUserCurrencyBalance(userAccountId)
+        assertThat(currencyBalances).containsExactlyInAnyOrder(
+            UserCurrencyBalance(currency = "ETH", balance = BigDecimal("20.6")),
+            UserCurrencyBalance(currency = "BTC", balance = BigDecimal("15.8"))
+        )
+    }
+
+    @Test
     fun shouldUpdateUserBlockChainWallet() {
         // given
         val id = UUID.randomUUID().toString()

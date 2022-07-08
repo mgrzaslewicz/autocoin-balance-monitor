@@ -5,6 +5,12 @@ import org.jdbi.v3.sqlobject.kotlin.BindKotlin
 import org.jdbi.v3.sqlobject.kotlin.RegisterKotlinMapper
 import org.jdbi.v3.sqlobject.statement.SqlQuery
 import org.jdbi.v3.sqlobject.statement.SqlUpdate
+import java.math.BigDecimal
+
+data class UserCurrencyBalance(
+    val currency: String,
+    val balance: BigDecimal,
+)
 
 interface UserBlockChainWalletRepository {
     @SqlUpdate(
@@ -43,4 +49,8 @@ interface UserBlockChainWalletRepository {
 
     @SqlUpdate("DELETE FROM user_blockchain_wallet WHERE user_account_id = :userAccountId and wallet_address = :walletAddress")
     fun deleteOneByUserAccountIdAndWalletAddress(@Bind("userAccountId") userAccountId: String, @Bind("walletAddress") walletAddress: String): Int
+
+    @SqlQuery("SELECT currency, SUM(balance) as balance FROM user_blockchain_wallet WHERE user_account_id = :userAccountId GROUP BY currency")
+    @RegisterKotlinMapper(UserCurrencyBalance::class)
+    fun selectUserCurrencyBalance(@Bind("userAccountId") userAccountId: String): List<UserCurrencyBalance>
 }
