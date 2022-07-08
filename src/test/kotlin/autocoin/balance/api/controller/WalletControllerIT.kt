@@ -247,7 +247,7 @@ class WalletControllerIT {
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
-        assertThat(response.isSuccessful).isTrue
+        assertThat(response.code).isEqualTo(200)
         val walletsResponse = objectMapper.readValue(response.body?.string(), Array<WalletResponseDto>::class.java)
         SoftAssertions().apply {
             assertThat(walletsResponse).hasSize(2)
@@ -297,7 +297,7 @@ class WalletControllerIT {
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
-        assertThat(response.isSuccessful).isTrue
+        assertThat(response.code).isEqualTo(200)
         val walletsResponse = objectMapper.readValue(response.body?.string(), Array<WalletResponseDto>::class.java)
         SoftAssertions().apply {
             assertThat(walletsResponse).hasSize(2)
@@ -305,6 +305,46 @@ class WalletControllerIT {
             assertThat(walletsResponse[1].balance).isEqualTo("0.56")
             assertAll()
         }
+    }
+
+    @Test
+    fun shouldDeleteWallet() {
+        // given
+        val walletToRemove = UserBlockChainWallet(
+            userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
+            currency = "ETH",
+            walletAddress = sampleEthAddress1,
+            description = "sample description 1",
+            balance = null,
+            id = UUID.randomUUID().toString(),
+        )
+
+        walletRepository.insertWallet(walletToRemove)
+
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallet/$sampleEthAddress1")
+            .delete(EMPTY_REQUEST)
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(200)
+        assertThat(walletRepository.existsByUserAccountIdAndWalletAddress(userAccountId = authenticatedHttpHandlerWrapper.userAccountId, sampleEthAddress1)).isFalse
+    }
+
+    @Test
+    fun shouldReturn404WhenDeletingNonExistingWallet() {
+        // given
+        startedServer = TestServer.startTestServer(walletController)
+        val request = Request.Builder()
+            .url("http://localhost:${startedServer.port}/wallet/nonexistingwallet")
+            .delete(EMPTY_REQUEST)
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(404)
     }
 
 }

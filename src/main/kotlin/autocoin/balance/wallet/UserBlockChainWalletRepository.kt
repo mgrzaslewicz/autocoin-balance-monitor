@@ -21,7 +21,7 @@ interface UserBlockChainWalletRepository {
         WHERE id = :id
         """
     )
-    fun updateWallet(@BindKotlin userBlockChainWallet: UserBlockChainWallet)
+    fun updateWallet(@BindKotlin userBlockChainWallet: UserBlockChainWallet): Int
 
     @SqlQuery("SELECT * FROM user_blockchain_wallet WHERE user_account_id = :userAccountId")
     @RegisterKotlinMapper(UserBlockChainWallet::class)
@@ -33,4 +33,7 @@ interface UserBlockChainWalletRepository {
 
     @SqlQuery("SELECT EXISTS (select 1 FROM user_blockchain_wallet WHERE user_account_id = :userAccountId and wallet_address = :walletAddress)")
     fun existsByUserAccountIdAndWalletAddress(@Bind("userAccountId") userAccountId: String, @Bind("walletAddress") walletAddress: String): Boolean
+
+    @SqlUpdate("DELETE FROM user_blockchain_wallet WHERE user_account_id = :userAccountId and wallet_address = :walletAddress")
+    fun deleteByUserAccountIdAndWalletAddress(@Bind("userAccountId") userAccountId: String, @Bind("walletAddress") walletAddress: String): Int
 }

@@ -79,9 +79,10 @@ class UserBlockChainWalletRepositoryTest {
         )
         repository.insertWallet(wallet)
         // when
-        repository.updateWallet(wallet.copy(walletAddress = "test2", currency = "BTC", description = "new description", balance = BigDecimal("11.5")))
+        val howManyUpdated = repository.updateWallet(wallet.copy(walletAddress = "test2", currency = "BTC", description = "new description", balance = BigDecimal("11.5")))
         // then
         val updatedWallet = repository.findWalletById(id)
+        assertThat(howManyUpdated).isEqualTo(1)
         assertThat(updatedWallet.walletAddress).isEqualTo("test2")
         assertThat(updatedWallet.currency).isEqualTo("BTC")
         assertThat(updatedWallet.description).isEqualTo("new description")
@@ -128,6 +129,28 @@ class UserBlockChainWalletRepositoryTest {
         val walletExists = repository.existsByUserAccountIdAndWalletAddress(userAccountId, "test")
         // then
         assertThat(walletExists).isTrue
+    }
+
+    @Test
+    fun shouldDeleteWallet() {
+        // given
+        val id = UUID.randomUUID().toString()
+        val userAccountId = UUID.randomUUID().toString()
+        val repository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
+        val wallet = UserBlockChainWallet(
+            id = id,
+            walletAddress = "test",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description",
+            balance = BigDecimal("10.6"),
+        )
+        repository.insertWallet(wallet)
+        // when
+        val howManyDeleted = repository.deleteByUserAccountIdAndWalletAddress(userAccountId, "test")
+        // then
+        assertThat(howManyDeleted).isEqualTo(1)
+        assertThat(repository.existsByUserAccountIdAndWalletAddress(userAccountId, "test")).isFalse
     }
 
     @Test

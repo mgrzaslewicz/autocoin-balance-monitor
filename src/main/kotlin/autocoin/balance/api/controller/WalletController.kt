@@ -13,8 +13,8 @@ import autocoin.balance.wallet.UserBlockChainWalletService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.undertow.server.HttpHandler
 import io.undertow.server.HttpServerExchange
-import io.undertow.util.Methods.GET
-import io.undertow.util.Methods.POST
+import io.undertow.util.Methods.*
+import io.undertow.util.PathTemplateMatch
 import mu.KLogging
 
 data class AddWalletRequestDto(
@@ -139,9 +139,32 @@ class WalletController(
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
+    private fun deleteWallet() = object : ApiEndpoint {
+        private val walletAddressParameter = "address"
+
+        override val method = DELETE
+        override val urlTemplate = "/wallet/{$walletAddressParameter}"
+
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val pathMatch: PathTemplateMatch = httpServerExchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY)
+            val walletAddress = pathMatch.parameters[walletAddressParameter]
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is deleting wallet $walletAddress" }
+            if (walletAddress != null) {
+                val howManyDeleted = userBlockChainWalletRepository().deleteByUserAccountIdAndWalletAddress(userAccountId, walletAddress)
+                if (howManyDeleted == 0) {
+                    logger.warn { "User $userAccountId tried to delete wallet $walletAddress which was not found. That might be a hack attempt or just missing wallet" }
+                    httpServerExchange.statusCode = 404
+                }
+            }
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
     override fun apiEndpoints(): List<ApiEndpoint> = listOf(
         addMonitoredWallets(),
         getMonitoredWallets(),
-        refreshWalletsBalance()
+        refreshWalletsBalance(),
+        deleteWallet()
     )
 }
