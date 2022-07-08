@@ -64,6 +64,73 @@ class UserBlockChainWalletRepositoryTest {
     }
 
     @Test
+    fun shouldUpdateUserBlockChainWallet() {
+        // given
+        val id = UUID.randomUUID().toString()
+        val userAccountId = UUID.randomUUID().toString()
+        val repository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
+        val wallet = UserBlockChainWallet(
+            id = id,
+            walletAddress = "test",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description",
+            balance = BigDecimal("10.6"),
+        )
+        repository.insertWallet(wallet)
+        // when
+        repository.updateWallet(wallet.copy(walletAddress = "test2", currency = "BTC", description = "new description", balance = BigDecimal("11.5")))
+        // then
+        val updatedWallet = repository.findWalletById(id)
+        assertThat(updatedWallet.walletAddress).isEqualTo("test2")
+        assertThat(updatedWallet.currency).isEqualTo("BTC")
+        assertThat(updatedWallet.description).isEqualTo("new description")
+        assertThat(updatedWallet.balance).isEqualTo(BigDecimal("11.5"))
+    }
+
+    @Test
+    fun shouldFindWalletById() {
+        // given
+        val id = UUID.randomUUID().toString()
+        val userAccountId = UUID.randomUUID().toString()
+        val repository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
+        val wallet = UserBlockChainWallet(
+            id = id,
+            walletAddress = "test",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description",
+            balance = BigDecimal("10.6"),
+        )
+        repository.insertWallet(wallet)
+        // when
+        val foundWallet = repository.findWalletById(id)
+        // then
+        assertThat(foundWallet.id).isEqualTo(id)
+    }
+
+    @Test
+    fun shouldWalletExist() {
+        // given
+        val id = UUID.randomUUID().toString()
+        val userAccountId = UUID.randomUUID().toString()
+        val repository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
+        val wallet = UserBlockChainWallet(
+            id = id,
+            walletAddress = "test",
+            currency = "ETH",
+            userAccountId = userAccountId,
+            description = "sample description",
+            balance = BigDecimal("10.6"),
+        )
+        repository.insertWallet(wallet)
+        // when
+        val walletExists = repository.existsByUserAccountIdAndWalletAddress(userAccountId, "test")
+        // then
+        assertThat(walletExists).isTrue
+    }
+
+    @Test
     fun shouldRejectNonUniqueWallet() {
         // given
         val id = UUID.randomUUID().toString()

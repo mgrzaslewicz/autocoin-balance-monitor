@@ -33,14 +33,19 @@ class EthWalletController(
             val ethWalletAddress = pathMatch.parameters[walletAddressParameter]
             if (ethWalletAddress != null && ethWalletAddressValidator.isWalletAddressValid(ethWalletAddress)) {
                 val balance = ethService.getEthBalance(ethWalletAddress)
-                httpServerExchange.responseSender.send(
-                    objectMapper.writeValueAsString(
-                        EthWalletBalanceResponseDto(
-                            ethWalletAddress = ethWalletAddress,
-                            balance = balance.toPlainString(),
+                if (balance == null) {
+                    httpServerExchange.statusCode = 500
+                    httpServerExchange.responseSender.send("Could not get wallet balance")
+                } else {
+                    httpServerExchange.responseSender.send(
+                        objectMapper.writeValueAsString(
+                            EthWalletBalanceResponseDto(
+                                ethWalletAddress = ethWalletAddress,
+                                balance = balance.toPlainString(),
+                            )
                         )
                     )
-                )
+                }
             } else {
                 httpServerExchange.statusCode = 400
                 httpServerExchange.responseSender.send("Incorrect eth wallet address")

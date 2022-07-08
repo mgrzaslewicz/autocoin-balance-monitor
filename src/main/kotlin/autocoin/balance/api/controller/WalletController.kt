@@ -3,6 +3,8 @@ package autocoin.balance.api.controller
 import autocoin.balance.api.ApiController
 import autocoin.balance.api.ApiEndpoint
 import autocoin.balance.api.HttpHandlerWrapper
+import autocoin.balance.blockchain.eth.EthService
+import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.wallet.UserBlockChainWallet
@@ -17,6 +19,11 @@ data class AddWalletRequestDto(
     val walletAddress: String,
     val currency: String,
     val description: String?,
+)
+
+data class AddWalletsErrorResponseDto(
+    val duplicatedAddresses: List<String>,
+    val invalidAddresses: List<String>,
 )
 
 data class WalletResponseDto(
@@ -44,7 +51,9 @@ fun AddWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserBloc
 class WalletController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
-    private val userBlockChainWalletRepository: () -> UserBlockChainWalletRepository
+    private val userBlockChainWalletRepository: () -> UserBlockChainWalletRepository,
+    private val ethService: EthService,
+    private val ethWalletAddressValidator: EthWalletAddressValidator,
 ) : ApiController {
 
     private companion object : KLogging()
@@ -60,20 +69,37 @@ class WalletController(
             httpServerExchange.startBlocking() // in order to user inputStream
             val addWalletsRequest = objectMapper.readValue(httpServerExchange.inputStream, Array<AddWalletRequestDto>::class.java)
             logger.info { "User $userAccountId is adding wallets: $addWalletsRequest" }
-            val duplicatedWalletAddresses = addWalletsRequest.mapNotNull {
+            val duplicatedWalletAddresses = mutableListOf<String>()
+            val invalidAddresses = mutableListOf<String>()
+            addWalletsRequest.forEach {
                 val walletToAdd = it.toUserBlockChainWallet(userAccountId)
-                try {
-                    // TODO if needed make the check more granular, not all exceptions might be related to unique constraint
-                    userBlockChainWalletRepository().insertWallet(walletToAdd)
-                    null
-                } catch (e: Exception) {
-                    logger.error(e) { "Could not add wallet $walletToAdd" }
-                    walletToAdd.walletAddress
+                if (!ethWalletAddressValidator.isWalletAddressValid(walletToAdd.walletAddress)) {
+                    invalidAddresses += walletToAdd.walletAddress
+                } else {
+                    try {
+                        if (userBlockChainWalletRepository().existsByUserAccountIdAndWalletAddress(userAccountId, walletToAdd.walletAddress)) {
+                            duplicatedWalletAddresses += walletToAdd.walletAddress
+                        } else {
+                            userBlockChainWalletRepository().insertWallet(walletToAdd)
+                            val walletBalance = ethService.getEthBalance(walletToAdd.walletAddress)
+                            userBlockChainWalletRepository().updateWallet(walletToAdd.copy(balance = walletBalance))
+                        }
+                    } catch (e: Exception) {
+                        logger.error(e) { "Could not add wallet $walletToAdd" }
+                        throw e
+                    }
                 }
             }
-            if (duplicatedWalletAddresses.isNotEmpty()) {
+            if (duplicatedWalletAddresses.isNotEmpty() || invalidAddresses.isNotEmpty()) {
                 httpServerExchange.statusCode = 400
-                httpServerExchange.responseSender.send(objectMapper.writeValueAsString(duplicatedWalletAddresses))
+                httpServerExchange.responseSender.send(
+                    objectMapper.writeValueAsString(
+                        AddWalletsErrorResponseDto(
+                            duplicatedAddresses = duplicatedWalletAddresses,
+                            invalidAddresses = invalidAddresses,
+                        )
+                    )
+                )
             }
             logger.info { "User $userAccountId added wallets: $addWalletsRequest" }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
