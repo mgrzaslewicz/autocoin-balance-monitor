@@ -178,6 +178,11 @@ class WalletController(
         this.responseSender.send(objectMapper.writeValueAsString(wallets))
     }
 
+    private fun HttpServerExchange.sendUserWallet(userAccountId: String, walletId: String) {
+        val wallet = userBlockChainWalletRepository().findOneById(walletId).toDto()
+        this.responseSender.send(objectMapper.writeValueAsString(wallet))
+    }
+
     private fun getMonitoredWallets() = object : ApiEndpoint {
         override val method = GET
         override val urlTemplate = "/wallets"
@@ -187,6 +192,26 @@ class WalletController(
             val userAccountId = httpServerExchange.userAccountId()
             logger.info { "User $userAccountId is requesting wallets" }
             httpServerExchange.sendUserWallets(userAccountId)
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
+    private fun getMonitoredWallet() = object : ApiEndpoint {
+        private val walletIdParameter = "walletId"
+        override val method = GET
+        override val urlTemplate = "/wallets/{$walletIdParameter}"
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            val pathMatch: PathTemplateMatch = httpServerExchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY)
+            val walletId= pathMatch.parameters[walletIdParameter]
+            logger.info { "User $userAccountId is requesting wallet $walletId" }
+            if (walletId != null) {
+                if (userBlockChainWalletRepository().existsByUserAccountIdAndId(userAccountId, walletId)) {
+                    httpServerExchange.sendUserWallet(userAccountId, walletId)
+                } else {
+                    httpServerExchange.statusCode = 404
+                }
+            }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -228,6 +253,7 @@ class WalletController(
     override fun apiEndpoints(): List<ApiEndpoint> = listOf(
         addMonitoredWallets(),
         getMonitoredWallets(),
+        getMonitoredWallet(),
         refreshWalletsBalance(),
         deleteWallet(),
         updateWallet(),
