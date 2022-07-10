@@ -28,7 +28,7 @@ preconditions() {
 
 buildJar() {
   if [ -n "${SKIP_TESTS}" ]; then
-     mvn clean package -DskipTests
+    mvn clean package -DskipTests
   else
     mvn clean package
   fi
@@ -42,22 +42,21 @@ clearLogs() {
 runJar() {
   while read envPropertyFileLine; do
     export "$envPropertyFileLine"
-  done < env.properties
+  done <env.properties
   java \
-  -XX:+ExitOnOutOfMemoryError \
-  -XX:+HeapDumpOnOutOfMemoryError \
-  -XX:HeapDumpPath=${APP_DATA_PATH} \
-  -Xmx800M \
-  -XX:+PrintFlagsFinal \
-  -Djava.security.egd=file:/dev/./urandom \
-  -Dtelegraf.hostname="" \
-  -DautocoinOauth2ServerUrl=http://localhost:9002 \
-  -DexchangesApiUrl=http://localhost:9001 \
-  -jar target/${SERVICE_NAME}.jar
+    -XX:+ExitOnOutOfMemoryError \
+    -XX:+HeapDumpOnOutOfMemoryError \
+    -XX:HeapDumpPath=${APP_DATA_PATH} \
+    -Xmx800M \
+    -XX:+PrintFlagsFinal \
+    -Djava.security.egd=file:/dev/./urandom \
+    -Dtelegraf.hostname="" \
+    -DautocoinOauth2ServerUrl=http://localhost:9002 \
+    -DexchangesApiUrl=http://localhost:9001 \
+    -jar target/${SERVICE_NAME}.jar
 }
 
 preconditions
 buildJar
 clearLogs
 runJar
-
