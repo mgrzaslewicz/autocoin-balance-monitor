@@ -102,7 +102,7 @@ class AppContext(private val appConfig: AppConfig) {
         .callTimeout(5, TimeUnit.SECONDS)
         .build()
 
-    val statsdClient = if (appConfig.useMetrics) {
+    val statsdClient = if (appConfig.useRealStatsDClient) {
         NonBlockingStatsDClient(appConfig.serviceName, appConfig.telegrafHostname, 8125)
     } else {
         val metricsFolderPath = Path.of(appConfig.metricsFolder)

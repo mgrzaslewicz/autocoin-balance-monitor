@@ -45,11 +45,11 @@ data class AppConfig(
     @ExternalDependency
     val ethNodeUrl: String = getPropertyThenEnv("ETH_NODE_URL", "https://main-light.eth.linkpool.io"),
 
-    @InternalDependency
-    val useMetrics: Boolean = getPropertyThenEnv("USE_METRICS", "true").toBoolean(),
 
     @InternalDependency
     val telegrafHostname: String = getPropertyThenEnv("TELEGRAF_HOSTNAME", "telegraf"),
+    @InternalDependency
+    val useRealStatsDClient: Boolean = telegrafHostname != "metrics.jsonl",
 
     @InternalDependency
     val jdbcUrl: String = getPropertyThenEnv(JDBC_URL_PARAMETER),

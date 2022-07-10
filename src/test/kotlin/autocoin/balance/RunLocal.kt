@@ -17,8 +17,7 @@ fun main() {
     setProperty("DB_USERNAME", "changeme")
     setProperty("DB_PASSWORD", "changeme")
     setProperty("JDBC_URL", "changeme")
-    setProperty("USE_METRICS", "false")
-    setProperty("TELEGRAF_HOSTNAME", "localhost")
+    setProperty("TELEGRAF_HOSTNAME", "metrics.jsonl")
     setProperty("logging.level", "DEBUG")
     main(emptyArray())
 }

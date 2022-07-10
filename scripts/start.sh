@@ -19,6 +19,7 @@ preconditions() {
     "HOST_PORT"
     "LOG_PATH"
     "SERVICE_NAME"
+    "TELEGRAF_HOSTNAME"
   )
 
   for requiredVariable in "${requiredVariables[@]}"; do
@@ -50,6 +51,7 @@ docker run --name ${SERVICE_NAME} -d \
   -e OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID} \
   -e OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET} \
   -e SERVICE_NAME=${SERVICE_NAME} \
+  -e TELEGRAF_HOSTNAME=${TELEGRAF_HOSTNAME} \
   -v ${LOG_PATH}:/app/log \
   -v ${APP_DATA_PATH}:/app/data \
   --memory=200m \
