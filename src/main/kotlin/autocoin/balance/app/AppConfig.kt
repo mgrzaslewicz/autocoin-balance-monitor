@@ -30,10 +30,10 @@ data class AppConfig(
     val serviceName: String = getPropertyThenEnv("SERVICE_NAME"),
 
     @InternalDependency
-    val oauth2ApiBaseUrl: String = getPropertyThenEnv("OAUTH2_API_URL", "https://users-apiv2.autocoin-trader.com"),
+    val oauth2ApiBaseUrl: String = getPropertyThenEnv("OAUTH2_API_URL", "http://autocoin-auth-service:9002"),
 
     @InternalDependency
-    val exchangeMediatorApiBaseUrl: String = getPropertyThenEnv("EXCHANGE_MEDIATOR_API_URL", "https://orders-api.autocoin-trader.com"),
+    val exchangeMediatorApiBaseUrl: String = getPropertyThenEnv("EXCHANGE_MEDIATOR_API_URL", "http://autocoin-exchange-mediator:9001"),
 
     @InternalDependency
     val oauth2ClientId: String = getPropertyThenEnv("OAUTH_CLIENT_ID", "balance-monitor"),
