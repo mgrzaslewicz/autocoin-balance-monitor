@@ -5,10 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
@@ -78,6 +75,21 @@ class CachingPriceServiceTest {
         // then
         assertThat(price).isNull()
         verify(priceService, times(2)).getPrice("A", "B")
+    }
+
+    @Test
+    fun shouldRefreshPrices() {
+        // given
+        val tested = CachingPriceService(decorated = priceService)
+        val expectedPrice: CurrencyPrice = mock()
+        whenever(priceService.getUsdPrice("A")).thenReturn(expectedPrice)
+        tested.refreshUsdPrices(listOf("A"))
+        verify(priceService, times(1)).getUsdPrice("A")
+        // when
+        val actualPrice = tested.getPrice("A", "USD")
+        // then
+        assertThat(actualPrice).isEqualTo(expectedPrice)
+        verifyNoMoreInteractions(priceService)
     }
 
 }

@@ -9,14 +9,14 @@ import java.time.temporal.ChronoUnit
 
 class CachingPriceService(
     private val decorated: PriceService,
-    private val maxPriceCacheAgeNanos: Long = Duration.of(1, ChronoUnit.HOURS).toNanos(),
+    private val maxPriceCacheAgeNanos: Long = Long.MAX_VALUE,
     private val maxPriceCacheNullValueAgeNanos: Long = Duration.of(1, ChronoUnit.MINUTES).toNanos(),
 ) : PriceService {
 
     private val nullValueMarker = CurrencyPrice(price = BigDecimal.ZERO, baseCurrency = "", counterCurrency = "", timestampMillis = 0)
 
     /**
-     * When getting price failed, keep null value cached much shorter than successfully fetched price
+     * When getting price failed, keep null value cached - but only for a short period of time
      */
     private val priceCache: Cache<String, CurrencyPrice> = Caffeine.newBuilder()
         .expireAfter(object : Expiry<String, CurrencyPrice> {
@@ -56,8 +56,11 @@ class CachingPriceService(
 
     fun refreshUsdPrices(currencies: List<String>) {
         currencies.forEach {
-            priceCache.invalidate(it.toUsdPriceCacheKey())
-            getUsdPrice(it)
+            val newPrice = decorated.getUsdPrice(it)
+            val priceKey = it.toUsdPriceCacheKey()
+            if (newPrice != null) {
+                priceCache.put(priceKey, newPrice)
+            }
         }
     }
 
