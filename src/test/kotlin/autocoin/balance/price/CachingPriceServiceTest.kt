@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.math.BigDecimal
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
@@ -20,7 +20,7 @@ class CachingPriceServiceTest {
     @Test
     fun shouldGetPriceFromCache() {
         // given
-        val expectedPrice = BigDecimal.ONE
+        val expectedPrice: CurrencyPrice = mock()
         whenever(priceService.getPrice("A", "B")).thenReturn(expectedPrice)
         val tested = CachingPriceService(decorated = priceService)
         // when
@@ -34,8 +34,8 @@ class CachingPriceServiceTest {
     @Test
     fun shouldGetPriceAgainAfterExpiry() {
         // given
-        val expectedPrice1 = BigDecimal.ONE
-        val expectedPrice2 = BigDecimal.TEN
+        val expectedPrice1: CurrencyPrice = mock()
+        val expectedPrice2: CurrencyPrice = mock()
         whenever(priceService.getPrice("A", "B")).thenReturn(expectedPrice1, expectedPrice2)
         val cacheDuration = Duration.of(10, ChronoUnit.MILLIS)
         val tested = CachingPriceService(

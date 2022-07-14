@@ -242,7 +242,7 @@ class BlockchainWalletController(
             val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
             httpServerExchange.sendJson(currencyBalance.map {
                 val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                val usdPrice = priceService.getUsdPrice(it.currency)
+                val usdPrice = priceService.getUsdPrice(it.currency)?.price
                 it.toDto(usdBalance, usdPrice)
             })
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)

@@ -69,7 +69,7 @@ class DefaultUserBalanceSummaryService(
                 currency = currency,
                 balance = sumOfBalances,
                 valueInOtherCurrency = mapOf("USD" to if (sumOfBalances == null) null else priceService.getUsdValue(currency, sumOfBalances)),
-                priceInOtherCurrency = mapOf("USD" to priceService.getUsdPrice(currency)),
+                priceInOtherCurrency = mapOf("USD" to priceService.getUsdPrice(currency)?.price),
                 exchanges = userExchangeWallets.map {
                     ExchangeCurrencySummary(
                         exchangeName = it.exchange,

@@ -9,6 +9,7 @@ import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.blockchain.btc.BtcWalletAddressValidator
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
+import autocoin.balance.price.CurrencyPrice
 import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.blockchain.UserBlockChainWallet
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
@@ -233,7 +234,9 @@ class BlockchainWalletControllerIT {
     fun shouldGetCurrencyBalance() {
         // given
         whenever(priceService.getUsdValue("ETH", BigDecimal("5.65"))).thenReturn(BigDecimal("2000.0"))
-        whenever(priceService.getUsdPrice("ETH")).thenReturn(BigDecimal("2500.0"))
+        whenever(priceService.getUsdPrice("ETH")).thenReturn(
+            CurrencyPrice(price = BigDecimal("2500.0"), baseCurrency = "ETH", counterCurrency = "USD", timestampMillis = System.currentTimeMillis())
+        )
         val expectedWallets = listOf(
             UserBlockChainWallet(
                 userAccountId = authenticatedHttpHandlerWrapper.userAccountId,

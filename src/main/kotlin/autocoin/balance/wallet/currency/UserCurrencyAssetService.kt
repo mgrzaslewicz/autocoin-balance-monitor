@@ -31,7 +31,7 @@ class UserCurrencyAssetService(
     private fun UserCurrencyAssetSummary.withUsdPriceAndValue() = UserCurrencyAssetSummaryWithPriceAndValue(
         userCurrencyAssetSummary = this,
         valueInOtherCurrency = mapOf("USD" to priceService.getUsdValue(this.currency, this.balance)),
-        priceInOtherCurrency = mapOf("USD" to priceService.getUsdPrice(this.currency)),
+        priceInOtherCurrency = mapOf("USD" to priceService.getUsdPrice(this.currency)?.price),
     )
 
     fun getUserCurrencyAsset(userAccountId: String, userCurrencyAssetId: String): UserCurrencyAssetWithValue? {

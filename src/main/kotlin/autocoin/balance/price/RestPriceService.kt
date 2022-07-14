@@ -9,17 +9,35 @@ import java.math.BigDecimal
 
 
 data class CurrencyPriceDto(
-    val price: Double,
+    val price: String,
     val baseCurrency: String,
-    val counterCurrency: String
+    val counterCurrency: String,
+    val timestampMillis: Long,
+) {
+    fun toCurrencyPrice(): CurrencyPrice {
+        return CurrencyPrice(
+            price = BigDecimal(price),
+            baseCurrency = baseCurrency,
+            counterCurrency = counterCurrency,
+            timestampMillis = timestampMillis
+        )
+    }
+}
+
+data class CurrencyPrice(
+    val price: BigDecimal,
+    val baseCurrency: String,
+    val counterCurrency: String,
+    val timestampMillis: Long,
 )
 
 interface PriceService {
-    fun getUsdPrice(currencyCode: String): BigDecimal? = getPrice(currencyCode, counterCurrency = "USD")
-    fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal? = getPrice(currencyCode, counterCurrency = "USD")?.multiply(amount)
+    fun getUsdPrice(currencyCode: String): CurrencyPrice? = getPrice(currencyCode, counterCurrency = "USD")
+    fun getUsdValue(currencyCode: String, amount: BigDecimal): BigDecimal? = getPrice(currencyCode, counterCurrency = "USD")?.price?.multiply(amount)
 
-    fun getPrice(baseCurrency: String, counterCurrency: String): BigDecimal?
-    fun getValue(baseCurrency: String, counterCurrency: String, baseCurrencyAmount: BigDecimal): BigDecimal? = getPrice(baseCurrency, counterCurrency)?.multiply(baseCurrencyAmount)
+    fun getPrice(baseCurrency: String, counterCurrency: String): CurrencyPrice?
+    fun getValue(baseCurrency: String, counterCurrency: String, baseCurrencyAmount: BigDecimal): BigDecimal? =
+        getPrice(baseCurrency, counterCurrency)?.price?.multiply(baseCurrencyAmount)
 }
 
 class PriceResponseException(message: String) : IllegalStateException(message)
@@ -34,15 +52,20 @@ class RestPriceService(
 
     private companion object : KLogging()
 
-    override fun getPrice(baseCurrency: String, counterCurrency: String): BigDecimal? {
+    override fun getPrice(baseCurrency: String, counterCurrency: String): CurrencyPrice? {
         return if (baseCurrency == counterCurrency) {
-            return BigDecimal.ONE
+            return CurrencyPrice(
+                price = BigDecimal.ONE,
+                baseCurrency = baseCurrency,
+                counterCurrency = counterCurrency,
+                timestampMillis = currentTimeMillisFunction(),
+            )
         } else {
             tryFetchPrice(baseCurrency, counterCurrency)
         }
     }
 
-    private fun tryFetchPrice(baseCurrency: String, counterCurrency: String): BigDecimal? {
+    private fun tryFetchPrice(baseCurrency: String, counterCurrency: String): CurrencyPrice? {
         return try {
             fetchPrice(baseCurrency, counterCurrency)
         } catch (e: Exception) {
@@ -51,7 +74,7 @@ class RestPriceService(
         }
     }
 
-    private fun fetchPrice(baseCurrency: String, counterCurrency: String): BigDecimal {
+    private fun fetchPrice(baseCurrency: String, counterCurrency: String): CurrencyPrice {
         val currencyPair = "$baseCurrency/$counterCurrency"
         logger.info { "[$currencyPair] Fetching price" }
         val millisBefore = currentTimeMillisFunction()
@@ -69,7 +92,7 @@ class RestPriceService(
             if (priceDto.size != 1) {
                 throw PriceResponseException("[$currencyPair] No expected price in response body")
             }
-            return priceDto.first().price.toBigDecimal()
+            return priceDto.first().toCurrencyPrice()
         }
 
     }

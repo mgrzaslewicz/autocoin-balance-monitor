@@ -13,15 +13,15 @@ class CachingPriceService(
     private val maxPriceCacheNullValueAgeNanos: Long = Duration.of(1, ChronoUnit.MINUTES).toNanos(),
 ) : PriceService {
 
-    private val nullValueMarker = -BigDecimal.ONE
+    private val nullValueMarker = CurrencyPrice(price = BigDecimal.ZERO, baseCurrency = "", counterCurrency = "", timestampMillis = 0)
 
     /**
      * When getting price failed, keep null value cached much shorter than successfully fetched price
      */
-    private val priceCache: Cache<String, BigDecimal> = Caffeine.newBuilder()
-        .expireAfter(object : Expiry<String, BigDecimal> {
+    private val priceCache: Cache<String, CurrencyPrice> = Caffeine.newBuilder()
+        .expireAfter(object : Expiry<String, CurrencyPrice> {
 
-            override fun expireAfterCreate(key: String, value: BigDecimal, currentTime: Long): Long {
+            override fun expireAfterCreate(key: String, value: CurrencyPrice, currentTime: Long): Long {
                 return if (value === nullValueMarker) {
                     maxPriceCacheNullValueAgeNanos
                 } else {
@@ -29,11 +29,11 @@ class CachingPriceService(
                 }
             }
 
-            override fun expireAfterUpdate(key: String, value: BigDecimal, currentTime: Long, currentDuration: Long): Long {
+            override fun expireAfterUpdate(key: String, value: CurrencyPrice, currentTime: Long, currentDuration: Long): Long {
                 return currentDuration
             }
 
-            override fun expireAfterRead(key: String, value: BigDecimal, currentTime: Long, currentDuration: Long): Long {
+            override fun expireAfterRead(key: String, value: CurrencyPrice, currentTime: Long, currentDuration: Long): Long {
                 return currentDuration
             }
 
@@ -42,7 +42,7 @@ class CachingPriceService(
 
     private fun String.toUsdPriceCacheKey() = "$this/USD"
 
-    override fun getPrice(baseCurrency: String, counterCurrency: String): BigDecimal? {
+    override fun getPrice(baseCurrency: String, counterCurrency: String): CurrencyPrice? {
         val cacheKey = "$baseCurrency/$counterCurrency"
         val price = priceCache.get(cacheKey) {
             decorated.getPrice(baseCurrency, counterCurrency) ?: nullValueMarker

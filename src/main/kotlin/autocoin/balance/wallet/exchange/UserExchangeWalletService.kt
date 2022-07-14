@@ -73,7 +73,7 @@ class UserExchangeWalletService(
         return ExchangeWalletBalancesDto(
             isShowingRealBalance = true,
             refreshTimeMillis = userExchangeWalletsLastRefresh.firstOrNull()?.insertTime?.time,
-            pricesInOtherCurrencies = uniqueCurrenciesInWallets.associateWith { mapOf("USD" to priceService.getUsdPrice(it)?.toPlainString()) },
+            pricesInOtherCurrencies = uniqueCurrenciesInWallets.associateWith { mapOf("USD" to priceService.getUsdPrice(it)?.price?.toPlainString()) },
             exchangeCurrencyBalances = userExchangeWalletsLastRefreshGroupedByExchangeUserId.map { userExchangeWalletsLastRefresh ->
                 val userExchangeWallets = userExchangeWalletsGroupedByExchangeUser[userExchangeWalletsLastRefresh.key]
                 val userExchangeWalletsGroupedByExchange = userExchangeWallets?.groupBy { it.exchange } ?: emptyMap()

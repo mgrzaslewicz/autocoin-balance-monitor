@@ -1,5 +1,6 @@
 package autocoin.balance.wallet.exchange
 
+import autocoin.balance.price.CurrencyPrice
 import autocoin.balance.price.PriceService
 import automate.profit.autocoin.exchange.time.TimeMillisProvider
 import automate.profit.autocoin.exchange.wallet.ExchangeBalanceDto
@@ -235,8 +236,22 @@ class UserExchangeWalletServiceTest {
         val priceService = mock<PriceService>().apply {
             whenever(this.getUsdValue("ETH", "20".toBigDecimal())).thenReturn("100.0".toBigDecimal())
             whenever(this.getUsdValue("BTC", "31".toBigDecimal())).thenReturn("2000.0".toBigDecimal())
-            whenever(this.getUsdPrice("BTC")).thenReturn("20000.0".toBigDecimal())
-            whenever(this.getUsdPrice("ETH")).thenReturn("1400.4".toBigDecimal())
+            whenever(this.getUsdPrice("BTC")).thenReturn(
+                CurrencyPrice(
+                    price = BigDecimal("20000.0"),
+                    baseCurrency = "BTC",
+                    counterCurrency = "USD",
+                    timestampMillis = 0L,
+                )
+            )
+            whenever(this.getUsdPrice("ETH")).thenReturn(
+                CurrencyPrice(
+                    price = BigDecimal("1400.4"),
+                    baseCurrency = "ETH",
+                    counterCurrency = "USD",
+                    timestampMillis = 0L,
+                )
+            )
         }
         val tested = UserExchangeWalletService(
             userExchangeWalletLastRefreshRepository = { userExchangeWalletLastRefreshRepository },

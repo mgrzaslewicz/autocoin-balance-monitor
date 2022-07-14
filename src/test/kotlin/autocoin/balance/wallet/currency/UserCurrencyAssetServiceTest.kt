@@ -1,5 +1,6 @@
 package autocoin.balance.wallet.currency
 
+import autocoin.balance.price.CurrencyPrice
 import autocoin.balance.price.PriceService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -69,7 +70,14 @@ class UserCurrencyAssetServiceTest {
         val tested = UserCurrencyAssetService(
             priceService = priceService.apply {
                 whenever(this.getUsdValue("BTC", BigDecimal("10.5"))).thenReturn(BigDecimal("20000"))
-                whenever(this.getUsdPrice("BTC")).thenReturn(BigDecimal("26000"))
+                whenever(this.getUsdPrice("BTC")).thenReturn(
+                    CurrencyPrice(
+                        price = BigDecimal("26000"),
+                        baseCurrency = "BTC",
+                        counterCurrency = "USD",
+                        timestampMillis = 0L,
+                    )
+                )
             },
             currencyAssetRepository = {
                 userCurrencyAssetRepository.apply {

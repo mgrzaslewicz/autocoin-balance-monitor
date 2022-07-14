@@ -1,5 +1,6 @@
 package autocoin.balance.wallet.summary
 
+import autocoin.balance.price.CurrencyPrice
 import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.blockchain.UserBlockChainWallet
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
@@ -157,8 +158,23 @@ class DefaultUserBalanceSummaryServiceTest {
             valueInOtherCurrency = mapOf("USD" to BigDecimal("30"))
         )
         whenever(userCurrencyAssetService.getUserCurrencyAssets(userAccountId)).thenReturn(listOf(currencyAssetLtc, currencyAssetXyz))
-        whenever(priceService.getUsdPrice("ETH")).thenReturn("1400.2".toBigDecimal())
-        whenever(priceService.getUsdPrice("BTC")).thenReturn("22500.1".toBigDecimal())
+        whenever(priceService.getUsdPrice("ETH")).thenReturn(
+            CurrencyPrice(
+                price = BigDecimal("1400.2"),
+                baseCurrency = "ETH",
+                counterCurrency = "USD",
+                timestampMillis = 0L,
+            )
+        )
+        whenever(priceService.getUsdPrice("BTC")).thenReturn(
+            CurrencyPrice(
+                price = BigDecimal("22500.1"),
+                baseCurrency = "BTC",
+                counterCurrency = "USD",
+                timestampMillis = 0L,
+            )
+
+        )
         whenever(priceService.getUsdValue("ETH", "15.6".toBigDecimal())).thenReturn("50000".toBigDecimal())
         whenever(priceService.getUsdValue("LTC", "332.23".toBigDecimal())).thenReturn("200".toBigDecimal())
         whenever(priceService.getUsdValue("LTC", "0.5".toBigDecimal())).thenReturn("1".toBigDecimal())
