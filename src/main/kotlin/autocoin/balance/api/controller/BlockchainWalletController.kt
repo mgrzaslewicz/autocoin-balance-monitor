@@ -3,6 +3,7 @@ package autocoin.balance.api.controller
 import autocoin.balance.api.ApiController
 import autocoin.balance.api.ApiEndpoint
 import autocoin.balance.api.HttpHandlerWrapper
+import autocoin.balance.blockchain.BlockChainExplorerUrlService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
@@ -50,15 +51,17 @@ data class BlockchainWalletResponseDto(
     val description: String?,
     val balance: String?,
     val usdBalance: String?,
+    val blockChainExplorerUrl: String?,
 )
 
-fun UserBlockChainWallet.toDto(usdBalance: BigDecimal?) = BlockchainWalletResponseDto(
+fun UserBlockChainWallet.toDto(usdBalance: BigDecimal?, blockchainExplorerUrl: String?) = BlockchainWalletResponseDto(
     id = this.id,
     walletAddress = this.walletAddress,
     currency = this.currency,
     description = this.description,
     balance = this.balance?.stripTrailingZeros()?.toPlainString(),
     usdBalance = usdBalance?.stripTrailingZeros()?.toPlainString(),
+    blockChainExplorerUrl = blockchainExplorerUrl,
 )
 
 fun CreateBlockchainWalletRequestDto.toUserBlockChainWallet(userAccountId: String) = UserBlockChainWallet(
@@ -90,6 +93,7 @@ class BlockchainWalletController(
     private val walletAddressValidator: MultiWalletAddressValidator,
     private val userBlockChainWalletService: UserBlockChainWalletService,
     private val priceService: PriceService,
+    private val blockChainExplorerUrlService: BlockChainExplorerUrlService,
 ) : ApiController {
 
     private companion object : KLogging()
@@ -177,7 +181,7 @@ class BlockchainWalletController(
         val wallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
             .map {
                 val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                it.toDto(usdBalance)
+                it.toDto(usdBalance = usdBalance, blockchainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(it))
             }
         this.sendJson(wallets)
     }
@@ -185,7 +189,7 @@ class BlockchainWalletController(
     private fun HttpServerExchange.sendUserWallet(walletId: String) {
         val wallet = userBlockChainWalletRepository().findOneById(walletId)
         val usdBalance = if (wallet.balance == null) null else priceService.getUsdValue(wallet.currency, wallet.balance)
-        this.sendJson(wallet.toDto(usdBalance))
+        this.sendJson(wallet.toDto(usdBalance = usdBalance, blockchainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(wallet)))
     }
 
     private fun <T> HttpServerExchange.sendJson(response: T) {

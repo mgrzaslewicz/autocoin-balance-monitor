@@ -2,6 +2,7 @@ package autocoin.balance.app
 
 import autocoin.balance.api.ServerBuilder
 import autocoin.balance.api.controller.*
+import autocoin.balance.blockchain.BlockChainExplorerUrlService
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.blockchain.btc.BtcService
@@ -258,6 +259,8 @@ class AppContext(private val appConfig: AppConfig) {
         timeMillisProvider = timeMillisProvider,
     )
 
+    val blockChainExplorerUrlService = BlockChainExplorerUrlService()
+
     val blockchainWalletController = BlockchainWalletController(
         objectMapper = objectMapper,
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
@@ -265,6 +268,7 @@ class AppContext(private val appConfig: AppConfig) {
         walletAddressValidator = multiWalletAddressValidator,
         userBlockChainWalletService = userBlockChainWalletService,
         priceService = priceService,
+        blockChainExplorerUrlService = blockChainExplorerUrlService,
     )
 
     val userCurrencyAssetService = UserCurrencyAssetService(

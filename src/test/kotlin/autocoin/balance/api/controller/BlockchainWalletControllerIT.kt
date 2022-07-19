@@ -5,6 +5,7 @@ import autocoin.TestDb
 import autocoin.TestServer
 import autocoin.balance.app.ObjectMapperProvider
 import autocoin.balance.app.createJdbi
+import autocoin.balance.blockchain.BlockChainExplorerUrlService
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
 import autocoin.balance.blockchain.btc.BtcWalletAddressValidator
@@ -76,6 +77,7 @@ class BlockchainWalletControllerIT {
             ),
             userBlockChainWalletService = walletService,
             priceService = priceService,
+            blockChainExplorerUrlService = BlockChainExplorerUrlService(),
         )
     }
 
@@ -220,12 +222,14 @@ class BlockchainWalletControllerIT {
             assertThat(walletsResponse[0].description).isEqualTo("sample description 1")
             assertThat(walletsResponse[0].walletAddress).isEqualTo(sampleEthAddress1)
             assertThat(walletsResponse[0].usdBalance).isNull()
+            assertThat(walletsResponse[0].blockChainExplorerUrl).isEqualTo("https://etherscan.io/address/$sampleEthAddress1")
 
             assertThat(walletsResponse[1].currency).isEqualTo("ETH")
             assertThat(walletsResponse[1].description).isNull()
             assertThat(walletsResponse[1].walletAddress).isEqualTo(sampleEthAddress2)
             assertThat(walletsResponse[1].balance).isEqualTo("2.78")
             assertThat(walletsResponse[1].usdBalance).isEqualTo("10.5")
+            assertThat(walletsResponse[1].blockChainExplorerUrl).isEqualTo("https://etherscan.io/address/$sampleEthAddress2")
             assertAll()
         }
     }
