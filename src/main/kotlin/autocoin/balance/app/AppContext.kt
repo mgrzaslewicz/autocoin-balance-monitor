@@ -8,6 +8,7 @@ import autocoin.balance.blockchain.btc.BtcService
 import autocoin.balance.blockchain.btc.BtcWalletAddressValidator
 import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.blockchain.eth.Web3EthService
+import autocoin.balance.eventbus.DefaultEventBus
 import autocoin.balance.health.HealthService
 import autocoin.balance.health.db.DbHealthCheck
 import autocoin.balance.metrics.MetricsService
@@ -20,6 +21,8 @@ import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
 import autocoin.balance.price.CachingPriceService
 import autocoin.balance.price.CurrencyRepository
 import autocoin.balance.price.RestPriceService
+import autocoin.balance.price.pricesUpdatedEventType
+import autocoin.balance.price.repository.FilePriceRepository
 import autocoin.balance.scheduled.HealthMetricsScheduler
 import autocoin.balance.scheduled.PriceRefreshScheduler
 import autocoin.balance.wallet.blockchain.UserBlockChainWalletRepository
@@ -34,6 +37,7 @@ import autocoin.balance.wallet.summary.DefaultUserBalanceSummaryService
 import autocoin.balance.wallet.summary.UserBalanceSummaryRepository
 import autocoin.metrics.JsonlFileStatsDClient
 import automate.profit.autocoin.exchange.time.SystemTimeMillisProvider
+import automate.profit.autocoin.keyvalue.FileKeyValueRepository
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -46,6 +50,7 @@ import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.kotlin.KotlinPlugin
 import org.jdbi.v3.sqlobject.kotlin.KotlinSqlObjectPlugin
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -198,13 +203,28 @@ class AppContext(private val appConfig: AppConfig) {
         multiBlockchainWalletService = multiBlockchainWalletService,
     )
 
+    private val timeMillisProvider = SystemTimeMillisProvider()
+
+    val eventBus = DefaultEventBus(executorService = scheduledJobsxecutorService)
+
+    val fileKeyValueRepository = FileKeyValueRepository(timeMillisProvider = timeMillisProvider)
+
+    val filePriceRepository = FilePriceRepository(
+        fileKeyValueRepository = fileKeyValueRepository,
+        objectMapper = objectMapper,
+        pricesFolder = Paths.get(appConfig.pricesFolder),
+    )
+
     val priceService = CachingPriceService(
         decorated = RestPriceService(
             priceApiUrl = appConfig.exchangeMediatorApiBaseUrl,
             httpClient = oauth2HttpClient,
             metricsService = metricsService,
             objectMapper = objectMapper
-        )
+        ),
+        eventBus = eventBus.apply {
+            this.register(pricesUpdatedEventType, filePriceRepository::savePrices)
+        },
     )
 
     val priceRefreshScheduler = PriceRefreshScheduler(
@@ -219,8 +239,6 @@ class AppContext(private val appConfig: AppConfig) {
         httpClient = oauth2HttpClient.newBuilder().callTimeout(1, TimeUnit.MINUTES).build(),
         exchangeMediatorApiUrl = appConfig.exchangeMediatorApiBaseUrl,
     )
-
-    private val timeMillisProvider = SystemTimeMillisProvider()
 
     val userExchangeWalletService = UserExchangeWalletService(
         exchangeMediatorWalletService = exchangeMediatorWalletService,

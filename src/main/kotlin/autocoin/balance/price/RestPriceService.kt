@@ -1,6 +1,7 @@
 package autocoin.balance.price
 
 import autocoin.balance.metrics.MetricsService
+import automate.profit.autocoin.exchange.currency.CurrencyPair
 import com.fasterxml.jackson.databind.ObjectMapper
 import mu.KLogging
 import okhttp3.OkHttpClient
@@ -29,7 +30,9 @@ data class CurrencyPrice(
     val baseCurrency: String,
     val counterCurrency: String,
     val timestampMillis: Long,
-)
+) {
+    val currencyPair: CurrencyPair by lazy { CurrencyPair.of(baseCurrency, counterCurrency) }
+}
 
 interface PriceService {
     fun getUsdPrice(currencyCode: String): CurrencyPrice? = getPrice(currencyCode, counterCurrency = "USD")

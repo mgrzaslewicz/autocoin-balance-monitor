@@ -1,17 +1,23 @@
 package autocoin.balance.price
 
+import autocoin.balance.eventbus.EventBus
+import automate.profit.autocoin.exchange.currency.CurrencyPair
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
+import mu.KLogging
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.util.*
 
 class CachingPriceService(
     private val decorated: PriceService,
     private val maxPriceCacheAgeNanos: Long = Long.MAX_VALUE,
     private val maxPriceCacheNullValueAgeNanos: Long = Duration.of(1, ChronoUnit.MINUTES).toNanos(),
+    private val eventBus: EventBus,
 ) : PriceService {
+    private companion object : KLogging()
 
     private val nullValueMarker = CurrencyPrice(price = BigDecimal.ZERO, baseCurrency = "", counterCurrency = "", timestampMillis = 0)
 
@@ -54,6 +60,11 @@ class CachingPriceService(
         }
     }
 
+    fun populateCache(prices: Map<CurrencyPair, CurrencyPrice>) {
+        logger.info { "Populating price cache with ${prices.keys.size} prices" }
+        priceCache.putAll(prices.mapKeys { it.key.toString() })
+    }
+
     fun refreshUsdPrices(currencies: List<String>) {
         currencies.forEach {
             val newPrice = decorated.getUsdPrice(it)
@@ -62,6 +73,7 @@ class CachingPriceService(
                 priceCache.put(priceKey, newPrice)
             }
         }
+        eventBus.publish(pricesUpdatedEventType, Collections.unmodifiableCollection(priceCache.asMap().values))
     }
 
 }

@@ -1,6 +1,8 @@
 package autocoin.balance.price
 
+import autocoin.balance.eventbus.EventBus
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
@@ -14,12 +16,21 @@ class CachingPriceServiceTest {
     @Mock
     private lateinit var priceService: PriceService
 
+    @Mock
+    private lateinit var eventBus: EventBus
+
+    private lateinit var tested: CachingPriceService
+
+    @BeforeEach
+    fun setup() {
+        tested = CachingPriceService(decorated = priceService, eventBus = eventBus)
+    }
+
     @Test
     fun shouldGetPriceFromCache() {
         // given
         val expectedPrice: CurrencyPrice = mock()
         whenever(priceService.getPrice("A", "B")).thenReturn(expectedPrice)
-        val tested = CachingPriceService(decorated = priceService)
         // when
         val price = tested.getPrice("A", "B")
         tested.getPrice("A", "B")
@@ -37,7 +48,8 @@ class CachingPriceServiceTest {
         val cacheDuration = Duration.of(10, ChronoUnit.MILLIS)
         val tested = CachingPriceService(
             decorated = priceService,
-            maxPriceCacheAgeNanos = cacheDuration.toNanos()
+            maxPriceCacheAgeNanos = cacheDuration.toNanos(),
+            eventBus = eventBus,
         )
         // when
         tested.getPrice("A", "B")
@@ -50,8 +62,6 @@ class CachingPriceServiceTest {
 
     @Test
     fun shouldGetNullPriceFromCache() {
-        // given
-        val tested = CachingPriceService(decorated = priceService)
         // when
         val price = tested.getPrice("A", "B")
         tested.getPrice("A", "B")
@@ -66,7 +76,8 @@ class CachingPriceServiceTest {
         val nullCacheDuration = Duration.of(10, ChronoUnit.MILLIS)
         val tested = CachingPriceService(
             decorated = priceService,
-            maxPriceCacheNullValueAgeNanos = nullCacheDuration.toNanos()
+            maxPriceCacheNullValueAgeNanos = nullCacheDuration.toNanos(),
+            eventBus = eventBus,
         )
         // when
         tested.getPrice("A", "B")
@@ -80,7 +91,6 @@ class CachingPriceServiceTest {
     @Test
     fun shouldRefreshPrices() {
         // given
-        val tested = CachingPriceService(decorated = priceService)
         val expectedPrice: CurrencyPrice = mock()
         whenever(priceService.getUsdPrice("A")).thenReturn(expectedPrice)
         tested.refreshUsdPrices(listOf("A"))
@@ -90,6 +100,17 @@ class CachingPriceServiceTest {
         // then
         assertThat(actualPrice).isEqualTo(expectedPrice)
         verifyNoMoreInteractions(priceService)
+    }
+
+    @Test
+    fun shouldPublishPricesUpdatedEventWhenRefreshPrices() {
+        // given
+        val expectedPrice: CurrencyPrice = mock()
+        whenever(priceService.getUsdPrice("A")).thenReturn(expectedPrice)
+        // when
+        tested.refreshUsdPrices(listOf("A"))
+        // then
+        verify(eventBus).publish(eq(pricesUpdatedEventType), argThat { arg -> arg.contains(expectedPrice) })
     }
 
 }

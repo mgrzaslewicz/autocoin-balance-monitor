@@ -29,6 +29,8 @@ data class AppConfig(
     val appServerPort: Int = getPropertyThenEnv("APP_SERVER_PORT", "10022").toInt(),
     val serviceName: String = getPropertyThenEnv("SERVICE_NAME"),
 
+    val pricesFolder: String = getPropertyThenEnv("APP_DATA_PATH", "data") + File.separator + "prices",
+
     @InternalDependency
     val oauth2ApiBaseUrl: String = getPropertyThenEnv("OAUTH2_API_URL", "http://autocoin-auth-service:9002"),
 
