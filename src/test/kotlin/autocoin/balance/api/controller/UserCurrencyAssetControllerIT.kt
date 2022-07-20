@@ -3,6 +3,7 @@ package autocoin.balance.api.controller
 import autocoin.StartedServer
 import autocoin.TestServer
 import autocoin.balance.app.ObjectMapperProvider
+import autocoin.balance.blockchain.BlockChainExplorerUrlService
 import autocoin.balance.wallet.currency.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -30,6 +31,9 @@ class UserCurrencyAssetControllerIT {
     @Mock
     private lateinit var userCurrencyAssetRepository: UserCurrencyAssetRepository
 
+    @Mock
+    private lateinit var blockChainExplorerUrlService: BlockChainExplorerUrlService
+
     private val authenticatedHttpHandlerWrapper = AuthenticatedHttpHandlerWrapper()
     private val httpClientWithoutAuthorization = OkHttpClient()
     private val objectMapper = ObjectMapperProvider().createObjectMapper()
@@ -52,6 +56,7 @@ class UserCurrencyAssetControllerIT {
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userCurrencyAssetService = userCurrencyAssetService,
             userCurrencyAssetRepository = { userCurrencyAssetRepository },
+            blockChainExplorerUrlService = blockChainExplorerUrlService,
         )
         startedServer = TestServer.startTestServer(userCurrencyAssetController)
     }
@@ -90,6 +95,7 @@ class UserCurrencyAssetControllerIT {
     @Test
     fun shouldGetUserCurrencyAssets() {
         // given
+        whenever(blockChainExplorerUrlService.getBlockchainExplorerUrl(any<UserCurrencyAsset>())).thenReturn("wallet url")
         val userCurrencyAssetId = UUID.randomUUID().toString()
         val expectedResponse = UserCurrencyAssetsResponseDto(
             userCurrencyAssets = listOf(
@@ -100,6 +106,7 @@ class UserCurrencyAssetControllerIT {
                     description = "sample description",
                     valueInOtherCurrency = mapOf("USD" to "10"),
                     walletAddress = "sample wallet address",
+                    blockChainExplorerUrl = "wallet url",
                 )
             ),
             userCurrencyAssetsSummary = listOf(
@@ -130,6 +137,7 @@ class UserCurrencyAssetControllerIT {
         whenever(userCurrencyAssetService.getUserCurrencyAsset(authenticatedHttpHandlerWrapper.userAccountId, sampleUserCurrencyAsset.id)).thenReturn(
             UserCurrencyAssetWithValue(userCurrencyAsset = sampleUserCurrencyAsset, valueInOtherCurrency = mapOf())
         )
+        whenever(blockChainExplorerUrlService.getBlockchainExplorerUrl(sampleUserCurrencyAsset)).thenReturn("wallet url")
         // when
         val request = Request.Builder()
             .url("http://localhost:${startedServer.port}/user-currency-assets/${sampleUserCurrencyAsset.id}")
@@ -145,6 +153,7 @@ class UserCurrencyAssetControllerIT {
                 currency = sampleUserCurrencyAsset.currency,
                 balance = sampleUserCurrencyAsset.balance.toPlainString(),
                 walletAddress = sampleUserCurrencyAsset.walletAddress,
+                blockChainExplorerUrl = "wallet url",
                 description = sampleUserCurrencyAsset.description,
                 valueInOtherCurrency = mapOf(),
             )

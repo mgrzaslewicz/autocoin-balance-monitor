@@ -1,12 +1,16 @@
 package autocoin.balance.blockchain
 
 import autocoin.balance.wallet.blockchain.UserBlockChainWallet
+import autocoin.balance.wallet.currency.UserCurrencyAsset
 
 class BlockChainExplorerUrlService {
     fun getBlockchainExplorerUrl(wallet: UserBlockChainWallet) = getBlockchainExplorerUrl(wallet.currency, wallet.walletAddress)
+    fun getBlockchainExplorerUrl(userCurrencyAsset: UserCurrencyAsset) = getBlockchainExplorerUrl(userCurrencyAsset.currency, userCurrencyAsset.walletAddress)
 
-    fun getBlockchainExplorerUrl(currency: String, walletAddress: String): String? {
-        return when (currency) {
+    fun getBlockchainExplorerUrl(currency: String, walletAddress: String?): String? {
+        return if (walletAddress == null) {
+            null
+        } else when (currency) {
             "BTC" -> "https://blockchain.info/address/$walletAddress"
             "LTC" -> "https://live.blockcypher.com/ltc/address/$walletAddress"
             "DOGE" -> "https://dogechain.info/address/$walletAddress"

@@ -3,6 +3,7 @@ package autocoin.balance.api.controller
 import autocoin.balance.api.ApiController
 import autocoin.balance.api.ApiEndpoint
 import autocoin.balance.api.HttpHandlerWrapper
+import autocoin.balance.blockchain.BlockChainExplorerUrlService
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.wallet.currency.*
@@ -19,6 +20,7 @@ data class UserCurrencyAssetResponseDto(
     val currency: String,
     val description: String?,
     val walletAddress: String?,
+    val blockChainExplorerUrl: String?,
     val balance: String,
     val valueInOtherCurrency: Map<String, String?>,
 )
@@ -35,11 +37,12 @@ data class UserCurrencyAssetsResponseDto(
     val userCurrencyAssetsSummary: List<UserCurrencyAssetSummaryResponseDto>,
 )
 
-fun UserCurrencyAssetWithValue.toDto() = UserCurrencyAssetResponseDto(
+fun UserCurrencyAssetWithValue.toDto(blockChainExplorerUrl: String?) = UserCurrencyAssetResponseDto(
     id = this.userCurrencyAsset.id,
     currency = this.userCurrencyAsset.currency,
     description = this.userCurrencyAsset.description,
     walletAddress = this.userCurrencyAsset.walletAddress,
+    blockChainExplorerUrl = blockChainExplorerUrl,
     balance = this.userCurrencyAsset.balance.toPlainString(),
     valueInOtherCurrency = this.valueInOtherCurrency.toStringValueMap(),
 )
@@ -84,6 +87,7 @@ class UserCurrencyAssetController(
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
     private val userCurrencyAssetService: UserCurrencyAssetService,
     private val userCurrencyAssetRepository: () -> UserCurrencyAssetRepository,
+    private val blockChainExplorerUrlService: BlockChainExplorerUrlService,
 ) : ApiController {
     private companion object : KLogging()
 
@@ -96,7 +100,9 @@ class UserCurrencyAssetController(
             val userCurrencyAssetSummaryList = userCurrencyAssetService.getUserCurrencyAssetsSummary(userAccountId)
             val userCurrencyAssets = userCurrencyAssetService.getUserCurrencyAssets(userAccountId)
             val result = UserCurrencyAssetsResponseDto(
-                userCurrencyAssets = userCurrencyAssets.map { it.toDto() },
+                userCurrencyAssets = userCurrencyAssets.map {
+                    it.toDto(blockChainExplorerUrlService.getBlockchainExplorerUrl(it.userCurrencyAsset))
+                },
                 userCurrencyAssetsSummary = userCurrencyAssetSummaryList.map { it.toDto() }
             )
             httpServerExchange.responseSender.send(objectMapper.writeValueAsString(result))
@@ -117,7 +123,7 @@ class UserCurrencyAssetController(
             if (userCurrencyAssetId != null) {
                 val result = userCurrencyAssetService.getUserCurrencyAsset(userAccountId, userCurrencyAssetId)
                 if (result != null) {
-                    httpServerExchange.responseSender.send(objectMapper.writeValueAsString(result.toDto()))
+                    httpServerExchange.responseSender.send(objectMapper.writeValueAsString(result.toDto(blockChainExplorerUrlService.getBlockchainExplorerUrl(result.userCurrencyAsset))))
                 } else {
                     httpServerExchange.statusCode = 404
                 }

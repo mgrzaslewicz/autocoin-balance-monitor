@@ -299,6 +299,7 @@ class AppContext(private val appConfig: AppConfig) {
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
         userCurrencyAssetService = userCurrencyAssetService,
         userCurrencyAssetRepository = { jdbi.get().onDemand(UserCurrencyAssetRepository::class.java) },
+        blockChainExplorerUrlService = blockChainExplorerUrlService,
     )
 
     val controllers = listOf(
