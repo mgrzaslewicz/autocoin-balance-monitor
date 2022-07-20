@@ -74,6 +74,7 @@ data class UpdateUserCurrencyAssetRequestDto(
     val id: String,
     val currency: String,
     val balance: String,
+    val walletAddress: String?,
     val description: String?,
 )
 
@@ -174,6 +175,7 @@ class UserCurrencyAssetController(
             val pathMatch: PathTemplateMatch = httpServerExchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY)
             val userCurrencyAssetId = pathMatch.parameters[userCurrencyAssetIdParameter]
             val updateUserCurrencyAssetRequest = httpServerExchange.inputStreamToObject(UpdateUserCurrencyAssetRequestDto::class.java)
+            logger.info { "User $userAccountId is updating currency asset $updateUserCurrencyAssetRequest" }
             if (userCurrencyAssetId != null) {
                 val userCurrencyAsset = userCurrencyAssetRepository().findOneByUserAccountIdAndId(userAccountId, userCurrencyAssetId)
                 if (userCurrencyAsset != null) {
@@ -181,6 +183,7 @@ class UserCurrencyAssetController(
                         balance = BigDecimal(updateUserCurrencyAssetRequest.balance),
                         description = updateUserCurrencyAssetRequest.description,
                         currency = updateUserCurrencyAssetRequest.currency,
+                        walletAddress = updateUserCurrencyAssetRequest.walletAddress,
                     )
                     val howManyUpdated = userCurrencyAssetRepository().updateCurrencyAsset(modifiedCurrencyAsset)
                     if (howManyUpdated != 1) {

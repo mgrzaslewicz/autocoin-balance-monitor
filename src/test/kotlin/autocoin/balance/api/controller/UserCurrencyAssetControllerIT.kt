@@ -185,6 +185,7 @@ class UserCurrencyAssetControllerIT {
         val updateUserCurrencyAssetRequestDto = UpdateUserCurrencyAssetRequestDto(
             id = sampleUserCurrencyAsset.id,
             currency = "NEW",
+            walletAddress = "new wallet address",
             description = "new description",
             balance = "5678.21",
         )
@@ -199,6 +200,7 @@ class UserCurrencyAssetControllerIT {
         verify(userCurrencyAssetRepository).updateCurrencyAsset(
             sampleUserCurrencyAsset.copy(
                 currency = "NEW",
+                walletAddress = "new wallet address",
                 description = "new description",
                 balance = BigDecimal("5678.21"),
             )
