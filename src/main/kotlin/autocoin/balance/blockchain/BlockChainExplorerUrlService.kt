@@ -23,7 +23,7 @@ class BlockChainExplorerUrlService {
             "EOS" -> "https://eosweb.net/account/$walletAddress"
             "BCN" -> "https://explorer.bcn.cash/account/$walletAddress"
             "XLM" -> "https://xlmcharts.com/account/$walletAddress"
-            "TRX" -> "https://trx.network/address/$walletAddress"
+            "TRX" -> "https://tronscan.org/#/address/$walletAddress"
             "NEO" -> "https://neoexplorer.io/address/$walletAddress"
             "ONT" -> "https://explorer.ont.io/address/$walletAddress"
             "ZIL" -> "https://explorer.zilliqa.com/address/$walletAddress"
