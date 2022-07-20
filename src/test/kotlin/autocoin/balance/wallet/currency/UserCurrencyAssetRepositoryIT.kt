@@ -36,6 +36,7 @@ class UserCurrencyAssetRepositoryIT {
             userAccountId = userAccountId,
             description = "sample description",
             balance = BigDecimal("10.6"),
+            walletAddress = "sample wallet address",
         )
         // when
         tested.insertCurrencyAsset(currencyAssetToInsert)
@@ -54,6 +55,7 @@ class UserCurrencyAssetRepositoryIT {
             userAccountId = userAccountId,
             description = "sample description",
             balance = BigDecimal("10.6"),
+            walletAddress = "sample wallet address",
         )
         val userCurrencyAssetsToInsert = listOf(
             currencyAsset,
@@ -84,6 +86,7 @@ class UserCurrencyAssetRepositoryIT {
             userAccountId = userAccountId,
             description = "sample description",
             balance = BigDecimal("10.6"),
+            walletAddress = "sample wallet address",
         )
         tested.insertCurrencyAsset(currencyAsset)
         // when
@@ -107,6 +110,7 @@ class UserCurrencyAssetRepositoryIT {
             userAccountId = userAccountId,
             description = "sample description",
             balance = BigDecimal("10.6"),
+            walletAddress = "sample wallet address",
         )
         tested.insertCurrencyAsset(userCurrencyAsset)
         // when
@@ -126,6 +130,7 @@ class UserCurrencyAssetRepositoryIT {
             userAccountId = userAccountId,
             description = "sample description",
             balance = BigDecimal("10.6"),
+            walletAddress = "sample wallet address",
         )
         tested.insertCurrencyAsset(currencyAsset)
         // when
@@ -145,6 +150,7 @@ class UserCurrencyAssetRepositoryIT {
             userAccountId = userAccountId,
             description = "sample description",
             balance = BigDecimal("10.6"),
+            walletAddress = "sample wallet address",
         )
         tested.insertCurrencyAsset(currencyAsset)
         // when
@@ -172,6 +178,7 @@ class UserCurrencyAssetRepositoryIT {
             userAccountId = userAccountId,
             description = "sample description",
             balance = BigDecimal("10.6"),
+            walletAddress = "sample wallet address",
         )
         tested.insertCurrencyAsset(userCurrencyAsset)
         // when
@@ -190,24 +197,28 @@ class UserCurrencyAssetRepositoryIT {
             userAccountId = userAccountId,
             description = "sample description",
             balance = BigDecimal("10.6"),
+            walletAddress = "sample wallet address1",
         )
         val currencyAsset2 = UserCurrencyAsset(
             currency = "ETH",
             userAccountId = userAccountId,
             description = "sample description2",
             balance = BigDecimal("12.6"),
+            walletAddress = "sample wallet address2",
         )
         val currencyAsset3 = UserCurrencyAsset(
             currency = "ETH",
             userAccountId = userAccountId,
             description = "sample description3",
             balance = BigDecimal("14.6"),
+            walletAddress = "sample wallet address3",
         )
         val currencyAsset4 = UserCurrencyAsset(
             currency = "BTC",
             userAccountId = userAccountId,
             description = null,
             balance = BigDecimal("45.7"),
+            walletAddress = "sample wallet address4",
         )
 
         tested.insertCurrencyAssets(listOf(currencyAsset1, currencyAsset2, currencyAsset3, currencyAsset4))

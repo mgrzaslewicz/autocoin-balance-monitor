@@ -47,3 +47,6 @@ create table user_currency_asset
     balance         numeric      not null,
     description     varchar(1024)
 );
+
+--changeset mgrzaslewicz:4-add-walletAddress-to-currency-asset
+alter table user_currency_asset add column wallet_address varchar(255);

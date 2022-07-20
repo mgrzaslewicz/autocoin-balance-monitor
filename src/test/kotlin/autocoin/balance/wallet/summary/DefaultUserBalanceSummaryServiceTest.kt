@@ -145,6 +145,7 @@ class DefaultUserBalanceSummaryServiceTest {
                 balance = BigDecimal("13.53"),
                 currency = "LTC",
                 description = null,
+                walletAddress = "sample-wallet-address-1",
             ),
             valueInOtherCurrency = mapOf("USD" to BigDecimal("20"))
         )
@@ -154,6 +155,7 @@ class DefaultUserBalanceSummaryServiceTest {
                 balance = BigDecimal("0.031"),
                 currency = "XYZ",
                 description = null,
+                walletAddress = "sample-wallet-address-2",
             ),
             valueInOtherCurrency = mapOf("USD" to BigDecimal("30"))
         )

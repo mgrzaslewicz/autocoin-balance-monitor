@@ -18,6 +18,7 @@ data class UserCurrencyAssetResponseDto(
     val id: String,
     val currency: String,
     val description: String?,
+    val walletAddress: String?,
     val balance: String,
     val valueInOtherCurrency: Map<String, String?>,
 )
@@ -38,6 +39,7 @@ fun UserCurrencyAssetWithValue.toDto() = UserCurrencyAssetResponseDto(
     id = this.userCurrencyAsset.id,
     currency = this.userCurrencyAsset.currency,
     description = this.userCurrencyAsset.description,
+    walletAddress = this.userCurrencyAsset.walletAddress,
     balance = this.userCurrencyAsset.balance.toPlainString(),
     valueInOtherCurrency = this.valueInOtherCurrency.toStringValueMap(),
 )
@@ -54,12 +56,14 @@ data class AddUserCurrencyAssetRequestDto(
     val currency: String,
     val balance: String,
     val description: String?,
+    val walletAddress: String?,
 ) {
     fun toUserCurrencyAsset(userAccountId: String) = UserCurrencyAsset(
         currency = currency,
         description = description,
         balance = balance.toBigDecimal(),
         userAccountId = userAccountId,
+        walletAddress = walletAddress,
     )
 }
 

@@ -28,13 +28,15 @@ class UserCurrencyAssetServiceTest {
             userAccountId = userAccountId,
             currency = "ETH",
             balance = BigDecimal("0.5"),
-            description = null
+            description = null,
+            walletAddress = "sample-wallet-address-1",
         )
         val currencyAsset2 = UserCurrencyAsset(
             userAccountId = userAccountId,
             currency = "BTC",
             balance = BigDecimal("2.5"),
-            description = "binance"
+            description = "binance",
+            walletAddress = "sample-wallet-address-2",
         )
         val tested = UserCurrencyAssetService(
             priceService = priceService.apply {

@@ -14,6 +14,7 @@ data class UserCurrencyAsset(
     val currency: String,
     val balance: BigDecimal,
     val description: String?,
+    val walletAddress: String?,
 )
 
 data class UserCurrencyAssetSummary(
@@ -24,8 +25,8 @@ data class UserCurrencyAssetSummary(
 interface UserCurrencyAssetRepository {
     @SqlUpdate(
         """
-        INSERT INTO user_currency_asset (id, user_account_id, currency, balance, description)
-        VALUES (:id, :userAccountId, :currency, :balance, :description)
+        INSERT INTO user_currency_asset (id, user_account_id, currency, balance, description, wallet_address)
+        VALUES (:id, :userAccountId, :currency, :balance, :description, :walletAddress)
         """
     )
     fun insertCurrencyAsset(@BindKotlin userCurrencyAsset: UserCurrencyAsset): Int
@@ -33,7 +34,7 @@ interface UserCurrencyAssetRepository {
     fun insertCurrencyAssets(userCurrencyAssets: List<UserCurrencyAsset>) = userCurrencyAssets
         .fold(0) { acc, it -> acc + insertCurrencyAsset(it) }
 
-    @SqlUpdate("UPDATE user_currency_asset set  currency = :currency, balance = :balance, description = :description WHERE id = :id")
+    @SqlUpdate("UPDATE user_currency_asset set  currency = :currency, balance = :balance, description = :description , wallet_address = :walletAddress WHERE id = :id")
     fun updateCurrencyAsset(@BindKotlin userCurrencyAsset: UserCurrencyAsset): Int
 
     @SqlQuery("SELECT currency, SUM(balance) as balance FROM user_currency_asset WHERE user_account_id = :userAccountId GROUP BY currency")

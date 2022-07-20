@@ -75,6 +75,7 @@ class BalanceSummaryControllerIT {
                                     balance = BigDecimal("0.001353"),
                                     currency = "ABC",
                                     description = "hardware wallet",
+                                    walletAddress = null,
                                 ),
                                 valueInOtherCurrency = mapOf("EUR" to 20.toBigDecimal())
                             )

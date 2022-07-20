@@ -39,6 +39,7 @@ class UserCurrencyAssetControllerIT {
         currency = "BTC",
         balance = BigDecimal.ONE,
         description = "sample description",
+        walletAddress = "sample wallet address",
     )
 
     private lateinit var startedServer: StartedServer
@@ -98,6 +99,7 @@ class UserCurrencyAssetControllerIT {
                     balance = "1",
                     description = "sample description",
                     valueInOtherCurrency = mapOf("USD" to "10"),
+                    walletAddress = "sample wallet address",
                 )
             ),
             userCurrencyAssetsSummary = listOf(
@@ -142,6 +144,7 @@ class UserCurrencyAssetControllerIT {
                 id = sampleUserCurrencyAsset.id,
                 currency = sampleUserCurrencyAsset.currency,
                 balance = sampleUserCurrencyAsset.balance.toPlainString(),
+                walletAddress = sampleUserCurrencyAsset.walletAddress,
                 description = sampleUserCurrencyAsset.description,
                 valueInOtherCurrency = mapOf(),
             )
@@ -200,6 +203,7 @@ class UserCurrencyAssetControllerIT {
             currency = "NEW",
             description = "new description",
             balance = "5678.21",
+            walletAddress = "sample wallet address",
         )
         // when
         val request = Request.Builder()
@@ -215,6 +219,7 @@ class UserCurrencyAssetControllerIT {
                 currencyAsset.currency == addUserCurrencyAssetRequestDto.currency
                         && currencyAsset.balance == addUserCurrencyAssetRequestDto.balance.toBigDecimal()
                         && currencyAsset.description == addUserCurrencyAssetRequestDto.description
+                        && currencyAsset.walletAddress == addUserCurrencyAssetRequestDto.walletAddress
                         && currencyAsset.userAccountId == authenticatedHttpHandlerWrapper.userAccountId
             }
         )
