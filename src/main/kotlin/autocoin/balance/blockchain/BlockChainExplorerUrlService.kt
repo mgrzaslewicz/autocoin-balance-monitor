@@ -12,6 +12,7 @@ class BlockChainExplorerUrlService {
             null
         } else when (currency) {
             "BTC" -> "https://blockchain.info/address/$walletAddress"
+            "BNB" -> "https://bscscan.com/address/$walletAddress"
             "LTC" -> "https://live.blockcypher.com/ltc/address/$walletAddress"
             "DOGE" -> "https://dogechain.info/address/$walletAddress"
             "BCH" -> "https://blockchair.com/bitcoin-cash/address/$walletAddress"
