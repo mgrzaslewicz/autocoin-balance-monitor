@@ -10,7 +10,6 @@ preconditions() {
 
   declare -a requiredVariables=(
     "APP_DATA_PATH"
-    "OAUTH_CLIENT_ID"
     "OAUTH_CLIENT_SECRET"
     "DB_PASSWORD"
     "DB_USERNAME"
@@ -50,7 +49,6 @@ docker run --name ${SERVICE_NAME} -d \
   -e DB_USERNAME=${DB_USERNAME} \
   -e DB_PASSWORD=${DB_PASSWORD} \
   -e JDBC_URL=${JDBC_URL} \
-  -e OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID} \
   -e OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET} \
   -e SERVICE_NAME=${SERVICE_NAME} \
   -e TELEGRAF_HOSTNAME=${TELEGRAF_HOSTNAME} \

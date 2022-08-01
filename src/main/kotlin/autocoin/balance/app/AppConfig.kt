@@ -38,7 +38,7 @@ data class AppConfig(
     val exchangeMediatorApiBaseUrl: String = getPropertyThenEnv("EXCHANGE_MEDIATOR_API_URL", "http://autocoin-exchange-mediator:9001"),
 
     @InternalDependency
-    val oauth2ClientId: String = getPropertyThenEnv("OAUTH_CLIENT_ID", "balance-monitor"),
+    val oauth2ClientId: String = serviceName,
     @InternalDependency
     val oauth2ClientSecret: String = getPropertyThenEnv("OAUTH_CLIENT_SECRET"),
 
