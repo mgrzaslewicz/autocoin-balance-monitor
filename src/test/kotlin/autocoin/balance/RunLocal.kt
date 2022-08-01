@@ -13,7 +13,8 @@ fun main() {
     setProperty("SERVICE_NAME", "autocoin-balance-monitor")
     setProperty("EXCHANGE_MEDIATOR_API_URL", "http://localhost:9001")
     setProperty("OAUTH2_API_URL", "http://localhost:9002")
-    setProperty("OAUTH_CLIENT_SECRET", "changeme")
+    // the same as
+    setProperty("OAUTH_CLIENT_SECRET", "autocoin-balance-monitor-secret-for-local-development")
     setProperty("DB_USERNAME", "changeme")
     setProperty("DB_PASSWORD", "changeme")
     setProperty("JDBC_URL", "changeme")

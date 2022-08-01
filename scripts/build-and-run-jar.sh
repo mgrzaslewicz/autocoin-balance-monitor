@@ -50,7 +50,7 @@ runJar() {
     -Xmx800M \
     -XX:+PrintFlagsFinal \
     -Djava.security.egd=file:/dev/./urandom \
-    -Dtelegraf.hostname="" \
+    -Dtelegraf.hostname="metrics.jsonl" \
     -DautocoinOauth2ServerUrl=http://localhost:9002 \
     -DexchangesApiUrl=http://localhost:9001 \
     -jar target/${SERVICE_NAME}.jar
