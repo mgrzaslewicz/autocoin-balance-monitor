@@ -74,7 +74,11 @@ fun loadConfig(): AppConfig {
 }
 
 private fun getPropertyThenEnv(propertyName: String): String {
-    return System.getProperty(propertyName, System.getenv(propertyName))
+    try {
+        return System.getProperty(propertyName, System.getenv(propertyName))
+    } catch (e: Exception) {
+        throw IllegalStateException("Can't getPropertyThenEnv $propertyName", e)
+    }
 }
 
 private fun <T> getPropertyThenEnv(propertyName: String, existingPropertyParser: (String) -> T, defaultValue: T): T {

@@ -4,6 +4,7 @@ import autocoin.balance.app.*
 import mu.KotlinLogging
 import org.testcontainers.containers.PostgreSQLContainer
 import java.net.SocketAddress
+import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
 private val logger = KotlinLogging.logger { }
@@ -29,16 +30,21 @@ private fun startOwnDbContainer() {
 }
 
 fun main(args: Array<String>) {
-    var address: SocketAddress? = null
-    val bootTimeMillis = measureTimeMillis {
-        if (shouldStartOwnDbContainer) {
-            startOwnDbContainer()
+    try {
+        var address: SocketAddress? = null
+        val bootTimeMillis = measureTimeMillis {
+            if (shouldStartOwnDbContainer) {
+                startOwnDbContainer()
+            }
+            val config = loadConfig()
+            logger.info { "Config: $config" }
+            val appContext = AppContext(config)
+            val appStarter = AppStarter(appContext)
+            address = appStarter.start().serverAddress
         }
-        val config = loadConfig()
-        logger.info { "Config: $config" }
-        val appContext = AppContext(config)
-        val appStarter = AppStarter(appContext)
-        address = appStarter.start().serverAddress
+        logger.info { "Started in $bootTimeMillis ms, available at $address" }
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to start" }
+        exitProcess(1)
     }
-    logger.info { "Started in $bootTimeMillis ms, available at $address" }
 }
