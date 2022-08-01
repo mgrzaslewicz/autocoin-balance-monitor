@@ -27,7 +27,7 @@ private const val DB_PASSWORD_PARAMETER = "DB_PASSWORD"
 
 data class AppConfig(
     val appServerPort: Int = getPropertyThenEnv("APP_SERVER_PORT", "10022").toInt(),
-    val serviceName: String = getPropertyThenEnv("SERVICE_NAME"),
+    val serviceName: String = getPropertyThenEnv("SERVICE_NAME", "autocoin-balance-monitor"),
 
     val pricesFolder: String = getPropertyThenEnv("APP_DATA_PATH", "data") + File.separator + "prices",
 
