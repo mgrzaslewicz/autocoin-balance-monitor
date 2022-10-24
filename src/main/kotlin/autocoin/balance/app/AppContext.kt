@@ -42,6 +42,7 @@ import automate.profit.autocoin.keyvalue.FileKeyValueRepository
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.undertow.server.HttpServerExchange
 import liquibase.Liquibase
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.ClassLoaderResourceAccessor
@@ -291,6 +292,9 @@ class AppContext(private val appConfig: AppConfig) {
         objectMapper = objectMapper,
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
         userBalanceSummaryService = userBalanceSummaryService,
+        userInProPlanChecker = object : UserProPlanChecker {
+            override fun invoke(exchange: HttpServerExchange) = true
+        }
     )
 
 

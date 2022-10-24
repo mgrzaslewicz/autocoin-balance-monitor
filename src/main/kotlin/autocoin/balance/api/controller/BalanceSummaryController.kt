@@ -78,11 +78,17 @@ data class BalanceSummaryResponseDto(
     val currencyBalances: List<CurrencyBalanceSummaryDto>,
 )
 
+interface UserProPlanChecker {
+    operator fun invoke(exchange: HttpServerExchange): Boolean
+}
+
 class BalanceSummaryController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
     private val userBalanceSummaryService: UserBalanceSummaryService,
-    private val isUserInProPlanFunction: (httpServerExchange: HttpServerExchange) -> Boolean = { it -> it.isUserInProPlan() },
+    private val userInProPlanChecker: UserProPlanChecker = object : UserProPlanChecker {
+        override fun invoke(exchange: HttpServerExchange) = exchange.isUserInProPlan()
+    },
     private val freePlanBalanceSummaryResponseDto: BalanceSummaryResponseDto = objectMapper.readValue(
         this::class.java.getResource("/freePlanBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
     ),
@@ -100,7 +106,7 @@ class BalanceSummaryController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val isProPlan = isUserInProPlanFunction(httpServerExchange)
+            val isProPlan = userInProPlanChecker(httpServerExchange)
             logger.info { "User $userAccountId is requesting balance summary (isProPlan=$isProPlan" }
             if (isProPlan) {
                 val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
@@ -129,7 +135,7 @@ class BalanceSummaryController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val isProPlan = isUserInProPlanFunction(httpServerExchange)
+            val isProPlan = userInProPlanChecker(httpServerExchange)
             logger.info { "User $userAccountId is requesting balance refresh (isProPlan=$isProPlan)" }
             if (isProPlan) {
                 userBalanceSummaryService.refreshBalanceSummary(userAccountId)

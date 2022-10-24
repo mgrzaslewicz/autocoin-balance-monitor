@@ -9,6 +9,7 @@ import autocoin.balance.wallet.summary.BlockchainWalletCurrencySummary
 import autocoin.balance.wallet.summary.CurrencyBalanceSummary
 import autocoin.balance.wallet.summary.ExchangeCurrencySummary
 import autocoin.balance.wallet.summary.UserBalanceSummaryService
+import io.undertow.server.HttpServerExchange
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.internal.EMPTY_REQUEST
@@ -32,6 +33,12 @@ class BalanceSummaryControllerIT {
     private lateinit var startedServer: StartedServer
     private val authenticatedHttpHandlerWrapper = AuthenticatedHttpHandlerWrapper()
     private val userAccountId = authenticatedHttpHandlerWrapper.userAccountId
+    private val userAlwaysInProPlanChecker: UserProPlanChecker = object : UserProPlanChecker {
+        override fun invoke(exchange: HttpServerExchange) = true
+    }
+    private val userAlwaysNotInProPlanChecker: UserProPlanChecker = object : UserProPlanChecker {
+        override fun invoke(exchange: HttpServerExchange) = false
+    }
 
     @BeforeEach
     fun setup() {
@@ -88,7 +95,7 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
-            isUserInProPlanFunction = { true },
+            userInProPlanChecker = userAlwaysInProPlanChecker,
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -143,7 +150,7 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
-            isUserInProPlanFunction = { false },
+            userInProPlanChecker = userAlwaysNotInProPlanChecker,
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -167,7 +174,7 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
-            isUserInProPlanFunction = { true },
+            userInProPlanChecker = userAlwaysInProPlanChecker,
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -197,7 +204,7 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
-            isUserInProPlanFunction = { false },
+            userInProPlanChecker = userAlwaysNotInProPlanChecker,
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
