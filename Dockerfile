@@ -4,7 +4,7 @@ ADD target/autocoin-balance-monitor*.jar /app/autocoin-balance-monitor.jar
 
 RUN mkdir -p /tmp/jar
 
-RUN unzip /app/autocoin-arbitrage-monitor.jar -d /tmp/jar \
+RUN unzip /app/autocoin-balance-monitor.jar -d /tmp/jar \
  && mkdir -p /scripts/run \
  && mv /tmp/jar/scripts/docker/* /scripts/run/ \
  && rm -rf /tmp/jar
