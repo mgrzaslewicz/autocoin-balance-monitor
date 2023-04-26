@@ -4,7 +4,7 @@
 
     <groupId>com.autocoin</groupId>
     <artifactId>autocoin-balance-monitor</artifactId>
-    <version>1.1.2-SNAPSHOT</version>
+    <version>1.1.2</version>
     <packaging>jar</packaging>
 
     <description>Allows to monitor blockchain wallets, exchange wallets and coin balances</description>
@@ -30,7 +30,7 @@
         <connection>scm:git:git@github.com:mgrzaslewicz/autocoin-balance-monitor.git</connection>
         <url>scm:git:git@github.com:mgrzaslewicz/autocoin-balance-monitor.git</url>
         <developerConnection>scm:git:git@github.com:mgrzaslewicz/autocoin-balance-monitor.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>autocoin-balance-monitor-1.1.2</tag>
     </scm>
 
     <dependencies>
