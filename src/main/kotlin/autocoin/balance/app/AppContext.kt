@@ -109,17 +109,17 @@ class AppContext(private val appConfig: AppConfig) {
         .callTimeout(5, TimeUnit.SECONDS)
         .build()
 
-    val statsdClient = if (appConfig.useRealStatsDClient) {
+    val statsdClient = if (appConfig.metricsDestination == MetricsDestination.TELEGRAF) {
         NonBlockingStatsDClient(appConfig.serviceName, appConfig.telegrafHostname, 8125)
     } else {
         val metricsFolderPath = Path.of(appConfig.metricsFolder)
         metricsFolderPath.toFile().mkdirs()
         val metricsFile = metricsFolderPath.resolve("metrics.jsonl")
-        logger.warn { "Using JsonlFileStatsDClient, telegraf.hostname not provided. Writing metrics to ${metricsFile.toAbsolutePath()}" }
+        logger.warn { "Using JsonlFileStatsDClient as metricsDestination set to 'FILE'. Writing metrics to ${metricsFile.toAbsolutePath()}" }
         JsonlFileStatsDClient(metricsFile.toFile())
     }
-    val metricsService: MetricsService = MetricsService(statsdClient)
 
+    val metricsService: MetricsService = MetricsService(statsdClient)
 
     val scheduledJobsxecutorService = Executors.newScheduledThreadPool(3)
 

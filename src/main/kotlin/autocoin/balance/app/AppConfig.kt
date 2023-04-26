@@ -25,6 +25,12 @@ private const val JDBC_URL_PARAMETER = "JDBC_URL"
 private const val DB_USERNAME_PARAMETER = "DB_USERNAME"
 private const val DB_PASSWORD_PARAMETER = "DB_PASSWORD"
 
+
+enum class MetricsDestination {
+    FILE,
+    TELEGRAF,
+}
+
 data class AppConfig(
     val appServerPort: Int = getPropertyThenEnv("APP_SERVER_PORT", "10022").toInt(),
     val serviceName: String = getPropertyThenEnv("SERVICE_NAME", "autocoin-balance-monitor"),
@@ -51,7 +57,7 @@ data class AppConfig(
     @InternalDependency
     val telegrafHostname: String = getPropertyThenEnv("TELEGRAF_HOSTNAME", "telegraf"),
     @InternalDependency
-    val useRealStatsDClient: Boolean = telegrafHostname != "metrics.jsonl",
+    val metricsDestination: MetricsDestination = MetricsDestination.valueOf(getPropertyThenEnv("METRICS_DESTINATION", MetricsDestination.FILE.name)),
 
     @InternalDependency
     val jdbcUrl: String = getPropertyThenEnv(JDBC_URL_PARAMETER),
@@ -78,15 +84,6 @@ private fun getPropertyThenEnv(propertyName: String): String {
         return System.getProperty(propertyName, System.getenv(propertyName))
     } catch (e: Exception) {
         throw IllegalStateException("Can't getPropertyThenEnv $propertyName", e)
-    }
-}
-
-private fun <T> getPropertyThenEnv(propertyName: String, existingPropertyParser: (String) -> T, defaultValue: T): T {
-    val propertyValue = System.getProperty(propertyName, System.getenv(propertyName))
-    return if (propertyValue != null) {
-        existingPropertyParser(propertyValue)
-    } else {
-        defaultValue
     }
 }
 
