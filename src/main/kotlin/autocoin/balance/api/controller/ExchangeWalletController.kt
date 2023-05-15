@@ -4,7 +4,6 @@ import autocoin.balance.api.ApiController
 import autocoin.balance.api.ApiEndpoint
 import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.oauth.server.authorizeWithOauth2
-import autocoin.balance.oauth.server.isUserInProPlan
 import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.blockchain.UserCurrencyBalance
@@ -26,9 +25,11 @@ class ExchangeWalletController(
     private val userExchangeWalletService: UserExchangeWalletService,
     private val userExchangeWalletRepository: () -> UserExchangeWalletRepository,
     private val priceService: PriceService,
-    private val isUserInProPlanFunction: (httpServerExchange: HttpServerExchange) -> Boolean = { it -> it.isUserInProPlan() },
-    private val freePlanExchangeWalletBalancesResponseDto: ExchangeWalletBalancesDto = objectMapper.readValue(
-        this::class.java.getResource("/freePlanExchangeWalletBalancesResponse.json").readText(), ExchangeWalletBalancesDto::class.java
+    private val shouldSendSampleBalance: (httpServerExchange: HttpServerExchange) -> Boolean = { it ->
+        it.queryParameters["sampleBalance"]?.first == "true"
+    },
+    private val sampleExchangeWalletBalancesResponseDto: ExchangeWalletBalancesDto = objectMapper.readValue(
+        this::class.java.getResource("/sampleExchangeWalletBalancesResponse.json").readText(), ExchangeWalletBalancesDto::class.java
     ),
     private val timeMillisProvider: TimeMillisProvider,
 ) : ApiController {
@@ -46,12 +47,12 @@ class ExchangeWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val isProPlan = isUserInProPlanFunction(httpServerExchange)
-            logger.info { "User $userAccountId is requesting exchange wallets (isProPlan=$isProPlan" }
-            if (isProPlan) {
-                httpServerExchange.sendJson(userExchangeWalletService.getWalletBalances(userAccountId))
+            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
+            logger.info { "User $userAccountId is requesting exchange wallets (shouldSendSampleBalance=$shouldSendSampleBalance)" }
+            if (shouldSendSampleBalance) {
+                httpServerExchange.sendJson(sampleExchangeWalletBalancesResponseDto)
             } else {
-                httpServerExchange.sendJson(freePlanExchangeWalletBalancesResponseDto)
+                httpServerExchange.sendJson(userExchangeWalletService.getWalletBalances(userAccountId))
             }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
@@ -70,17 +71,17 @@ class ExchangeWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val isProPlan = isUserInProPlanFunction(httpServerExchange)
-            logger.info { "User $userAccountId is requesting exchange wallets currency balance (isProPlan=$isProPlan" }
-            if (isProPlan) {
+            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
+            logger.info { "User $userAccountId is requesting exchange wallets currency balance (shouldSendSampleBalance=$shouldSendSampleBalance)" }
+            if (shouldSendSampleBalance) {
+                httpServerExchange.sendJson(emptyList<UserCurrencyBalance>())
+            } else {
                 val currencyBalance = userExchangeWalletRepository().selectUserCurrencyBalance(userAccountId)
                 httpServerExchange.sendJson(currencyBalance.map {
                     val usdBalance = tryGetUsdValue(it.currency, it.balance)
                     val usdPrice = priceService.getUsdPrice(it.currency)?.price
                     it.toDto(usdBalance, usdPrice)
                 })
-            } else {
-                httpServerExchange.sendJson(emptyList<UserCurrencyBalance>())
             }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
@@ -91,14 +92,14 @@ class ExchangeWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val isProPlan = isUserInProPlanFunction(httpServerExchange)
-            logger.info { "User $userAccountId is refreshing exchange wallets balance (isProPlan=$isProPlan" }
-            if (isProPlan) {
+            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
+            logger.info { "User $userAccountId is refreshing exchange wallets balance (shouldSendSampleBalance=$shouldSendSampleBalance)" }
+            if (shouldSendSampleBalance) {
+                httpServerExchange.sendJson(sampleExchangeWalletBalancesResponseDto.copy(refreshTimeMillis = timeMillisProvider.now()))
+            } else {
                 userExchangeWalletService.refreshWalletBalances(userAccountId)
                 logger.info { "User $userAccountId refreshed exchange wallets balance" }
                 httpServerExchange.sendJson(userExchangeWalletService.getWalletBalances(userAccountId))
-            } else {
-                httpServerExchange.sendJson(freePlanExchangeWalletBalancesResponseDto.copy(refreshTimeMillis = timeMillisProvider.now()))
             }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }

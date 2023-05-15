@@ -17,19 +17,18 @@ class ExchangeWalletControllerIT {
     private val authenticatedHttpHandlerWrapper = AuthenticatedHttpHandlerWrapper()
 
     @Test
-    fun shouldGetExchangeWallets() {
+    fun shouldGetSampleExchangeWallets() {
         // given
         val tested = ExchangeWalletController(
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userExchangeWalletService = mock(),
             userExchangeWalletRepository = { mock() },
-            isUserInProPlanFunction = { false },
             priceService = mock(),
             timeMillisProvider = SystemTimeMillisProvider(),
         )
         val startedServer = startTestServer(tested)
-        val request = Request.Builder().url("http://localhost:${startedServer.port}/exchange/wallets")
+        val request = Request.Builder().url("http://localhost:${startedServer.port}/exchange/wallets?sampleBalance=true")
             .build()
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
