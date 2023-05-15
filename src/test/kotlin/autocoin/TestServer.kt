@@ -5,9 +5,10 @@ import autocoin.balance.api.ServerBuilder
 import io.undertow.Undertow
 import me.alexpanov.net.FreePortFinder
 import org.mockito.kotlin.mock
+import java.net.URI
 
 data class StartedServer(
-    val port: Int,
+    val uri: URI,
     private val server: Undertow
 ) {
     fun stop() {
@@ -28,8 +29,8 @@ class TestServer {
             val server = serverBuilder.build()
             server.start()
             return StartedServer(
-                port = port,
-                server = server
+                uri = URI.create("http://localhost:$port"),
+                server = server,
             )
         }
     }

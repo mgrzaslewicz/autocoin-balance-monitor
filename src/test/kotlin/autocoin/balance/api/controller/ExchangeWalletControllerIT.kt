@@ -28,7 +28,7 @@ class ExchangeWalletControllerIT {
             timeMillisProvider = SystemTimeMillisProvider(),
         )
         val startedServer = startTestServer(tested)
-        val request = Request.Builder().url("http://localhost:${startedServer.port}/exchange/wallets?sampleBalance=true")
+        val request = Request.Builder().url(startedServer.uri.resolve("/exchange/wallets?sampleBalance=true").toURL())
             .build()
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()

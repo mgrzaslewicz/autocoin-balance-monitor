@@ -94,7 +94,7 @@ class BlockchainWalletControllerIT {
         whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets")
+            .url(startedServer.uri.resolve("/blockchain/wallets").toURL())
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
@@ -126,7 +126,7 @@ class BlockchainWalletControllerIT {
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val duplicatedWalletAddress = sampleEthAddress1
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets")
+            .url(startedServer.uri.resolve("/blockchain/wallets").toURL())
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
@@ -153,7 +153,7 @@ class BlockchainWalletControllerIT {
         // given
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets")
+            .url(startedServer.uri.resolve("/blockchain/wallets").toURL())
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
@@ -208,7 +208,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets")
+            .url(startedServer.uri.resolve("/blockchain/wallets").toURL())
             .get()
             .build()
         // when
@@ -265,7 +265,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets/currency/balance")
+            .url(startedServer.uri.resolve("/blockchain/wallets/currency/balance").toURL())
             .get()
             .build()
         // when
@@ -300,7 +300,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets/$walletId")
+            .url(startedServer.uri.resolve("/blockchain/wallets/$walletId").toURL())
             .get()
             .build()
         // when
@@ -321,7 +321,7 @@ class BlockchainWalletControllerIT {
         // given
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets/nonexistingwallet")
+            .url(startedServer.uri.resolve("/blockchain/wallets/nonexistingwallet").toURL())
             .get()
             .build()
         // when
@@ -348,7 +348,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets/$walletId")
+            .url(startedServer.uri.resolve("/blockchain/wallets/$walletId").toURL())
             .get()
             .build()
         // when
@@ -385,7 +385,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallets/balance/refresh")
+            .url(startedServer.uri.resolve("/blockchain/wallets/balance/refresh").toURL())
             .post(EMPTY_REQUEST)
             .build()
         // when
@@ -419,7 +419,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallet")
+            .url(startedServer.uri.resolve("/blockchain/wallet").toURL())
             .put(
                 objectMapper.writeValueAsString(
                     UpdateBlockchainWalletRequestDto(
@@ -458,7 +458,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/blockchain/wallet/$sampleEthAddress1")
+            .url(startedServer.uri.resolve("/blockchain/wallet/$sampleEthAddress1").toURL())
             .delete(EMPTY_REQUEST)
             .build()
         // when
@@ -473,7 +473,7 @@ class BlockchainWalletControllerIT {
         // given
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallet/nonexistingwallet")
+            .url(startedServer.uri.resolve("/wallet/nonexistingwallet").toURL())
             .delete(EMPTY_REQUEST)
             .build()
         // when
@@ -500,7 +500,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/wallet/$walletId")
+            .url(startedServer.uri.resolve("/wallet/$walletId").toURL())
             .delete(EMPTY_REQUEST)
             .build()
         // when

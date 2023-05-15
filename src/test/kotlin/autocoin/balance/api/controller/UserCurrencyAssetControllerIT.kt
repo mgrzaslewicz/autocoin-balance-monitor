@@ -121,7 +121,7 @@ class UserCurrencyAssetControllerIT {
         setupSampleResultsInCurrencyAssetService(userCurrencyAssetId)
         // when
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/user-currency-assets")
+            .url(startedServer.uri.resolve("/user-currency-assets").toURL())
             .get()
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -140,7 +140,7 @@ class UserCurrencyAssetControllerIT {
         whenever(blockChainExplorerUrlService.getBlockchainExplorerUrl(sampleUserCurrencyAsset)).thenReturn("wallet url")
         // when
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/user-currency-assets/${sampleUserCurrencyAsset.id}")
+            .url(startedServer.uri.resolve("/user-currency-assets/${sampleUserCurrencyAsset.id}").toURL())
             .get()
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -167,7 +167,7 @@ class UserCurrencyAssetControllerIT {
         whenever(userCurrencyAssetRepository.deleteOneByUserAccountIdAndId(authenticatedHttpHandlerWrapper.userAccountId, userCurrencyAssetId)).thenReturn(1)
         // when
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/user-currency-assets/$userCurrencyAssetId")
+            .url(startedServer.uri.resolve("/user-currency-assets/$userCurrencyAssetId").toURL())
             .delete()
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -191,7 +191,7 @@ class UserCurrencyAssetControllerIT {
         )
         // when
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/user-currency-assets/${sampleUserCurrencyAsset.id}")
+            .url(startedServer.uri.resolve("/user-currency-assets/${sampleUserCurrencyAsset.id}").toURL())
             .put(objectMapper.writeValueAsString(updateUserCurrencyAssetRequestDto).toRequestBody())
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -218,7 +218,7 @@ class UserCurrencyAssetControllerIT {
         )
         // when
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/user-currency-assets")
+            .url(startedServer.uri.resolve("/user-currency-assets").toURL())
             .post(objectMapper.writeValueAsString(listOf(addUserCurrencyAssetRequestDto)).toRequestBody())
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
