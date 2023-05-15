@@ -4,7 +4,6 @@ import autocoin.balance.api.ApiController
 import autocoin.balance.api.ApiEndpoint
 import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.oauth.server.authorizeWithOauth2
-import autocoin.balance.oauth.server.isUserInProPlan
 import autocoin.balance.oauth.server.userAccountId
 import autocoin.balance.wallet.currency.UserCurrencyAssetWithValue
 import autocoin.balance.wallet.summary.BlockchainWalletCurrencySummary
@@ -78,7 +77,7 @@ data class BalanceSummaryResponseDto(
     val currencyBalances: List<CurrencyBalanceSummaryDto>,
 )
 
-interface UserProPlanChecker {
+interface ShouldSendSampleBalanceChecker {
     operator fun invoke(exchange: HttpServerExchange): Boolean
 }
 
@@ -86,17 +85,17 @@ class BalanceSummaryController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
     private val userBalanceSummaryService: UserBalanceSummaryService,
-    private val userInProPlanChecker: UserProPlanChecker = object : UserProPlanChecker {
-        override fun invoke(exchange: HttpServerExchange) = exchange.isUserInProPlan()
+    private val shouldSendSampleBalance: (httpServerExchange: HttpServerExchange) -> Boolean = { it ->
+        it.queryParameters["sampleBalance"]?.first == "true"
     },
-    private val freePlanBalanceSummaryResponseDto: BalanceSummaryResponseDto = objectMapper.readValue(
-        this::class.java.getResource("/freePlanBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
+    private val sampleBalanceSummaryResponseDto: BalanceSummaryResponseDto = objectMapper.readValue(
+        this::class.java.getResource("/sampleBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
     ),
 ) : ApiController {
     private companion object : KLogging()
 
-    private val freePlanBalanceSummaryResponseJson: String by lazy {
-        objectMapper.writeValueAsString(freePlanBalanceSummaryResponseDto)
+    private val sampleBalanceSummaryResponseJson: String by lazy {
+        objectMapper.writeValueAsString(sampleBalanceSummaryResponseDto)
     }
 
     private fun getUserBalanceSummary() = object : ApiEndpoint {
@@ -106,24 +105,22 @@ class BalanceSummaryController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val isProPlan = userInProPlanChecker(httpServerExchange)
-            logger.info { "User $userAccountId is requesting balance summary (isProPlan=$isProPlan" }
-            if (isProPlan) {
-                val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
-                httpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList)
+            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
+            logger.info { "User $userAccountId is requesting balance summary (shouldSendSampleBalance =$shouldSendSampleBalance)" }
+            if (shouldSendSampleBalance) {
+                httpServerExchange.responseSender.send(sampleBalanceSummaryResponseJson)
             } else {
-                httpServerExchange.responseSender.send(freePlanBalanceSummaryResponseJson)
+                val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
+                httpServerExchange.responseSender.send(currencyBalanceSummaryList.toJson())
             }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
-    private fun HttpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList: List<CurrencyBalanceSummary>) {
-        this.responseSender.send(
-            objectMapper.writeValueAsString(
-                BalanceSummaryResponseDto(
-                    isShowingRealBalance = true,
-                    currencyBalances = currencyBalanceSummaryList.map { it.toDto() }
-                )
+    private fun List<CurrencyBalanceSummary>.toJson(): String {
+        return objectMapper.writeValueAsString(
+            BalanceSummaryResponseDto(
+                isShowingRealBalance = true,
+                currencyBalances = this.map { it.toDto() }
             )
         )
     }
@@ -135,15 +132,15 @@ class BalanceSummaryController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val isProPlan = userInProPlanChecker(httpServerExchange)
-            logger.info { "User $userAccountId is requesting balance refresh (isProPlan=$isProPlan)" }
-            if (isProPlan) {
+            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
+            logger.info { "User $userAccountId is requesting balance refresh (shouldSendSampleBalance=$shouldSendSampleBalance)" }
+            if (shouldSendSampleBalance) {
+                httpServerExchange.responseSender.send(sampleBalanceSummaryResponseJson)
+            } else {
                 userBalanceSummaryService.refreshBalanceSummary(userAccountId)
                 logger.info { "User $userAccountId refreshed balance" }
                 val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
-                httpServerExchange.sendCurrencyBalanceSummary(currencyBalanceSummaryList)
-            } else {
-                httpServerExchange.responseSender.send(freePlanBalanceSummaryResponseJson)
+                httpServerExchange.responseSender.send(currencyBalanceSummaryList.toJson())
             }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }

@@ -9,7 +9,6 @@ import autocoin.balance.wallet.summary.BlockchainWalletCurrencySummary
 import autocoin.balance.wallet.summary.CurrencyBalanceSummary
 import autocoin.balance.wallet.summary.ExchangeCurrencySummary
 import autocoin.balance.wallet.summary.UserBalanceSummaryService
-import io.undertow.server.HttpServerExchange
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.internal.EMPTY_REQUEST
@@ -33,12 +32,6 @@ class BalanceSummaryControllerIT {
     private lateinit var startedServer: StartedServer
     private val authenticatedHttpHandlerWrapper = AuthenticatedHttpHandlerWrapper()
     private val userAccountId = authenticatedHttpHandlerWrapper.userAccountId
-    private val userAlwaysInProPlanChecker: UserProPlanChecker = object : UserProPlanChecker {
-        override fun invoke(exchange: HttpServerExchange) = true
-    }
-    private val userAlwaysNotInProPlanChecker: UserProPlanChecker = object : UserProPlanChecker {
-        override fun invoke(exchange: HttpServerExchange) = false
-    }
 
     @BeforeEach
     fun setup() {
@@ -95,7 +88,6 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
-            userInProPlanChecker = userAlwaysInProPlanChecker,
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -143,28 +135,6 @@ class BalanceSummaryControllerIT {
     }
 
     @Test
-    fun shouldGetFreePlanBalanceSummary() {
-        // given
-        val userBalanceSummaryService = mock<UserBalanceSummaryService>()
-        val balanceSummaryController = BalanceSummaryController(
-            objectMapper = objectMapper,
-            oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
-            userBalanceSummaryService = userBalanceSummaryService,
-            userInProPlanChecker = userAlwaysNotInProPlanChecker,
-        )
-        startedServer = TestServer.startTestServer(balanceSummaryController)
-        val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/balance/summary")
-            .get()
-            .build()
-        // when
-        val response = httpClientWithoutAuthorization.newCall(request).execute()
-        // then
-        assertThat(response.code).isEqualTo(200)
-        assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java)).isEqualTo(getFreePlanBalanceSummaryResponseDto())
-    }
-
-    @Test
     fun shouldRefreshBalanceSummary() {
         // given
         val userBalanceSummaryService = mock<UserBalanceSummaryService>().apply {
@@ -174,7 +144,6 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
-            userInProPlanChecker = userAlwaysInProPlanChecker,
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -190,25 +159,24 @@ class BalanceSummaryControllerIT {
         assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java).currencyBalances).isEmpty()
     }
 
-    private fun getFreePlanBalanceSummaryResponseDto(): BalanceSummaryResponseDto {
+    private fun sampleBalanceSummaryResponseDto(): BalanceSummaryResponseDto {
         return objectMapper.readValue(
-            this::class.java.getResource("/freePlanBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
+            this::class.java.getResource("/sampleBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
         )
     }
 
     @Test
-    fun shouldSendFreePlanResponseWhenRefreshBalanceSummaryInFreePlan() {
+    fun shouldGetSampleBalanceSummary() {
         // given
         val userBalanceSummaryService = mock<UserBalanceSummaryService>()
         val balanceSummaryController = BalanceSummaryController(
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
-            userInProPlanChecker = userAlwaysNotInProPlanChecker,
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
-            .url("http://localhost:${startedServer.port}/balance/summary")
+            .url("http://localhost:${startedServer.port}/balance/summary?sampleBalance=true")
             .post(EMPTY_REQUEST)
             .build()
         // when
@@ -217,6 +185,6 @@ class BalanceSummaryControllerIT {
         verify(userBalanceSummaryService, never()).refreshBalanceSummary(userAccountId)
         verify(userBalanceSummaryService, never()).getCurrencyBalanceSummary(userAccountId)
         assertThat(response.code).isEqualTo(200)
-        assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java)).isEqualTo(getFreePlanBalanceSummaryResponseDto())
+        assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java)).isEqualTo(sampleBalanceSummaryResponseDto())
     }
 }
