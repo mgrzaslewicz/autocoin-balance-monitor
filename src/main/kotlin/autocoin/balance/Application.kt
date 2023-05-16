@@ -30,6 +30,7 @@ private fun startOwnDbContainer() {
 }
 
 fun main(args: Array<String>) {
+    logger.info { "Starting application. Version ${AppVersion().commitId ?: "unavailable"}..." }
     try {
         var address: SocketAddress? = null
         val bootTimeMillis = measureTimeMillis {
