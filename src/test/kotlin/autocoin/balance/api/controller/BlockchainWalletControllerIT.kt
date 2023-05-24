@@ -144,7 +144,8 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(400)
-        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), CreateBlockchainWalletsErrorResponseDto::class.java)
+        val addWalletsErrorResponse =
+            objectMapper.readValue(response.body?.string(), CreateBlockchainWalletsErrorResponseDto::class.java)
         assertThat(addWalletsErrorResponse.duplicatedAddresses).containsExactly(duplicatedWalletAddress)
     }
 
@@ -176,7 +177,8 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(400)
-        val addWalletsErrorResponse = objectMapper.readValue(response.body?.string(), CreateBlockchainWalletsErrorResponseDto::class.java)
+        val addWalletsErrorResponse =
+            objectMapper.readValue(response.body?.string(), CreateBlockchainWalletsErrorResponseDto::class.java)
         assertThat(addWalletsErrorResponse.invalidAddresses).containsExactly("invalid address 1", "invalid address 2")
     }
 
@@ -215,7 +217,8 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
+        val walletsResponse =
+            objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
         SoftAssertions().apply {
             assertThat(walletsResponse).hasSize(2)
             assertThat(walletsResponse[0].currency).isEqualTo("ETH")
@@ -248,8 +251,12 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
-        assertThat(walletsResponse.map { it.description }).containsExactly("transfer from binance exchange", "transfer from friend")
+        val walletsResponse =
+            objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
+        assertThat(walletsResponse.map { it.description }).containsExactly(
+            "transfer from binance exchange",
+            "transfer from friend"
+        )
     }
 
     @Test
@@ -257,7 +264,12 @@ class BlockchainWalletControllerIT {
         // given
         whenever(priceService.getUsdValue("ETH", BigDecimal("5.65"))).thenReturn(BigDecimal("2000.0"))
         whenever(priceService.getUsdPrice("ETH")).thenReturn(
-            CurrencyPrice(price = BigDecimal("2500.0"), baseCurrency = "ETH", counterCurrency = "USD", timestampMillis = System.currentTimeMillis())
+            CurrencyPrice(
+                price = BigDecimal("2500.0"),
+                baseCurrency = "ETH",
+                counterCurrency = "USD",
+                timestampMillis = System.currentTimeMillis()
+            )
         )
         val expectedWallets = listOf(
             UserBlockChainWallet(
@@ -290,7 +302,8 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val balances = objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
+        val balances =
+            objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
         SoftAssertions().apply {
             assertThat(balances).hasSize(1)
             assertThat(balances[0].currency).isEqualTo("ETH")
@@ -306,10 +319,20 @@ class BlockchainWalletControllerIT {
         // given
         whenever(priceService.getUsdValue(any(), any())).thenReturn(BigDecimal.ONE)
         whenever(priceService.getUsdPrice("ETH")).thenReturn(
-            CurrencyPrice(price = BigDecimal.ONE, baseCurrency = "ETH", counterCurrency = "USD", timestampMillis = System.currentTimeMillis())
+            CurrencyPrice(
+                price = BigDecimal.ONE,
+                baseCurrency = "ETH",
+                counterCurrency = "USD",
+                timestampMillis = System.currentTimeMillis()
+            )
         )
         whenever(priceService.getUsdPrice("BTC")).thenReturn(
-            CurrencyPrice(price = BigDecimal.ONE, baseCurrency = "BTC", counterCurrency = "USD", timestampMillis = System.currentTimeMillis())
+            CurrencyPrice(
+                price = BigDecimal.ONE,
+                baseCurrency = "BTC",
+                counterCurrency = "USD",
+                timestampMillis = System.currentTimeMillis()
+            )
         )
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
@@ -321,7 +344,8 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val balances = objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
+        val balances =
+            objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
         assertThat(balances.map { it.currency }).containsExactly("BTC", "ETH")
     }
 
@@ -434,7 +458,8 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
+        val walletsResponse =
+            objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
         SoftAssertions().apply {
             assertThat(walletsResponse).hasSize(2)
             assertThat(walletsResponse[0].balance).isEqualTo("0.56")
@@ -507,7 +532,12 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        assertThat(walletRepository.existsByUserAccountIdAndWalletAddress(userAccountId = authenticatedHttpHandlerWrapper.userAccountId, sampleEthAddress1)).isFalse
+        assertThat(
+            walletRepository.existsByUserAccountIdAndWalletAddress(
+                userAccountId = authenticatedHttpHandlerWrapper.userAccountId,
+                sampleEthAddress1
+            )
+        ).isFalse
     }
 
     @Test
