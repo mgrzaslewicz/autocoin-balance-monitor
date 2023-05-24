@@ -117,7 +117,10 @@ class BlockchainWalletController(
                 description = "transfer from binance exchange",
                 balance = "1.55",
                 usdBalance = priceService.getUsdValue("BTC", 1.55.toBigDecimal())?.toPlainString(),
-                blockChainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl("BTC", "3LbpfzMPCLy4rbjBkJLRQxWV6GaybtF7ty"),
+                blockChainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(
+                    "BTC",
+                    "3LbpfzMPCLy4rbjBkJLRQxWV6GaybtF7ty"
+                ),
             ),
             BlockchainWalletResponseDto(
                 id = UUID.randomUUID().toString(),
@@ -126,9 +129,29 @@ class BlockchainWalletController(
                 description = "transfer from friend",
                 balance = "12.6754",
                 usdBalance = priceService.getUsdValue("ETH", 12.6754.toBigDecimal())?.toPlainString(),
-                blockChainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl("ETH", "0x2Fc617E933a52713247CE25730f6695920B3befe"),
+                blockChainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(
+                    "ETH",
+                    "0x2Fc617E933a52713247CE25730f6695920B3befe"
+                ),
             )
         )
+    }
+    private val sampleCurrencyBalances by lazy {
+        sampleWallets.groupBy { it.currency }
+            .mapKeys {
+                UserCurrencyBalanceResponseDto(
+                    currency = it.key,
+                    balance = it.value.fold(BigDecimal.ZERO) { acc, wallet ->
+                        acc + (wallet.balance?.toBigDecimal() ?: BigDecimal.ZERO)
+                    }.toPlainString(),
+                    usdBalance = it.value.fold(BigDecimal.ZERO) { acc, wallet ->
+                        acc + (wallet.usdBalance?.toBigDecimal() ?: BigDecimal.ZERO)
+                    }.toPlainString(),
+                    usdPrice = priceService.getUsdPrice(it.key)?.price?.toPlainString(),
+                )
+            }
+            .values
+            .flatten()
     }
 
     private fun addMonitoredWallets() = object : ApiEndpoint {
@@ -138,7 +161,8 @@ class BlockchainWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val addWalletsRequest = httpServerExchange.inputStreamToObject(Array<CreateBlockchainWalletRequestDto>::class.java).toList()
+            val addWalletsRequest =
+                httpServerExchange.inputStreamToObject(Array<CreateBlockchainWalletRequestDto>::class.java).toList()
             logger.info { "User $userAccountId is adding wallets: $addWalletsRequest" }
             val duplicatedWalletAddresses = mutableListOf<String>()
             val invalidAddresses = mutableListOf<String>()
@@ -183,9 +207,14 @@ class BlockchainWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val walletUpdateRequest = httpServerExchange.inputStreamToObject(UpdateBlockchainWalletRequestDto::class.java)
+            val walletUpdateRequest =
+                httpServerExchange.inputStreamToObject(UpdateBlockchainWalletRequestDto::class.java)
             logger.info { "User $userAccountId is updating wallet: $walletUpdateRequest" }
-            if (!walletAddressValidator.isWalletAddressValid(walletUpdateRequest.currency, walletUpdateRequest.walletAddress)) {
+            if (!walletAddressValidator.isWalletAddressValid(
+                    walletUpdateRequest.currency,
+                    walletUpdateRequest.walletAddress,
+                )
+            ) {
                 httpServerExchange.statusCode = 400
                 httpServerExchange.sendJson(UpdateBlockchainWalletErrorResponseDto(isAddressInvalid = true))
             } else try {
@@ -219,7 +248,10 @@ class BlockchainWalletController(
             val wallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
                 .map {
                     val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                    it.toDto(usdBalance = usdBalance, blockchainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(it))
+                    it.toDto(
+                        usdBalance = usdBalance,
+                        blockchainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(it)
+                    )
                 }
             this.sendJson(wallets)
         }
@@ -228,7 +260,12 @@ class BlockchainWalletController(
     private fun HttpServerExchange.sendUserWallet(walletId: String) {
         val wallet = userBlockChainWalletRepository().findOneById(walletId)
         val usdBalance = if (wallet.balance == null) null else priceService.getUsdValue(wallet.currency, wallet.balance)
-        this.sendJson(wallet.toDto(usdBalance = usdBalance, blockchainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(wallet)))
+        this.sendJson(
+            wallet.toDto(
+                usdBalance = usdBalance,
+                blockchainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(wallet),
+            )
+        )
     }
 
     private fun <T> HttpServerExchange.sendJson(response: T) {
@@ -244,7 +281,10 @@ class BlockchainWalletController(
             val userAccountId = httpServerExchange.userAccountId()
             val shouldUseSampleWallets = shouldSendSampleData(httpServerExchange)
             logger.info { "User $userAccountId is requesting blockchain wallets (sample=$shouldUseSampleWallets)" }
-            httpServerExchange.sendUserWallets(userAccountId, shouldUseSampleWallets = shouldSendSampleData(httpServerExchange))
+            httpServerExchange.sendUserWallets(
+                userAccountId,
+                shouldUseSampleWallets = shouldSendSampleData(httpServerExchange)
+            )
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -285,13 +325,18 @@ class BlockchainWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            logger.info { "User $userAccountId is requesting blockchain wallets currency balance" }
-            val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
-            httpServerExchange.sendJson(currencyBalance.map {
-                val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                val usdPrice = priceService.getUsdPrice(it.currency)?.price
-                it.toDto(usdBalance, usdPrice)
-            })
+            val shouldUseSampleBalance = shouldSendSampleData(httpServerExchange)
+            logger.info { "User $userAccountId is requesting blockchain wallets currency balance (sample=$shouldUseSampleBalance)" }
+            if (shouldUseSampleBalance) {
+                httpServerExchange.sendJson(sampleCurrencyBalances)
+            } else {
+                val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
+                httpServerExchange.sendJson(currencyBalance.map {
+                    val usdBalance = tryGetUsdValue(it.currency, it.balance)
+                    val usdPrice = priceService.getUsdPrice(it.currency)?.price
+                    it.toDto(usdBalance, usdPrice)
+                })
+            }
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -321,7 +366,10 @@ class BlockchainWalletController(
             val userAccountId = httpServerExchange.userAccountId()
             logger.info { "User $userAccountId is deleting blockchain wallet $walletAddress" }
             if (walletAddress != null) {
-                val howManyDeleted = userBlockChainWalletRepository().deleteOneByUserAccountIdAndWalletAddress(userAccountId, walletAddress)
+                val howManyDeleted = userBlockChainWalletRepository().deleteOneByUserAccountIdAndWalletAddress(
+                    userAccountId,
+                    walletAddress
+                )
                 if (howManyDeleted == 0) {
                     logger.warn { "User $userAccountId tried to delete blockchain wallet $walletAddress which was not found. That might be a hack attempt or just missing wallet" }
                     httpServerExchange.statusCode = 404

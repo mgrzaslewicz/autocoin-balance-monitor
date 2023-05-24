@@ -290,15 +290,39 @@ class BlockchainWalletControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
+        val balances = objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
         SoftAssertions().apply {
-            assertThat(walletsResponse).hasSize(1)
-            assertThat(walletsResponse[0].currency).isEqualTo("ETH")
-            assertThat(walletsResponse[0].balance).isEqualTo("5.65")
-            assertThat(walletsResponse[0].usdBalance).isEqualTo("2000")
-            assertThat(walletsResponse[0].usdPrice).isEqualTo("2500.0")
+            assertThat(balances).hasSize(1)
+            assertThat(balances[0].currency).isEqualTo("ETH")
+            assertThat(balances[0].balance).isEqualTo("5.65")
+            assertThat(balances[0].usdBalance).isEqualTo("2000")
+            assertThat(balances[0].usdPrice).isEqualTo("2500.0")
             assertAll()
         }
+    }
+
+    @Test
+    fun shouldGetSampleCurrencyBalance() {
+        // given
+        whenever(priceService.getUsdValue(any(), any())).thenReturn(BigDecimal.ONE)
+        whenever(priceService.getUsdPrice("ETH")).thenReturn(
+            CurrencyPrice(price = BigDecimal.ONE, baseCurrency = "ETH", counterCurrency = "USD", timestampMillis = System.currentTimeMillis())
+        )
+        whenever(priceService.getUsdPrice("BTC")).thenReturn(
+            CurrencyPrice(price = BigDecimal.ONE, baseCurrency = "BTC", counterCurrency = "USD", timestampMillis = System.currentTimeMillis())
+        )
+
+        startedServer = TestServer.startTestServer(blockchainWalletController)
+        val request = Request.Builder()
+            .url(startedServer.uri.resolve("/blockchain/wallets/currency/balance?sample=true").toURL())
+            .get()
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(200)
+        val balances = objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
+        assertThat(balances.map { it.currency }).containsExactly("BTC", "ETH")
     }
 
     @Test
