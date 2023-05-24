@@ -235,6 +235,24 @@ class BlockchainWalletControllerIT {
     }
 
     @Test
+    fun shouldGetSampleWallets() {
+        // given
+        whenever(priceService.getUsdValue(any(), any())).thenReturn(BigDecimal.ONE)
+
+        startedServer = TestServer.startTestServer(blockchainWalletController)
+        val request = Request.Builder()
+            .url(startedServer.uri.resolve("/blockchain/wallets?sample=true").toURL())
+            .get()
+            .build()
+        // when
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(200)
+        val walletsResponse = objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
+        assertThat(walletsResponse.map { it.description }).containsExactly("transfer from binance exchange", "transfer from friend")
+    }
+
+    @Test
     fun shouldGetCurrencyBalance() {
         // given
         whenever(priceService.getUsdValue("ETH", BigDecimal("5.65"))).thenReturn(BigDecimal("2000.0"))
