@@ -101,9 +101,6 @@ class BlockchainWalletController(
     private val userBlockChainWalletService: UserBlockChainWalletService,
     private val priceService: PriceService,
     private val blockChainExplorerUrlService: BlockChainExplorerUrlService,
-    private val shouldSendSampleData: (httpServerExchange: HttpServerExchange) -> Boolean = { it ->
-        it.queryParameters["sample"]?.first == "true"
-    },
 ) : ApiController {
 
     private companion object : KLogging()
@@ -238,23 +235,16 @@ class BlockchainWalletController(
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
-    private fun HttpServerExchange.sendUserWallets(
-        userAccountId: String,
-        shouldUseSampleWallets: Boolean = false,
-    ) {
-        return if (shouldUseSampleWallets) {
-            this.sendJson(sampleWallets)
-        } else {
-            val wallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
-                .map {
-                    val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                    it.toDto(
-                        usdBalance = usdBalance,
-                        blockchainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(it)
-                    )
-                }
-            this.sendJson(wallets)
-        }
+    private fun HttpServerExchange.sendUserWallets(userAccountId: String) {
+        val wallets = userBlockChainWalletRepository().findManyByUserAccountId(userAccountId)
+            .map {
+                val usdBalance = tryGetUsdValue(it.currency, it.balance)
+                it.toDto(
+                    usdBalance = usdBalance,
+                    blockchainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(it)
+                )
+            }
+        this.sendJson(wallets)
     }
 
     private fun HttpServerExchange.sendUserWallet(walletId: String) {
@@ -279,12 +269,19 @@ class BlockchainWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val shouldUseSampleWallets = shouldSendSampleData(httpServerExchange)
-            logger.info { "User $userAccountId is requesting blockchain wallets (sample=$shouldUseSampleWallets)" }
-            httpServerExchange.sendUserWallets(
-                userAccountId,
-                shouldUseSampleWallets = shouldSendSampleData(httpServerExchange)
-            )
+            logger.info { "User $userAccountId is requesting blockchain wallets" }
+            httpServerExchange.sendUserWallets(userAccountId)
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
+    private fun getSampleWallets() = object : ApiEndpoint {
+        override val method = GET
+        override val urlTemplate = "/blockchain/wallets/sample"
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is requesting sample blockchain wallets" }
+            httpServerExchange.sendJson(sampleWallets)
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -325,18 +322,24 @@ class BlockchainWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val shouldUseSampleBalance = shouldSendSampleData(httpServerExchange)
-            logger.info { "User $userAccountId is requesting blockchain wallets currency balance (sample=$shouldUseSampleBalance)" }
-            if (shouldUseSampleBalance) {
-                httpServerExchange.sendJson(sampleCurrencyBalances)
-            } else {
-                val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
-                httpServerExchange.sendJson(currencyBalance.map {
-                    val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                    val usdPrice = priceService.getUsdPrice(it.currency)?.price
-                    it.toDto(usdBalance, usdPrice)
-                })
-            }
+            logger.info { "User $userAccountId is requesting blockchain wallets currency balance" }
+            val currencyBalance = userBlockChainWalletRepository().selectUserCurrencyBalance(userAccountId)
+            httpServerExchange.sendJson(currencyBalance.map {
+                val usdBalance = tryGetUsdValue(it.currency, it.balance)
+                val usdPrice = priceService.getUsdPrice(it.currency)?.price
+                it.toDto(usdBalance, usdPrice)
+            })
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
+    private fun getSampleCurrencyBalance() = object : ApiEndpoint {
+        override val method = GET
+        override val urlTemplate = "/blockchain/wallets/currency/balance/sample"
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is requesting sample blockchain wallets currency balance" }
+            httpServerExchange.sendJson(sampleCurrencyBalances)
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -381,8 +384,10 @@ class BlockchainWalletController(
     override fun apiEndpoints(): List<ApiEndpoint> = listOf(
         addMonitoredWallets(),
         getMonitoredWallets(),
+        getSampleWallets(),
         getMonitoredWallet(),
         getCurrencyBalance(),
+        getSampleCurrencyBalance(),
         refreshWalletsBalance(),
         deleteWallet(),
         updateWallet(),

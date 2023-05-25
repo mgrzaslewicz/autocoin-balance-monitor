@@ -257,7 +257,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets?sample=true").toURL())
+            .url(startedServer.uri.resolve("/blockchain/wallets/sample").toURL())
             .get()
             .build()
         // when
@@ -350,7 +350,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets/currency/balance?sample=true").toURL())
+            .url(startedServer.uri.resolve("/blockchain/wallets/currency/balance/sample").toURL())
             .get()
             .build()
         // when
