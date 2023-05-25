@@ -29,6 +29,7 @@ class UserCurrencyAssetRepositoryIT {
     @BeforeEach
     fun setup() {
         tested = startedDatabase.jdbi.onDemand(UserCurrencyAssetRepository::class.java)
+        startedDatabase.runMigrations()
     }
 
     @AfterEach

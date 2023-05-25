@@ -21,6 +21,7 @@ class CurrencyRepositoryIT {
     fun setup() {
         startedDatabase = TestDb.startDatabase()
         jdbi = startedDatabase.jdbi
+        startedDatabase.runMigrations()
     }
 
     @AfterEach

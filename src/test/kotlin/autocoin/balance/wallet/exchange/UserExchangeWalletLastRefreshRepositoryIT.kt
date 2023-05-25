@@ -30,6 +30,7 @@ class UserExchangeWalletLastRefreshRepositoryIT {
     @BeforeEach
     fun setup() {
         jdbi = startedDatabase.jdbi
+        startedDatabase.runMigrations()
     }
 
     @AfterEach
