@@ -1,9 +1,8 @@
 package autocoin
 
 import autocoin.balance.app.createDatasource
+import autocoin.balance.app.createDbMigrator
 import autocoin.balance.app.createJdbi
-import autocoin.balance.app.createLiquibase
-import liquibase.Contexts
 import org.jdbi.v3.core.Jdbi
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
@@ -15,8 +14,7 @@ class TestDb {
         val jdbi: Jdbi,
     ) {
         fun runMigrations() {
-            val liquibase = createLiquibase(datasource)
-            liquibase.update(Contexts())
+            createDbMigrator(datasource).migrate()
         }
 
     }

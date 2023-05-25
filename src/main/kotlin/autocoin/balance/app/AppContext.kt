@@ -42,9 +42,6 @@ import automate.profit.autocoin.keyvalue.FileKeyValueRepository
 import com.timgroup.statsd.NonBlockingStatsDClient
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import liquibase.Liquibase
-import liquibase.database.jvm.JdbcConnection
-import liquibase.resource.ClassLoaderResourceAccessor
 import mu.KLogging
 import okhttp3.OkHttpClient
 import org.jdbi.v3.core.Jdbi
@@ -66,14 +63,7 @@ fun createJdbi(datasource: DataSource): Jdbi {
     return jdbi
 }
 
-fun createLiquibase(datasource: DataSource): Liquibase {
-    val liquibase = Liquibase(
-        /* changeLogFile = */ "dbschema.sql",
-        /* resourceAccessor = */ ClassLoaderResourceAccessor(),
-        /* conn = */ JdbcConnection(datasource.connection)
-    )
-    return liquibase
-}
+fun createDbMigrator(datasource: DataSource) = LiquibaseDbMigrator(datasource)
 
 fun createDatasource(jdbcUrl: String, username: String, password: String): HikariDataSource {
     val config = HikariConfig().apply {
@@ -142,15 +132,11 @@ class AppContext(private val appConfig: AppConfig) {
 
     fun initDbRelatedServices() {
         createDatasource()
-        createLiquibase()
         createJdbi()
     }
 
     private fun createJdbi() = jdbi.set(createJdbi(datasource.get()))
 
-    private fun createLiquibase() = liquibase.set(createLiquibase(datasource.get()))
-
-    val liquibase = AtomicReference<Liquibase>()
 
     val healthChecks = listOf(
         DbHealthCheck(datasource = datasource)
@@ -244,7 +230,9 @@ class AppContext(private val appConfig: AppConfig) {
     val userExchangeWalletService = UserExchangeWalletService(
         exchangeMediatorWalletService = exchangeMediatorWalletService,
         userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
-        userExchangeWalletLastRefreshRepository = { jdbi.get().onDemand(UserExchangeWalletLastRefreshRepository::class.java) },
+        userExchangeWalletLastRefreshRepository = {
+            jdbi.get().onDemand(UserExchangeWalletLastRefreshRepository::class.java)
+        },
         priceService = priceService,
         timeMillisProvider = timeMillisProvider,
     )

@@ -1,6 +1,5 @@
 package autocoin.balance.app
 
-import liquibase.Contexts
 import mu.KLogging
 import java.net.SocketAddress
 
@@ -17,7 +16,7 @@ class AppStarter(private val appContext: AppContext) {
         with(appContext) {
             initDbRelatedServices()
             logger.info { "Running DB migrations" }
-            liquibase.get().update(Contexts())
+            createDbMigrator(datasource.get()).migrate()
 
             logger.info { "Restoring prices" }
             priceService.populateCache(filePriceRepository.getPrices())
