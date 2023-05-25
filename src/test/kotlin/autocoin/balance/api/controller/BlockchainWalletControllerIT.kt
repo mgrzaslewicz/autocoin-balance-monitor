@@ -4,7 +4,6 @@ import autocoin.StartedServer
 import autocoin.TestDb
 import autocoin.TestServer
 import autocoin.balance.app.ObjectMapperProvider
-import autocoin.balance.app.createJdbi
 import autocoin.balance.blockchain.BlockChainExplorerUrlService
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
@@ -68,14 +67,14 @@ class BlockchainWalletControllerIT {
         @AfterAll
         @JvmStatic
         fun stopDb() {
-            startedDatabase.container.stop()
+            startedDatabase.stop()
         }
     }
 
 
     @BeforeEach
     fun setup() {
-        jdbi = createJdbi(startedDatabase.datasource)
+        jdbi = startedDatabase.jdbi
         startedDatabase.runMigrations()
         walletRepository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
         walletService = UserBlockChainWalletService(

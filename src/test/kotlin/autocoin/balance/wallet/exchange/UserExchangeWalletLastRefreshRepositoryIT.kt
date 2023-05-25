@@ -22,7 +22,7 @@ class UserExchangeWalletLastRefreshRepositoryIT {
         @AfterAll
         @JvmStatic
         fun stopDb() {
-            startedDatabase.container.stop()
+            startedDatabase.stop()
         }
 
     }

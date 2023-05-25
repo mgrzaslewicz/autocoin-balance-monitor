@@ -25,7 +25,7 @@ class CurrencyRepositoryIT {
 
     @AfterEach
     fun cleanup() {
-        startedDatabase.container.stop()
+        startedDatabase.stop()
     }
 
     @Test

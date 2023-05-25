@@ -32,7 +32,7 @@ class UserBalanceSummaryRepositoryIT {
         @AfterAll
         @JvmStatic
         fun stopDb() {
-            startedDatabase.container.stop()
+            startedDatabase.stop()
         }
     }
 

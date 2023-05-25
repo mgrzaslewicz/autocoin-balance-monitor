@@ -10,11 +10,15 @@ import javax.sql.DataSource
 class TestDb {
     data class StartedDatabase(
         val datasource: DataSource,
-        val container: PostgreSQLContainer<*>,
         val jdbi: Jdbi,
+        private val container: PostgreSQLContainer<*>,
     ) {
         fun runMigrations() {
             createDbMigrator(datasource).migrate()
+        }
+
+        fun stop() {
+            container.stop()
         }
 
     }
