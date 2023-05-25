@@ -121,7 +121,7 @@ class BlockchainWalletController(
             ),
             BlockchainWalletResponseDto(
                 id = UUID.randomUUID().toString(),
-                walletAddress = "3LbpfzMPCLy4rbjBkJLRQxWV6GaybtF7ty",
+                walletAddress = "0x2Fc617E933a52713247CE25730f6695920B3befe",
                 currency = "ETH",
                 description = "transfer from friend",
                 balance = "12.6754",
