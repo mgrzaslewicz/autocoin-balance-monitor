@@ -4,27 +4,41 @@ import autocoin.TestDb
 import org.assertj.core.api.Assertions.assertThat
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
 import java.math.BigDecimal
 import java.util.*
 
 class UserBlockChainWalletRepositoryIT {
 
-    private lateinit var startedDatabase: TestDb.StartedDatabase
     private lateinit var jdbi: Jdbi
+
+    companion object {
+        private lateinit var startedDatabase: TestDb.StartedDatabase
+
+        @BeforeAll
+        @JvmStatic
+        fun startDb() {
+            startedDatabase = TestDb.startDatabase()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun stopDb() {
+            startedDatabase.container.stop()
+        }
+    }
 
     @BeforeEach
     fun setup() {
-        startedDatabase = TestDb.startDatabase()
         jdbi = startedDatabase.jdbi
+        startedDatabase.runMigrations()
     }
 
     @AfterEach
     fun cleanup() {
-        startedDatabase.container.stop()
+        jdbi.useHandle<Exception> { handle ->
+            handle.execute("""select 'drop table "' || tablename || '" cascade;' from pg_tables;""")
+        }
     }
 
     @Test
