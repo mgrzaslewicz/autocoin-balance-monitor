@@ -2,27 +2,40 @@ package autocoin.balance.wallet.currency
 
 import autocoin.TestDb
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 import java.math.BigDecimal
 import java.util.*
 
 class UserCurrencyAssetRepositoryIT {
 
-    private lateinit var startedDatabase: TestDb.StartedDatabase
     private lateinit var tested: UserCurrencyAssetRepository
+
+    companion object {
+        private lateinit var startedDatabase: TestDb.StartedDatabase
+
+        @BeforeAll
+        @JvmStatic
+        fun startDb() {
+            startedDatabase = TestDb.startDatabase()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun stopDb() {
+            startedDatabase.container.stop()
+        }
+    }
 
     @BeforeEach
     fun setup() {
-        startedDatabase = TestDb.startDatabase().also {
-            tested = it.jdbi.onDemand(UserCurrencyAssetRepository::class.java)
-        }
+        tested = startedDatabase.jdbi.onDemand(UserCurrencyAssetRepository::class.java)
     }
 
     @AfterEach
     fun cleanup() {
-        startedDatabase.container.stop()
+        startedDatabase.jdbi.useHandle<Exception> { handle ->
+            handle.execute("""select 'drop table "' || tablename || '" cascade;' from pg_tables;""")
+        }
     }
 
     @Test
@@ -90,7 +103,13 @@ class UserCurrencyAssetRepositoryIT {
         )
         tested.insertCurrencyAsset(currencyAsset)
         // when
-        val howManyUpdated = tested.updateCurrencyAsset(currencyAsset.copy(currency = "BTC", description = "new description", balance = BigDecimal("11.5")))
+        val howManyUpdated = tested.updateCurrencyAsset(
+            currencyAsset.copy(
+                currency = "BTC",
+                description = "new description",
+                balance = BigDecimal("11.5")
+            )
+        )
         // then
         val updatedWallet = tested.findOneById(id)
         assertThat(howManyUpdated).isEqualTo(1)
@@ -162,7 +181,8 @@ class UserCurrencyAssetRepositoryIT {
     @Test
     fun shouldNotFindUserCurrencyAssetByUserAccountIdAndId() {
         // when
-        val userCurrencyAsset = tested.findOneByUserAccountIdAndId("not-existing-user-account-id", "not-existing-user-currency-asset-id")
+        val userCurrencyAsset =
+            tested.findOneByUserAccountIdAndId("not-existing-user-account-id", "not-existing-user-currency-asset-id")
         // then
         assertThat(userCurrencyAsset).isNull()
     }
