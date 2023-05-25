@@ -34,9 +34,7 @@ class UserExchangeWalletLastRefreshRepositoryIT {
 
     @AfterEach
     fun cleanup() {
-        jdbi.useHandle<Exception> { handle ->
-            handle.execute("""select 'drop table "' || tablename || '" cascade;' from pg_tables;""")
-        }
+        startedDatabase.removeAllTables()
     }
 
     @Test

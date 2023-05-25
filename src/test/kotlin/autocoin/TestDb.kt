@@ -21,6 +21,12 @@ class TestDb {
             container.stop()
         }
 
+        fun removeAllTables() {
+            jdbi.useHandle<Exception> { handle ->
+                handle.execute("""select 'drop table "' || tablename || '" cascade;' from pg_tables;""")
+            }
+        }
+
     }
 
     companion object {

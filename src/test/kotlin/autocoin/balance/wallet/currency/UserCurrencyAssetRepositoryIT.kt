@@ -33,9 +33,7 @@ class UserCurrencyAssetRepositoryIT {
 
     @AfterEach
     fun cleanup() {
-        startedDatabase.jdbi.useHandle<Exception> { handle ->
-            handle.execute("""select 'drop table "' || tablename || '" cascade;' from pg_tables;""")
-        }
+        startedDatabase.removeAllTables()
     }
 
     @Test
