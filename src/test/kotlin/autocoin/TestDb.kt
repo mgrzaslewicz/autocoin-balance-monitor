@@ -13,7 +13,13 @@ class TestDb {
         val datasource: DataSource,
         val container: PostgreSQLContainer<*>,
         val jdbi: Jdbi,
-    )
+    ) {
+        fun runMigrations() {
+            val liquibase = createLiquibase(datasource)
+            liquibase.update(Contexts())
+        }
+
+    }
 
     companion object {
         fun startDatabase(): StartedDatabase {
@@ -27,13 +33,11 @@ class TestDb {
             dbContainer.start()
 
             val datasource = createDatasource(dbContainer.jdbcUrl, "sampleUser", "samplePassword")
-            val liquibase = createLiquibase(datasource)
-            liquibase.update(Contexts())
             return StartedDatabase(
                 datasource = datasource,
                 container = dbContainer,
                 jdbi = createJdbi(datasource),
-            )
+            ).apply { runMigrations() }
         }
     }
 }

@@ -22,9 +22,7 @@ import okhttp3.internal.EMPTY_REQUEST
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.jdbi.v3.core.Jdbi
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
@@ -46,7 +44,6 @@ class BlockchainWalletControllerIT {
 
     private val authenticatedHttpHandlerWrapper = AuthenticatedHttpHandlerWrapper()
 
-    private lateinit var startedDatabase: TestDb.StartedDatabase
     private lateinit var jdbi: Jdbi
     private lateinit var walletRepository: UserBlockChainWalletRepository
 
@@ -59,10 +56,27 @@ class BlockchainWalletControllerIT {
     @Mock
     private lateinit var priceService: PriceService
 
+    companion object {
+        private lateinit var startedDatabase: TestDb.StartedDatabase
+
+        @BeforeAll
+        @JvmStatic
+        fun startDb() {
+            startedDatabase = TestDb.startDatabase()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun stopDb() {
+            startedDatabase.container.stop()
+        }
+    }
+
+
     @BeforeEach
     fun setup() {
-        startedDatabase = TestDb.startDatabase()
         jdbi = createJdbi(startedDatabase.datasource)
+        startedDatabase.runMigrations()
         walletRepository = jdbi.onDemand(UserBlockChainWalletRepository::class.java)
         walletService = UserBlockChainWalletService(
             userBlockChainWalletRepository = { walletRepository },
@@ -83,8 +97,10 @@ class BlockchainWalletControllerIT {
 
     @AfterEach
     fun cleanup() {
-        startedDatabase.container.stop()
         startedServer.stop()
+        jdbi.useHandle<Exception> { handle ->
+            handle.execute("""select 'drop table "' || tablename || '" cascade;' from pg_tables;""")
+        }
     }
 
 
