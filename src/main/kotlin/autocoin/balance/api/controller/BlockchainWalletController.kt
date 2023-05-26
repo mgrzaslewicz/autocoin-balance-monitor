@@ -111,7 +111,7 @@ class BlockchainWalletController(
                 id = UUID.randomUUID().toString(),
                 walletAddress = "3LbpfzMPCLy4rbjBkJLRQxWV6GaybtF7ty",
                 currency = "BTC",
-                description = "transfer from binance exchange",
+                description = "transfer from https://binance.com exchange",
                 balance = "1.55",
                 usdBalance = priceService.getUsdValue("BTC", 1.55.toBigDecimal())?.toPlainString(),
                 blockChainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(
