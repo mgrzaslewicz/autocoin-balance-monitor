@@ -4,6 +4,7 @@ import autocoin.StartedServer
 import autocoin.TestServer
 import autocoin.balance.app.ObjectMapperProvider
 import autocoin.balance.blockchain.BlockChainExplorerUrlService
+import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.currency.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,10 +16,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.any
-import org.mockito.kotlin.argThat
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 import java.math.BigDecimal
 import java.util.*
 
@@ -33,6 +31,9 @@ class UserCurrencyAssetControllerIT {
 
     @Mock
     private lateinit var blockChainExplorerUrlService: BlockChainExplorerUrlService
+
+    @Mock
+    private lateinit var priceService: PriceService
 
     private val authenticatedHttpHandlerWrapper = AuthenticatedHttpHandlerWrapper()
     private val httpClientWithoutAuthorization = OkHttpClient()
@@ -57,6 +58,7 @@ class UserCurrencyAssetControllerIT {
             userCurrencyAssetService = userCurrencyAssetService,
             userCurrencyAssetRepository = { userCurrencyAssetRepository },
             blockChainExplorerUrlService = blockChainExplorerUrlService,
+            priceService = priceService,
         )
         startedServer = TestServer.startTestServer(userCurrencyAssetController)
     }
@@ -90,6 +92,25 @@ class UserCurrencyAssetControllerIT {
                 )
             )
 
+    }
+
+
+    @Test
+    fun shouldGetSampleUserCurrencyAssets() {
+        // given
+        whenever(blockChainExplorerUrlService.getBlockchainExplorerUrl(eq("BTC"), any())).thenReturn("wallet url")
+        // when
+        val request = Request.Builder()
+            .url(startedServer.uri.resolve("/user-currency-assets/sample").toURL())
+            .get()
+            .build()
+        val response = httpClientWithoutAuthorization.newCall(request).execute()
+        // then
+        assertThat(response.code).isEqualTo(200)
+        val userCurrencyAssetsResponseDto =
+            objectMapper.readValue(response.body?.string(), UserCurrencyAssetsResponseDto::class.java)
+        assertThat(userCurrencyAssetsResponseDto.userCurrencyAssets.map { it.currency }).containsExactly("BTC", "BTC", "ETH")
+        assertThat(userCurrencyAssetsResponseDto.userCurrencyAssetsSummary.map { it.currency }).containsExactly("BTC", "ETH")
     }
 
     @Test
@@ -127,14 +148,20 @@ class UserCurrencyAssetControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val userCurrencyAssetsResponseDto = objectMapper.readValue(response.body?.string(), UserCurrencyAssetsResponseDto::class.java)
+        val userCurrencyAssetsResponseDto =
+            objectMapper.readValue(response.body?.string(), UserCurrencyAssetsResponseDto::class.java)
         assertThat(userCurrencyAssetsResponseDto).isEqualTo(expectedResponse)
     }
 
     @Test
     fun shouldGetUserCurrencyAsset() {
         // given
-        whenever(userCurrencyAssetService.getUserCurrencyAsset(authenticatedHttpHandlerWrapper.userAccountId, sampleUserCurrencyAsset.id)).thenReturn(
+        whenever(
+            userCurrencyAssetService.getUserCurrencyAsset(
+                authenticatedHttpHandlerWrapper.userAccountId,
+                sampleUserCurrencyAsset.id
+            )
+        ).thenReturn(
             UserCurrencyAssetWithValue(userCurrencyAsset = sampleUserCurrencyAsset, valueInOtherCurrency = mapOf())
         )
         whenever(blockChainExplorerUrlService.getBlockchainExplorerUrl(sampleUserCurrencyAsset)).thenReturn("wallet url")
@@ -146,7 +173,8 @@ class UserCurrencyAssetControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        val userCurrencyAssetsResponseDto = objectMapper.readValue(response.body?.string(), UserCurrencyAssetResponseDto::class.java)
+        val userCurrencyAssetsResponseDto =
+            objectMapper.readValue(response.body?.string(), UserCurrencyAssetResponseDto::class.java)
         assertThat(userCurrencyAssetsResponseDto).isEqualTo(
             UserCurrencyAssetResponseDto(
                 id = sampleUserCurrencyAsset.id,
@@ -164,7 +192,12 @@ class UserCurrencyAssetControllerIT {
     fun shouldDeleteUserCurrencyAsset() {
         // given
         val userCurrencyAssetId = UUID.randomUUID().toString()
-        whenever(userCurrencyAssetRepository.deleteOneByUserAccountIdAndId(authenticatedHttpHandlerWrapper.userAccountId, userCurrencyAssetId)).thenReturn(1)
+        whenever(
+            userCurrencyAssetRepository.deleteOneByUserAccountIdAndId(
+                authenticatedHttpHandlerWrapper.userAccountId,
+                userCurrencyAssetId
+            )
+        ).thenReturn(1)
         // when
         val request = Request.Builder()
             .url(startedServer.uri.resolve("/user-currency-assets/$userCurrencyAssetId").toURL())
@@ -173,13 +206,21 @@ class UserCurrencyAssetControllerIT {
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
         assertThat(response.code).isEqualTo(200)
-        verify(userCurrencyAssetRepository).deleteOneByUserAccountIdAndId(authenticatedHttpHandlerWrapper.userAccountId, userCurrencyAssetId)
+        verify(userCurrencyAssetRepository).deleteOneByUserAccountIdAndId(
+            authenticatedHttpHandlerWrapper.userAccountId,
+            userCurrencyAssetId
+        )
     }
 
     @Test
     fun shouldUpdateUserCurrencyAsset() {
         // given
-        whenever(userCurrencyAssetRepository.findOneByUserAccountIdAndId(authenticatedHttpHandlerWrapper.userAccountId, sampleUserCurrencyAsset.id))
+        whenever(
+            userCurrencyAssetRepository.findOneByUserAccountIdAndId(
+                authenticatedHttpHandlerWrapper.userAccountId,
+                sampleUserCurrencyAsset.id
+            )
+        )
             .thenReturn(sampleUserCurrencyAsset)
         whenever(userCurrencyAssetRepository.updateCurrencyAsset(any())).thenReturn(1)
         val updateUserCurrencyAssetRequestDto = UpdateUserCurrencyAssetRequestDto(

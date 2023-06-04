@@ -288,6 +288,7 @@ class AppContext(private val appConfig: AppConfig) {
         userCurrencyAssetService = userCurrencyAssetService,
         userCurrencyAssetRepository = { jdbi.get().onDemand(UserCurrencyAssetRepository::class.java) },
         blockChainExplorerUrlService = blockChainExplorerUrlService,
+        priceService = priceService,
     )
 
     val controllers = listOf(

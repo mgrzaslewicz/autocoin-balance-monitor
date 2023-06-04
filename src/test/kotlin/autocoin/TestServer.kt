@@ -8,7 +8,7 @@ import org.mockito.kotlin.mock
 import java.net.URI
 
 data class StartedServer(
-    val uri: URI,
+    val uri: URI, // TODO hide field, add method resolveUrl(path: String): URL
     private val server: Undertow
 ) {
     fun stop() {

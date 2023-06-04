@@ -6,6 +6,7 @@ import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.blockchain.BlockChainExplorerUrlService
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
+import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.currency.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.undertow.server.HttpHandler
@@ -14,6 +15,7 @@ import io.undertow.util.Methods
 import io.undertow.util.PathTemplateMatch
 import mu.KLogging
 import java.math.BigDecimal
+import java.util.*
 
 data class UserCurrencyAssetResponseDto(
     val id: String,
@@ -89,10 +91,86 @@ class UserCurrencyAssetController(
     private val userCurrencyAssetService: UserCurrencyAssetService,
     private val userCurrencyAssetRepository: () -> UserCurrencyAssetRepository,
     private val blockChainExplorerUrlService: BlockChainExplorerUrlService,
+    private val priceService: PriceService,
 ) : ApiController {
     private companion object : KLogging()
 
-    fun getUserCurrencyAssets() = object : ApiEndpoint {
+    private val sampleUserCurrencyAssets by lazy {
+        UserCurrencyAssetsResponseDto(
+            userCurrencyAssets = listOf(
+                UserCurrencyAssetResponseDto(
+                    id = UUID.randomUUID().toString(),
+                    currency = "BTC",
+                    balance = "0.49",
+                    description = "from binance",
+                    valueInOtherCurrency = mapOf(
+                        "USD" to priceService.getUsdValue("BTC", BigDecimal("0.49"))?.toPlainString()
+                    ),
+                    walletAddress = "bc1qmsyd37rsfc9u29cun77rfc3m7gs72u03m8u7v8aadxaql7346r3sx8p9tr",
+                    blockChainExplorerUrl = blockChainExplorerUrlService.getBlockchainExplorerUrl(
+                        currency = "BTC",
+                        walletAddress = "bc1qmsyd37rsfc9u29cun77rfc3m7gs72u03m8u7v8aadxaql7346r3sx8p9tr"
+                    ),
+                ),
+                UserCurrencyAssetResponseDto(
+                    id = UUID.randomUUID().toString(),
+                    currency = "BTC",
+                    balance = "0.157",
+                    description = "at binance",
+                    valueInOtherCurrency = mapOf(
+                        "USD" to priceService.getUsdValue("BTC", BigDecimal("0.157"))?.toPlainString()
+                    ),
+                    walletAddress = null,
+                    blockChainExplorerUrl = null,
+                ),
+                UserCurrencyAssetResponseDto(
+                    id = UUID.randomUUID().toString(),
+                    currency = "ETH",
+                    balance = "1.29818",
+                    description = "deployed at https://app.yield.app",
+                    valueInOtherCurrency = mapOf(
+                        "USD" to priceService.getUsdValue("ETH", BigDecimal("1.29818"))?.toPlainString()
+                    ),
+                    walletAddress = null,
+                    blockChainExplorerUrl = null,
+                )
+            ),
+            userCurrencyAssetsSummary = listOf(
+                UserCurrencyAssetSummaryResponseDto(
+                    currency = "BTC",
+                    balance = "0.647",
+                    valueInOtherCurrency = mapOf(
+                        "USD" to priceService.getUsdValue("BTC", BigDecimal("0.647"))?.toPlainString()
+                    ),
+                    priceInOtherCurrency = mapOf(
+                        "USD" to priceService.getPrice("BTC", "USD")?.price?.toPlainString()
+                    ),
+                ),
+                UserCurrencyAssetSummaryResponseDto(
+                    currency = "ETH",
+                    balance = "1.29818",
+                    valueInOtherCurrency = mapOf(
+                        "USD" to priceService.getUsdValue("ETH", BigDecimal("1.29818"))?.toPlainString()
+                    ),
+                    priceInOtherCurrency = mapOf(
+                        "USD" to priceService.getPrice("ETH", "USD")?.price?.toPlainString()
+                    ),
+                ),
+            ),
+        )
+    }
+
+    private fun getSampleUserCurrencyAssets() = object : ApiEndpoint {
+        override val method = Methods.GET
+        override val urlTemplate = "/user-currency-assets/sample"
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            httpServerExchange.responseSender.send(objectMapper.writeValueAsString(sampleUserCurrencyAssets))
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+
+    }
+
+    private fun getUserCurrencyAssets() = object : ApiEndpoint {
         override val method = Methods.GET
         override val urlTemplate = "/user-currency-assets"
 
@@ -124,7 +202,13 @@ class UserCurrencyAssetController(
             if (userCurrencyAssetId != null) {
                 val result = userCurrencyAssetService.getUserCurrencyAsset(userAccountId, userCurrencyAssetId)
                 if (result != null) {
-                    httpServerExchange.responseSender.send(objectMapper.writeValueAsString(result.toDto(blockChainExplorerUrlService.getBlockchainExplorerUrl(result.userCurrencyAsset))))
+                    httpServerExchange.responseSender.send(
+                        objectMapper.writeValueAsString(
+                            result.toDto(
+                                blockChainExplorerUrlService.getBlockchainExplorerUrl(result.userCurrencyAsset)
+                            )
+                        )
+                    )
                 } else {
                     httpServerExchange.statusCode = 404
                 }
@@ -147,7 +231,10 @@ class UserCurrencyAssetController(
             val userCurrencyAssetId = pathMatch.parameters[userCurrencyAssetIdParameter]
 
             if (userCurrencyAssetId != null) {
-                val howManyDeleted = userCurrencyAssetRepository().deleteOneByUserAccountIdAndId(userAccountId = userAccountId, id = userCurrencyAssetId)
+                val howManyDeleted = userCurrencyAssetRepository().deleteOneByUserAccountIdAndId(
+                    userAccountId = userAccountId,
+                    id = userCurrencyAssetId
+                )
                 if (howManyDeleted == 0) {
                     logger.warn { "User $userAccountId tried to delete user currency asset $userCurrencyAssetId which was not found. That might be a hack attempt or just missing entry" }
                     httpServerExchange.statusCode = 404
@@ -174,10 +261,12 @@ class UserCurrencyAssetController(
             val userAccountId = httpServerExchange.userAccountId()
             val pathMatch: PathTemplateMatch = httpServerExchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY)
             val userCurrencyAssetId = pathMatch.parameters[userCurrencyAssetIdParameter]
-            val updateUserCurrencyAssetRequest = httpServerExchange.inputStreamToObject(UpdateUserCurrencyAssetRequestDto::class.java)
+            val updateUserCurrencyAssetRequest =
+                httpServerExchange.inputStreamToObject(UpdateUserCurrencyAssetRequestDto::class.java)
             logger.info { "User $userAccountId is updating currency asset $updateUserCurrencyAssetRequest" }
             if (userCurrencyAssetId != null) {
-                val userCurrencyAsset = userCurrencyAssetRepository().findOneByUserAccountIdAndId(userAccountId, userCurrencyAssetId)
+                val userCurrencyAsset =
+                    userCurrencyAssetRepository().findOneByUserAccountIdAndId(userAccountId, userCurrencyAssetId)
                 if (userCurrencyAsset != null) {
                     val modifiedCurrencyAsset = userCurrencyAsset.copy(
                         balance = BigDecimal(updateUserCurrencyAssetRequest.balance),
@@ -207,9 +296,14 @@ class UserCurrencyAssetController(
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
             logger.info { "User $userAccountId is adding currency asset, about to deserialize the request body" }
-            val addUserCurrencyAssetRequests = httpServerExchange.inputStreamToObject(Array<AddUserCurrencyAssetRequestDto>::class.java)
+            val addUserCurrencyAssetRequests =
+                httpServerExchange.inputStreamToObject(Array<AddUserCurrencyAssetRequestDto>::class.java)
             logger.info { "User $userAccountId is adding currency assets $addUserCurrencyAssetRequests" }
-            userCurrencyAssetRepository().insertCurrencyAssets(addUserCurrencyAssetRequests.map { it.toUserCurrencyAsset(userAccountId) })
+            userCurrencyAssetRepository().insertCurrencyAssets(addUserCurrencyAssetRequests.map {
+                it.toUserCurrencyAsset(
+                    userAccountId
+                )
+            })
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
 
     }
@@ -217,6 +311,7 @@ class UserCurrencyAssetController(
     override fun apiEndpoints(): List<ApiEndpoint> = listOf(
         getUserCurrencyAsset(),
         getUserCurrencyAssets(),
+        getSampleUserCurrencyAssets(),
         deleteUserCurrencyAsset(),
         deleteUserCurrencyAsset(),
         updateUserCurrencyAsset(),
