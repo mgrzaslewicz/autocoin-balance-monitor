@@ -267,7 +267,7 @@ class BlockchainWalletControllerIT {
         val walletsResponse =
             objectMapper.readValue(response.body?.string(), Array<BlockchainWalletResponseDto>::class.java)
         assertThat(walletsResponse.map { it.description }).containsExactly(
-            "transfer from binance exchange",
+            "transfer from https://binance.com exchange",
             "transfer from friend"
         )
     }
