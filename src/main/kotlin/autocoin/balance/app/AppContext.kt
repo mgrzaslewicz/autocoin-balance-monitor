@@ -244,7 +244,6 @@ class AppContext(private val appConfig: AppConfig) {
         userExchangeWalletRepository = { jdbi.get().onDemand(UserExchangeWalletRepository::class.java) },
         userExchangeWalletService = userExchangeWalletService,
         priceService = priceService,
-        timeMillisProvider = timeMillisProvider,
     )
 
     val blockChainExplorerUrlService = BlockChainExplorerUrlService()

@@ -25,19 +25,28 @@ class ExchangeWalletController(
     private val userExchangeWalletService: UserExchangeWalletService,
     private val userExchangeWalletRepository: () -> UserExchangeWalletRepository,
     private val priceService: PriceService,
-    private val shouldSendSampleBalance: (httpServerExchange: HttpServerExchange) -> Boolean = { it ->
-        it.queryParameters["sampleBalance"]?.first == "true"
-    },
     private val sampleExchangeWalletBalancesResponseDto: ExchangeWalletBalancesDto = objectMapper.readValue(
-        this::class.java.getResource("/sampleExchangeWalletBalancesResponse.json").readText(), ExchangeWalletBalancesDto::class.java
+        this::class.java.getResource("/sampleExchangeWalletBalancesResponse.json").readText(),
+        ExchangeWalletBalancesDto::class.java
     ),
-    private val timeMillisProvider: TimeMillisProvider,
 ) : ApiController {
 
     private companion object : KLogging()
 
     private fun <T> HttpServerExchange.sendJson(response: T) {
         this.responseSender.send(objectMapper.writeValueAsString(response))
+    }
+
+    private fun getSampleExchangeWallets() = object : ApiEndpoint {
+        override val method = GET
+        override val urlTemplate = "/exchange/wallets"
+
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is requesting sample exchange wallets" }
+            httpServerExchange.sendJson(sampleExchangeWalletBalancesResponseDto)
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
     private fun getExchangeWallets() = object : ApiEndpoint {
@@ -47,13 +56,8 @@ class ExchangeWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
-            logger.info { "User $userAccountId is requesting exchange wallets (shouldSendSampleBalance=$shouldSendSampleBalance)" }
-            if (shouldSendSampleBalance) {
-                httpServerExchange.sendJson(sampleExchangeWalletBalancesResponseDto)
-            } else {
-                httpServerExchange.sendJson(userExchangeWalletService.getWalletBalances(userAccountId))
-            }
+            logger.info { "User $userAccountId is requesting exchange wallets" }
+            httpServerExchange.sendJson(userExchangeWalletService.getWalletBalances(userAccountId))
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -65,24 +69,30 @@ class ExchangeWalletController(
         }
     }
 
+    private fun getSampleCurrencyBalance() = object : ApiEndpoint {
+        override val method = GET
+        override val urlTemplate = "/exchange/wallets/currency/balance/sample"
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is requesting sample exchange wallets currency balance" }
+            httpServerExchange.sendJson(emptyList<UserCurrencyBalance>())
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
+    }
+
     private fun getCurrencyBalance() = object : ApiEndpoint {
         override val method = GET
         override val urlTemplate = "/exchange/wallets/currency/balance"
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
-            logger.info { "User $userAccountId is requesting exchange wallets currency balance (shouldSendSampleBalance=$shouldSendSampleBalance)" }
-            if (shouldSendSampleBalance) {
-                httpServerExchange.sendJson(emptyList<UserCurrencyBalance>())
-            } else {
-                val currencyBalance = userExchangeWalletRepository().selectUserCurrencyBalance(userAccountId)
-                httpServerExchange.sendJson(currencyBalance.map {
-                    val usdBalance = tryGetUsdValue(it.currency, it.balance)
-                    val usdPrice = priceService.getUsdPrice(it.currency)?.price
-                    it.toDto(usdBalance, usdPrice)
-                })
-            }
+            logger.info { "User $userAccountId is requesting exchange wallets currency balance" }
+            val currencyBalance = userExchangeWalletRepository().selectUserCurrencyBalance(userAccountId)
+            httpServerExchange.sendJson(currencyBalance.map {
+                val usdBalance = tryGetUsdValue(it.currency, it.balance)
+                val usdPrice = priceService.getUsdPrice(it.currency)?.price
+                it.toDto(usdBalance, usdPrice)
+            })
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -92,21 +102,18 @@ class ExchangeWalletController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
-            logger.info { "User $userAccountId is refreshing exchange wallets balance (shouldSendSampleBalance=$shouldSendSampleBalance)" }
-            if (shouldSendSampleBalance) {
-                httpServerExchange.sendJson(sampleExchangeWalletBalancesResponseDto.copy(refreshTimeMillis = timeMillisProvider.now()))
-            } else {
-                userExchangeWalletService.refreshWalletBalances(userAccountId)
-                logger.info { "User $userAccountId refreshed exchange wallets balance" }
-                httpServerExchange.sendJson(userExchangeWalletService.getWalletBalances(userAccountId))
-            }
+            logger.info { "User $userAccountId is refreshing exchange wallets balance" }
+            userExchangeWalletService.refreshWalletBalances(userAccountId)
+            logger.info { "User $userAccountId refreshed exchange wallets balance" }
+            httpServerExchange.sendJson(userExchangeWalletService.getWalletBalances(userAccountId))
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
     override fun apiEndpoints(): List<ApiEndpoint> = listOf(
         getExchangeWallets(),
+        getSampleExchangeWallets(),
         getCurrencyBalance(),
+        getSampleCurrencyBalance(),
         refreshExchangeWalletsBalance(),
     )
 }

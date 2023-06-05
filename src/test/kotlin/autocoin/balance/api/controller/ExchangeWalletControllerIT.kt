@@ -3,7 +3,6 @@ package autocoin.balance.api.controller
 import autocoin.TestServer.Companion.startTestServer
 import autocoin.balance.app.ObjectMapperProvider
 import autocoin.balance.wallet.exchange.ExchangeWalletBalancesDto
-import automate.profit.autocoin.exchange.time.SystemTimeMillisProvider
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.assertj.core.api.Assertions.assertThat
@@ -25,10 +24,9 @@ class ExchangeWalletControllerIT {
             userExchangeWalletService = mock(),
             userExchangeWalletRepository = { mock() },
             priceService = mock(),
-            timeMillisProvider = SystemTimeMillisProvider(),
         )
         val startedServer = startTestServer(tested)
-        val request = Request.Builder().url(startedServer.resolveUrl("/exchange/wallets?sampleBalance=true"))
+        val request = Request.Builder().url(startedServer.resolveUrl("/exchange/wallets/sample"))
             .build()
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
