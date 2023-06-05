@@ -107,7 +107,7 @@ class BlockchainWalletControllerIT {
         whenever(multiBlockchainWalletService.getBalance(any(), any())).thenReturn(BigDecimal("0.56"))
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets"))
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
@@ -139,7 +139,7 @@ class BlockchainWalletControllerIT {
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val duplicatedWalletAddress = sampleEthAddress1
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets"))
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
@@ -167,7 +167,7 @@ class BlockchainWalletControllerIT {
         // given
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets"))
             .post(
                 objectMapper.writeValueAsString(
                     listOf(
@@ -223,7 +223,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets"))
             .get()
             .build()
         // when
@@ -257,7 +257,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets/sample").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets/sample"))
             .get()
             .build()
         // when
@@ -308,7 +308,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets/currency/balance").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets/currency/balance"))
             .get()
             .build()
         // when
@@ -350,7 +350,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets/currency/balance/sample").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets/currency/balance/sample"))
             .get()
             .build()
         // when
@@ -379,7 +379,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets/$walletId").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets/$walletId"))
             .get()
             .build()
         // when
@@ -400,7 +400,7 @@ class BlockchainWalletControllerIT {
         // given
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets/nonexistingwallet").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets/nonexistingwallet"))
             .get()
             .build()
         // when
@@ -427,7 +427,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets/$walletId").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets/$walletId"))
             .get()
             .build()
         // when
@@ -464,7 +464,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallets/balance/refresh").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallets/balance/refresh"))
             .post(EMPTY_REQUEST)
             .build()
         // when
@@ -499,7 +499,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallet").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallet"))
             .put(
                 objectMapper.writeValueAsString(
                     UpdateBlockchainWalletRequestDto(
@@ -538,7 +538,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/blockchain/wallet/$sampleEthAddress1").toURL())
+            .url(startedServer.resolveUrl("/blockchain/wallet/$sampleEthAddress1"))
             .delete(EMPTY_REQUEST)
             .build()
         // when
@@ -558,7 +558,7 @@ class BlockchainWalletControllerIT {
         // given
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/wallet/nonexistingwallet").toURL())
+            .url(startedServer.resolveUrl("/wallet/nonexistingwallet"))
             .delete(EMPTY_REQUEST)
             .build()
         // when
@@ -585,7 +585,7 @@ class BlockchainWalletControllerIT {
 
         startedServer = TestServer.startTestServer(blockchainWalletController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/wallet/$walletId").toURL())
+            .url(startedServer.resolveUrl("/wallet/$walletId"))
             .delete(EMPTY_REQUEST)
             .build()
         // when

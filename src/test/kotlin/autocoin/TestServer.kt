@@ -6,14 +6,17 @@ import io.undertow.Undertow
 import me.alexpanov.net.FreePortFinder
 import org.mockito.kotlin.mock
 import java.net.URI
+import java.net.URL
 
 data class StartedServer(
-    val uri: URI, // TODO hide field, add method resolveUrl(path: String): URL
+    private val uri: URI,
     private val server: Undertow
 ) {
     fun stop() {
         server.stop()
     }
+
+    fun resolveUrl(path: String): URL = uri.resolve(path).toURL()
 }
 
 class TestServer {

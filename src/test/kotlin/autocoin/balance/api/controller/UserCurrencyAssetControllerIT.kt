@@ -101,7 +101,7 @@ class UserCurrencyAssetControllerIT {
         whenever(blockChainExplorerUrlService.getBlockchainExplorerUrl(eq("BTC"), any())).thenReturn("wallet url")
         // when
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/user-currency-assets/sample").toURL())
+            .url(startedServer.resolveUrl("/user-currency-assets/sample"))
             .get()
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -142,7 +142,7 @@ class UserCurrencyAssetControllerIT {
         setupSampleResultsInCurrencyAssetService(userCurrencyAssetId)
         // when
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/user-currency-assets").toURL())
+            .url(startedServer.resolveUrl("/user-currency-assets"))
             .get()
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -167,7 +167,7 @@ class UserCurrencyAssetControllerIT {
         whenever(blockChainExplorerUrlService.getBlockchainExplorerUrl(sampleUserCurrencyAsset)).thenReturn("wallet url")
         // when
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/user-currency-assets/${sampleUserCurrencyAsset.id}").toURL())
+            .url(startedServer.resolveUrl("/user-currency-assets/${sampleUserCurrencyAsset.id}"))
             .get()
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -200,7 +200,7 @@ class UserCurrencyAssetControllerIT {
         ).thenReturn(1)
         // when
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/user-currency-assets/$userCurrencyAssetId").toURL())
+            .url(startedServer.resolveUrl("/user-currency-assets/$userCurrencyAssetId"))
             .delete()
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -232,7 +232,7 @@ class UserCurrencyAssetControllerIT {
         )
         // when
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/user-currency-assets/${sampleUserCurrencyAsset.id}").toURL())
+            .url(startedServer.resolveUrl("/user-currency-assets/${sampleUserCurrencyAsset.id}"))
             .put(objectMapper.writeValueAsString(updateUserCurrencyAssetRequestDto).toRequestBody())
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()
@@ -259,7 +259,7 @@ class UserCurrencyAssetControllerIT {
         )
         // when
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/user-currency-assets").toURL())
+            .url(startedServer.resolveUrl("/user-currency-assets"))
             .post(objectMapper.writeValueAsString(listOf(addUserCurrencyAssetRequestDto)).toRequestBody())
             .build()
         val response = httpClientWithoutAuthorization.newCall(request).execute()

@@ -91,7 +91,7 @@ class BalanceSummaryControllerIT {
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/balance/summary").toURL())
+            .url(startedServer.resolveUrl("/balance/summary"))
             .get()
             .build()
         // when
@@ -147,7 +147,7 @@ class BalanceSummaryControllerIT {
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/balance/summary").toURL())
+            .url(startedServer.resolveUrl("/balance/summary"))
             .post(EMPTY_REQUEST)
             .build()
         // when
@@ -176,7 +176,7 @@ class BalanceSummaryControllerIT {
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
-            .url(startedServer.uri.resolve("/balance/summary?sampleBalance=true").toURL())
+            .url(startedServer.resolveUrl("/balance/summary?sampleBalance=true"))
             .post(EMPTY_REQUEST)
             .build()
         // when
