@@ -39,7 +39,7 @@ class ExchangeWalletController(
 
     private fun getSampleExchangeWallets() = object : ApiEndpoint {
         override val method = GET
-        override val urlTemplate = "/exchange/wallets"
+        override val urlTemplate = "/exchange/wallets/sample"
 
 
         override val httpHandler = HttpHandler { httpServerExchange ->
