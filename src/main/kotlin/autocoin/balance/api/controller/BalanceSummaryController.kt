@@ -12,7 +12,6 @@ import autocoin.balance.wallet.summary.ExchangeCurrencySummary
 import autocoin.balance.wallet.summary.UserBalanceSummaryService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.undertow.server.HttpHandler
-import io.undertow.server.HttpServerExchange
 import io.undertow.util.Methods
 import mu.KLogging
 
@@ -77,25 +76,31 @@ data class BalanceSummaryResponseDto(
     val currencyBalances: List<CurrencyBalanceSummaryDto>,
 )
 
-interface ShouldSendSampleBalanceChecker {
-    operator fun invoke(exchange: HttpServerExchange): Boolean
-}
-
 class BalanceSummaryController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
     private val userBalanceSummaryService: UserBalanceSummaryService,
-    private val shouldSendSampleBalance: (httpServerExchange: HttpServerExchange) -> Boolean = { it ->
-        it.queryParameters["sampleBalance"]?.first == "true"
-    },
     private val sampleBalanceSummaryResponseDto: BalanceSummaryResponseDto = objectMapper.readValue(
-        this::class.java.getResource("/sampleBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
+        this::class.java.getResource("/sampleBalanceSummaryResponse.json").readText(),
+        BalanceSummaryResponseDto::class.java
     ),
 ) : ApiController {
     private companion object : KLogging()
 
     private val sampleBalanceSummaryResponseJson: String by lazy {
         objectMapper.writeValueAsString(sampleBalanceSummaryResponseDto)
+    }
+
+    private fun getSampleUserBalanceSummary() = object : ApiEndpoint {
+        override val method = Methods.GET
+        override val urlTemplate = "/balance/summary/sample"
+
+
+        override val httpHandler = HttpHandler { httpServerExchange ->
+            val userAccountId = httpServerExchange.userAccountId()
+            logger.info { "User $userAccountId is requesting sample balance summary" }
+            httpServerExchange.responseSender.send(sampleBalanceSummaryResponseJson)
+        }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
     private fun getUserBalanceSummary() = object : ApiEndpoint {
@@ -105,14 +110,9 @@ class BalanceSummaryController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
-            logger.info { "User $userAccountId is requesting balance summary (shouldSendSampleBalance =$shouldSendSampleBalance)" }
-            if (shouldSendSampleBalance) {
-                httpServerExchange.responseSender.send(sampleBalanceSummaryResponseJson)
-            } else {
-                val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
-                httpServerExchange.responseSender.send(currencyBalanceSummaryList.toJson())
-            }
+            logger.info { "User $userAccountId is requesting balance summary" }
+            val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
+            httpServerExchange.responseSender.send(currencyBalanceSummaryList.toJson())
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
@@ -132,21 +132,17 @@ class BalanceSummaryController(
 
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
-            val shouldSendSampleBalance = shouldSendSampleBalance(httpServerExchange)
-            logger.info { "User $userAccountId is requesting balance refresh (shouldSendSampleBalance=$shouldSendSampleBalance)" }
-            if (shouldSendSampleBalance) {
-                httpServerExchange.responseSender.send(sampleBalanceSummaryResponseJson)
-            } else {
-                userBalanceSummaryService.refreshBalanceSummary(userAccountId)
-                logger.info { "User $userAccountId refreshed balance" }
-                val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
-                httpServerExchange.responseSender.send(currencyBalanceSummaryList.toJson())
-            }
+            logger.info { "User $userAccountId is requesting balance refresh" }
+            userBalanceSummaryService.refreshBalanceSummary(userAccountId)
+            logger.info { "User $userAccountId refreshed balance" }
+            val currencyBalanceSummaryList = userBalanceSummaryService.getCurrencyBalanceSummary(userAccountId)
+            httpServerExchange.responseSender.send(currencyBalanceSummaryList.toJson())
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 
     override fun apiEndpoints(): List<ApiEndpoint> = listOf(
         getUserBalanceSummary(),
+        getSampleUserBalanceSummary(),
         refreshUserBalanceSummary(),
     )
 

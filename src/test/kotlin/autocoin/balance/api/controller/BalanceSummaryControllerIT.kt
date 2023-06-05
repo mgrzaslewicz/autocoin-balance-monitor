@@ -176,8 +176,7 @@ class BalanceSummaryControllerIT {
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
-            .url(startedServer.resolveUrl("/balance/summary?sampleBalance=true"))
-            .post(EMPTY_REQUEST)
+            .url(startedServer.resolveUrl("/balance/summary/sample"))
             .build()
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
