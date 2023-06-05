@@ -24,6 +24,7 @@ class ExchangeWalletControllerIT {
             userExchangeWalletService = mock(),
             userExchangeWalletRepository = { mock() },
             priceService = mock(),
+            timeMillisProvider = mock(),
         )
         val startedServer = startTestServer(tested)
         val request = Request.Builder().url(startedServer.resolveUrl("/exchange/wallets/sample"))

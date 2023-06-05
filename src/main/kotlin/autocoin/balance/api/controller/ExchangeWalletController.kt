@@ -25,13 +25,61 @@ class ExchangeWalletController(
     private val userExchangeWalletService: UserExchangeWalletService,
     private val userExchangeWalletRepository: () -> UserExchangeWalletRepository,
     private val priceService: PriceService,
-    private val sampleExchangeWalletBalancesResponseDto: ExchangeWalletBalancesDto = objectMapper.readValue(
+    private val timeMillisProvider: TimeMillisProvider,
+    private val sampleExchangeWalletBalancesResponseDtoJson: ExchangeWalletBalancesDto = objectMapper.readValue(
         this::class.java.getResource("/sampleExchangeWalletBalancesResponse.json").readText(),
         ExchangeWalletBalancesDto::class.java
     ),
 ) : ApiController {
 
     private companion object : KLogging()
+
+    private fun Map<String, Map<String, String?>>.updatePrices(): Map<String, Map<String, String?>> {
+        return this.map { baseWithPrices ->
+            baseWithPrices.key to baseWithPrices.value.map {
+                it.key to priceService.getPrice(baseWithPrices.key, it.key)?.price?.toPlainString()
+            }.toMap()
+        }.toMap()
+    }
+
+    private fun Map<String, String?>?.updateValueInOtherCurrency(
+        baseCurrencyCode: String,
+        amount: String,
+    ): Map<String, String?>? {
+        return this?.map { currencyWithValueInOtherCurrency ->
+            currencyWithValueInOtherCurrency.key to priceService.getValue(
+                baseCurrency = baseCurrencyCode,
+                counterCurrency = currencyWithValueInOtherCurrency.key,
+                baseCurrencyAmount = amount.toBigDecimal(),
+            )?.toPlainString()
+        }?.toMap()
+    }
+
+    private val sampleExchangeWalletBalancesResponseDto by lazy {
+        sampleExchangeWalletBalancesResponseDtoJson
+            .apply {
+                copy(
+                    refreshTimeMillis = timeMillisProvider.now(),
+                    pricesInOtherCurrencies = this.pricesInOtherCurrencies.updatePrices(),
+                    exchangeCurrencyBalances = this.exchangeCurrencyBalances.map {
+                        it.copy(
+                            exchangeBalances = it.exchangeBalances.map { exchangeBalance ->
+                                exchangeBalance.copy(
+                                    currencyBalances = exchangeBalance.currencyBalances.map { currencyBalance ->
+                                        currencyBalance.copy(
+                                            valueInOtherCurrency = currencyBalance.valueInOtherCurrency.updateValueInOtherCurrency(
+                                                baseCurrencyCode = currencyBalance.currencyCode,
+                                                amount = currencyBalance.totalAmount,
+                                            ),
+                                        )
+                                    }
+                                )
+                            }
+                        )
+                    }
+                )
+            }
+    }
 
     private fun <T> HttpServerExchange.sendJson(response: T) {
         this.responseSender.send(objectMapper.writeValueAsString(response))
