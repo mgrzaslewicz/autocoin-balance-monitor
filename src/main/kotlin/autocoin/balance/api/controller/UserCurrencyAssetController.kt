@@ -313,7 +313,6 @@ class UserCurrencyAssetController(
         getUserCurrencyAssets(),
         getSampleUserCurrencyAssets(),
         deleteUserCurrencyAsset(),
-        deleteUserCurrencyAsset(),
         updateUserCurrencyAsset(),
         addUserCurrencyAssets(),
     )
