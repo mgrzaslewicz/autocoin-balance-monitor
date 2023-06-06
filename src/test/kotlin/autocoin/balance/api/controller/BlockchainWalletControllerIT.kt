@@ -360,6 +360,8 @@ class BlockchainWalletControllerIT {
         val balances =
             objectMapper.readValue(response.body?.string(), Array<UserCurrencyBalanceResponseDto>::class.java)
         assertThat(balances.map { it.currency }).containsExactly("BTC", "ETH")
+        assertThat(balances.map { it.usdBalance }).doesNotContainNull()
+        assertThat(balances.map { it.usdPrice }).doesNotContainNull()
     }
 
     @Test

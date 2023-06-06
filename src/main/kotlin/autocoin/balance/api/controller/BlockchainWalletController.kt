@@ -135,20 +135,19 @@ class BlockchainWalletController(
     }
     private val sampleCurrencyBalances by lazy {
         sampleWallets.groupBy { it.currency }
-            .mapKeys {
+            .mapValues { currencyWithWallets ->
                 UserCurrencyBalanceResponseDto(
-                    currency = it.key,
-                    balance = it.value.fold(BigDecimal.ZERO) { acc, wallet ->
+                    currency = currencyWithWallets.key,
+                    balance = currencyWithWallets.value.fold(BigDecimal.ZERO) { acc, wallet ->
                         acc + (wallet.balance?.toBigDecimal() ?: BigDecimal.ZERO)
                     }.toPlainString(),
-                    usdBalance = it.value.fold(BigDecimal.ZERO) { acc, wallet ->
+                    usdBalance = currencyWithWallets.value.fold(BigDecimal.ZERO) { acc, wallet ->
                         acc + (wallet.usdBalance?.toBigDecimal() ?: BigDecimal.ZERO)
                     }.toPlainString(),
-                    usdPrice = priceService.getUsdPrice(it.key)?.price?.toPlainString(),
+                    usdPrice = priceService.getUsdPrice(currencyWithWallets.key)?.price?.toPlainString(),
                 )
             }
             .values
-            .flatten()
     }
 
     private fun addMonitoredWallets() = object : ApiEndpoint {
