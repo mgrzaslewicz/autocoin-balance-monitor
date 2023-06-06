@@ -141,7 +141,7 @@ class AppContext(private val appConfig: AppConfig) {
     val healthChecks = listOf(
         DbHealthCheck(datasource = datasource)
     )
-    val healthService = HealthService(healthChecks)
+    val healthService = HealthService(healthChecks, AppVersion().commitId)
 
     val healthMetricsScheduler = HealthMetricsScheduler(
         healthService = healthService,

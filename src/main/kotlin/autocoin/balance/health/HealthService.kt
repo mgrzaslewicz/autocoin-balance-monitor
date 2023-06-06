@@ -3,6 +3,7 @@ package autocoin.balance.health
 import mu.KLogging
 
 data class Health(
+    val version: String?,
     val healthy: Boolean,
     val healthChecks: List<HealthCheckResult>,
 ) {
@@ -23,13 +24,17 @@ interface HealthCheck {
     fun doHealthCheck(): HealthCheckResult
 }
 
-class HealthService(private val healthChecks: List<HealthCheck>) {
+class HealthService(
+    private val healthChecks: List<HealthCheck>,
+    private val appVersion: String?,
+) {
 
     private companion object : KLogging()
 
     fun getHealth(): Health {
         val healthCheckResults = healthChecks.map { it.doHealthCheck() }
         val health = Health(
+            version = appVersion,
             healthy = healthCheckResults.all { it.healthy },
             healthChecks = healthCheckResults,
         )
