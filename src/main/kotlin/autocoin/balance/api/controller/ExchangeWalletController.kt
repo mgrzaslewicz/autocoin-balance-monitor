@@ -56,12 +56,10 @@ class ExchangeWalletController(
     }
 
     private val sampleExchangeWalletBalancesResponseDto by lazy {
-        sampleExchangeWalletBalancesResponseDtoJson
-            .apply {
-                copy(
+        sampleExchangeWalletBalancesResponseDtoJson.copy(
                     refreshTimeMillis = timeMillisProvider.now(),
-                    pricesInOtherCurrencies = this.pricesInOtherCurrencies.updatePrices(),
-                    exchangeCurrencyBalances = this.exchangeCurrencyBalances.map {
+                    pricesInOtherCurrencies = sampleExchangeWalletBalancesResponseDtoJson.pricesInOtherCurrencies.updatePrices(),
+                    exchangeCurrencyBalances = sampleExchangeWalletBalancesResponseDtoJson.exchangeCurrencyBalances.map {
                         it.copy(
                             exchangeBalances = it.exchangeBalances.map { exchangeBalance ->
                                 exchangeBalance.copy(
@@ -78,7 +76,6 @@ class ExchangeWalletController(
                         )
                     }
                 )
-            }
     }
 
     private fun <T> HttpServerExchange.sendJson(response: T) {
