@@ -5,6 +5,7 @@ import autocoin.balance.api.ApiEndpoint
 import autocoin.balance.api.HttpHandlerWrapper
 import autocoin.balance.oauth.server.authorizeWithOauth2
 import autocoin.balance.oauth.server.userAccountId
+import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.currency.UserCurrencyAssetWithValue
 import autocoin.balance.wallet.summary.BlockchainWalletCurrencySummary
 import autocoin.balance.wallet.summary.CurrencyBalanceSummary
@@ -80,15 +81,51 @@ class BalanceSummaryController(
     private val objectMapper: ObjectMapper,
     private val oauth2BearerTokenAuthHandlerWrapper: HttpHandlerWrapper,
     private val userBalanceSummaryService: UserBalanceSummaryService,
-    private val sampleBalanceSummaryResponseDto: BalanceSummaryResponseDto = objectMapper.readValue(
+    private val priceService: PriceService,
+    private val sampleBalanceSummaryResponseDtoJson: BalanceSummaryResponseDto = objectMapper.readValue(
         this::class.java.getResource("/sampleBalanceSummaryResponse.json").readText(),
         BalanceSummaryResponseDto::class.java
     ),
 ) : ApiController {
     private companion object : KLogging()
 
-    private val sampleBalanceSummaryResponseJson: String by lazy {
-        objectMapper.writeValueAsString(sampleBalanceSummaryResponseDto)
+    private fun Map<String, String?>.updatePrices(baseCurrency: String): Map<String, String?> {
+        return this.map { counterCurrencyWithPrice ->
+            counterCurrencyWithPrice.key to priceService.getPrice(
+                baseCurrency,
+                counterCurrencyWithPrice.key
+            )?.price?.toPlainString()
+        }.toMap()
+    }
+
+    private fun Map<String, String?>.updateValueInOtherCurrency(
+        baseCurrencyCode: String,
+        amount: String,
+    ): Map<String, String?> {
+        return this.map { currencyWithValueInOtherCurrency ->
+            currencyWithValueInOtherCurrency.key to priceService.getValue(
+                baseCurrency = baseCurrencyCode,
+                counterCurrency = currencyWithValueInOtherCurrency.key,
+                baseCurrencyAmount = amount.toBigDecimal(),
+            )?.toPlainString()
+        }.toMap()
+    }
+
+
+    private val sampleBalanceSummaryResponseDto by lazy {
+        sampleBalanceSummaryResponseDtoJson.copy(
+            currencyBalances = sampleBalanceSummaryResponseDtoJson.currencyBalances.map { currencyBalanceSummaryDto ->
+                currencyBalanceSummaryDto.copy(
+                    priceInOtherCurrency = currencyBalanceSummaryDto.priceInOtherCurrency?.updatePrices(
+                        currencyBalanceSummaryDto.currency,
+                    ),
+                    valueInOtherCurrency = currencyBalanceSummaryDto.valueInOtherCurrency?.updateValueInOtherCurrency(
+                        baseCurrencyCode = currencyBalanceSummaryDto.currency,
+                        amount = currencyBalanceSummaryDto.balance ?: "0",
+                    ),
+                )
+            }
+        )
     }
 
     private fun getSampleUserBalanceSummary() = object : ApiEndpoint {
@@ -99,7 +136,7 @@ class BalanceSummaryController(
         override val httpHandler = HttpHandler { httpServerExchange ->
             val userAccountId = httpServerExchange.userAccountId()
             logger.info { "User $userAccountId is requesting sample balance summary" }
-            httpServerExchange.responseSender.send(sampleBalanceSummaryResponseJson)
+            httpServerExchange.responseSender.send(objectMapper.writeValueAsString(sampleBalanceSummaryResponseDto))
         }.authorizeWithOauth2(oauth2BearerTokenAuthHandlerWrapper)
     }
 

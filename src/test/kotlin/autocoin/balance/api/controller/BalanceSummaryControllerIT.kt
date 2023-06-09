@@ -3,6 +3,8 @@ package autocoin.balance.api.controller
 import autocoin.StartedServer
 import autocoin.TestServer
 import autocoin.balance.app.ObjectMapperProvider
+import autocoin.balance.price.CurrencyPrice
+import autocoin.balance.price.PriceService
 import autocoin.balance.wallet.currency.UserCurrencyAsset
 import autocoin.balance.wallet.currency.UserCurrencyAssetWithValue
 import autocoin.balance.wallet.summary.BlockchainWalletCurrencySummary
@@ -18,8 +20,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
@@ -88,6 +90,7 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
+            priceService = mock(),
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -144,6 +147,7 @@ class BalanceSummaryControllerIT {
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
             userBalanceSummaryService = userBalanceSummaryService,
+            priceService = mock(),
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -156,23 +160,41 @@ class BalanceSummaryControllerIT {
         verify(userBalanceSummaryService).refreshBalanceSummary(userAccountId)
         verify(userBalanceSummaryService).getCurrencyBalanceSummary(userAccountId)
         assertThat(response.code).isEqualTo(200)
-        assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java).currencyBalances).isEmpty()
+        assertThat(
+            objectMapper.readValue(
+                response.body?.string(),
+                BalanceSummaryResponseDto::class.java
+            ).currencyBalances
+        ).isEmpty()
     }
 
     private fun sampleBalanceSummaryResponseDto(): BalanceSummaryResponseDto {
         return objectMapper.readValue(
-            this::class.java.getResource("/sampleBalanceSummaryResponse.json").readText(), BalanceSummaryResponseDto::class.java
+            this::class.java.getResource("/sampleBalanceSummaryResponse.json").readText(),
+            BalanceSummaryResponseDto::class.java
         )
     }
 
     @Test
-    fun shouldGetSampleBalanceSummary() {
+    fun shouldGetSampleBalanceSummaryWithUpdatedPrices() {
         // given
-        val userBalanceSummaryService = mock<UserBalanceSummaryService>()
+        val expectedPrice = BigDecimal.ONE
+        val expectedValue = BigDecimal.TEN
         val balanceSummaryController = BalanceSummaryController(
             objectMapper = objectMapper,
             oauth2BearerTokenAuthHandlerWrapper = authenticatedHttpHandlerWrapper,
-            userBalanceSummaryService = userBalanceSummaryService,
+            userBalanceSummaryService = mock(),
+            priceService = mock<PriceService>().apply {
+                whenever(this.getPrice(any(), any())).thenReturn(
+                    CurrencyPrice(
+                        price = expectedPrice,
+                        baseCurrency = "does not matter",
+                        counterCurrency = "does not matter",
+                        timestampMillis = 0,
+                    )
+                )
+                whenever(this.getValue(any(), any(), any())).thenReturn(BigDecimal.TEN)
+            },
         )
         startedServer = TestServer.startTestServer(balanceSummaryController)
         val request = Request.Builder()
@@ -181,9 +203,15 @@ class BalanceSummaryControllerIT {
         // when
         val response = httpClientWithoutAuthorization.newCall(request).execute()
         // then
-        verify(userBalanceSummaryService, never()).refreshBalanceSummary(userAccountId)
-        verify(userBalanceSummaryService, never()).getCurrencyBalanceSummary(userAccountId)
         assertThat(response.code).isEqualTo(200)
-        assertThat(objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java)).isEqualTo(sampleBalanceSummaryResponseDto())
+        val responseDto = objectMapper.readValue(response.body?.string(), BalanceSummaryResponseDto::class.java)
+
+        val allPrices = responseDto.currencyBalances.flatMap { it.priceInOtherCurrency?.values ?: emptyList() }
+        assertThat(allPrices).hasSize(36)
+        assertThat(allPrices).containsOnly(expectedPrice.toPlainString())
+
+        val allValues = responseDto.currencyBalances.flatMap { it.valueInOtherCurrency?.values ?: emptyList() }
+        assertThat(allValues).hasSize(36)
+        assertThat(allValues).containsOnly(expectedValue.toPlainString())
     }
 }

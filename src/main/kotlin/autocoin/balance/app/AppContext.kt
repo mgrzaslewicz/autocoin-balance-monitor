@@ -279,6 +279,7 @@ class AppContext(private val appConfig: AppConfig) {
         objectMapper = objectMapper,
         oauth2BearerTokenAuthHandlerWrapper = oauth2BearerTokenAuthHandlerWrapper,
         userBalanceSummaryService = userBalanceSummaryService,
+        priceService = priceService,
     )
 
 
