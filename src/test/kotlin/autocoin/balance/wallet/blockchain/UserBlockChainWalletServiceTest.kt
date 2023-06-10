@@ -41,11 +41,12 @@ class UserBlockChainWalletServiceTest {
         val tested = UserBlockChainWalletService(
             userBlockChainWalletRepository = { walletRepository },
             multiBlockchainWalletService = MultiBlockchainWalletService(
-                blockchainWalletServices = listOf(mock<EthService>().apply {
-                    whenever(this.getBalance(walletAddress1)).thenReturn(BigDecimal("2.1"))
-                    whenever(this.getBalance(walletAddress2)).thenReturn(BigDecimal("3.5"))
-                    whenever(this.currency).thenReturn("ETH")
-                }
+                blockchainWalletServices = listOf(
+                    mock<EthService>().apply {
+                        whenever(this.getBalance(walletAddress1)).thenReturn(BigDecimal("2.1"))
+                        whenever(this.getBalance(walletAddress2)).thenReturn(BigDecimal("3.5"))
+                        whenever(this.currency).thenReturn("ETH")
+                    }
                 )
             )
         )
@@ -130,7 +131,10 @@ class UserBlockChainWalletServiceTest {
             whenever(this.existsByUserAccountIdAndId(userAccountId, walletId)).thenReturn(true)
             whenever(this.findOneById(walletId)).thenReturn(wallet)
         }
-        val tested = UserBlockChainWalletService(userBlockChainWalletRepository = { walletRepository }, multiBlockchainWalletService = mock())
+        val tested = UserBlockChainWalletService(
+            userBlockChainWalletRepository = { walletRepository },
+            multiBlockchainWalletService = mock()
+        )
         // when
         val newWalletAddress = "wallet-address-2"
         val updateResult = tested.updateWallet(
@@ -225,7 +229,10 @@ class UserBlockChainWalletServiceTest {
         val walletRepository = mock<UserBlockChainWalletRepository>().apply {
             whenever(this.existsByUserAccountIdAndId(userAccountId, walletId)).thenReturn(false)
         }
-        val tested = UserBlockChainWalletService(userBlockChainWalletRepository = { walletRepository }, multiBlockchainWalletService = mock())
+        val tested = UserBlockChainWalletService(
+            userBlockChainWalletRepository = { walletRepository },
+            multiBlockchainWalletService = mock()
+        )
         // when
         val updateResult = tested.updateWallet(
             userAccountId,
@@ -262,7 +269,10 @@ class UserBlockChainWalletServiceTest {
             whenever(this.findOneById(walletId)).thenReturn(wallet)
             whenever(this.existsByUserAccountIdAndWalletAddress(userAccountId, newWalletAddress)).thenReturn(true)
         }
-        val tested = UserBlockChainWalletService(userBlockChainWalletRepository = { walletRepository }, multiBlockchainWalletService = mock())
+        val tested = UserBlockChainWalletService(
+            userBlockChainWalletRepository = { walletRepository },
+            multiBlockchainWalletService = mock()
+        )
         // when
         val updateResult = tested.updateWallet(
             userAccountId,
