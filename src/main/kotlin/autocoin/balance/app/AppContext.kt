@@ -11,6 +11,7 @@ import autocoin.balance.blockchain.eth.EthWalletAddressValidator
 import autocoin.balance.blockchain.eth.Web3EthService
 import autocoin.balance.eventbus.DefaultEventBus
 import autocoin.balance.health.HealthService
+import autocoin.balance.health.blockchainwallet.EthServiceHealthCheck
 import autocoin.balance.health.db.DbHealthCheck
 import autocoin.balance.metrics.MetricsService
 import autocoin.balance.oauth.client.AccessTokenAuthenticator
@@ -138,17 +139,6 @@ class AppContext(private val appConfig: AppConfig) {
     private fun createJdbi() = jdbi.set(createJdbi(datasource.get()))
 
 
-    val healthChecks = listOf(
-        DbHealthCheck(datasource = datasource)
-    )
-    val healthService = HealthService(healthChecks, AppVersion().commitId)
-
-    val healthMetricsScheduler = HealthMetricsScheduler(
-        healthService = healthService,
-        metricsService = metricsService,
-        executorService = scheduledJobsxecutorService
-    )
-
     val accessTokenChecker = AccessTokenChecker(httpClientWithoutAuthorization, objectMapper, appConfig)
     val oauth2AuthenticationMechanism = Oauth2AuthenticationMechanism(accessTokenChecker)
     val oauth2BearerTokenAuthHandlerWrapper = Oauth2BearerTokenAuthHandlerWrapper(oauth2AuthenticationMechanism)
@@ -166,6 +156,17 @@ class AppContext(private val appConfig: AppConfig) {
         ethWalletAddressValidator = ethWalletAddressValidator,
     )
 
+    val healthChecks = listOf(
+        DbHealthCheck(datasource = datasource),
+        EthServiceHealthCheck(ethService = ethService),
+    )
+    val healthService = HealthService(healthChecks, AppVersion().commitId)
+
+    val healthMetricsScheduler = HealthMetricsScheduler(
+        healthService = healthService,
+        metricsService = metricsService,
+        executorService = scheduledJobsxecutorService
+    )
     val healthController = HealthController(
         healthService = healthService,
         objectMapper = objectMapper,
