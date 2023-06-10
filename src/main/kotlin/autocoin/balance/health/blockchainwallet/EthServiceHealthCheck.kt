@@ -15,14 +15,7 @@ class EthServiceHealthCheck(private val ethService: EthService) : HealthCheck {
     private val sampleEthWalletAddress = "0xDBC05B1ECB4FDAEF943819C0B04E9EF6DF4BABD6"
 
     override fun doHealthCheck(): HealthCheckResult {
-        var exception: Exception? = null
-        val ethBalance: BigDecimal? = try {
-            ethService.getEthBalance(sampleEthWalletAddress)
-        } catch (e: Exception) {
-            logger.error(e) { "Could not get sample wallet $sampleEthWalletAddress balance" }
-            exception = e
-            null
-        }
+        val ethBalance: BigDecimal? = ethService.getEthBalance(sampleEthWalletAddress)
         return HealthCheckResult(
             description = "Ethereum wallet balance retrieval",
             healthy = ethBalance != null && BigDecimal.ZERO.compareTo(ethBalance) == 0,
@@ -30,7 +23,9 @@ class EthServiceHealthCheck(private val ethService: EthService) : HealthCheck {
                 "sample wallet $sampleEthWalletAddress balance" to "$ethBalance",
             ),
             healthCheckClass = this.javaClass,
-            unhealthyReasons = listOfNotNull(exception?.message),
+            unhealthyReasons = listOfNotNull(
+                if (ethBalance == null) "Could not get wallet $sampleEthWalletAddress balance. Check logs for details" else null,
+            ),
         )
     }
 }
