@@ -1,5 +1,6 @@
 package autocoin.balance.app
 
+import autocoin.balance.blockchain.eth.Web3EthService
 import java.io.File
 
 /**
@@ -41,7 +42,10 @@ data class AppConfig(
     val oauth2ApiBaseUrl: String = getPropertyThenEnv("OAUTH2_API_URL", "http://autocoin-auth-service:9002"),
 
     @InternalDependency
-    val exchangeMediatorApiBaseUrl: String = getPropertyThenEnv("EXCHANGE_MEDIATOR_API_URL", "http://autocoin-exchange-mediator:9001"),
+    val exchangeMediatorApiBaseUrl: String = getPropertyThenEnv(
+        "EXCHANGE_MEDIATOR_API_URL",
+        "http://autocoin-exchange-mediator:9001"
+    ),
 
     @InternalDependency
     val oauth2ClientId: String = serviceName,
@@ -51,13 +55,18 @@ data class AppConfig(
     val metricsFolder: String = getPropertyThenEnv("APP_DATA_PATH", "data") + File.separator + "metrics",
 
     @ExternalDependency
-    val ethNodeUrl: String = getPropertyThenEnv("ETH_NODE_URL", "https://main-light.eth.linkpool.io"),
+    val ethNodeUrl: String = getPropertyThenEnv("ETH_NODE_URL", Web3EthService.ETH_NODE_URL),
 
 
     @InternalDependency
     val telegrafHostname: String = getPropertyThenEnv("TELEGRAF_HOSTNAME", "telegraf"),
     @InternalDependency
-    val metricsDestination: MetricsDestination = MetricsDestination.valueOf(getPropertyThenEnv("METRICS_DESTINATION", MetricsDestination.FILE.name)),
+    val metricsDestination: MetricsDestination = MetricsDestination.valueOf(
+        getPropertyThenEnv(
+            "METRICS_DESTINATION",
+            MetricsDestination.FILE.name
+        )
+    ),
 
     @InternalDependency
     val jdbcUrl: String = getPropertyThenEnv(JDBC_URL_PARAMETER),

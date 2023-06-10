@@ -15,10 +15,14 @@ interface EthService : BlockchainWalletService {
     override fun getBalance(walletAddress: String) = getEthBalance(walletAddress)
 }
 
-class Web3EthService(ethNodeUrl: String) : EthService {
+class Web3EthService(ethNodeUrl: String = ETH_NODE_URL) : EthService {
+    companion object {
+        const val ETH_NODE_URL = "https://main-light.eth.linkpool.io"
+        private val logger = KLogging().logger
+    }
+
     private val web3j = Web3j.build(HttpService(ethNodeUrl))
 
-    private companion object : KLogging()
 
     override val currency: String = "ETH"
 
