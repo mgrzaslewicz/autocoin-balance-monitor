@@ -17,7 +17,10 @@ interface EthService : BlockchainWalletService {
 
 class Web3EthService(ethNodeUrl: String = ETH_NODE_URL) : EthService {
     companion object {
-        const val ETH_NODE_URL = "https://main-light.eth.linkpool.io"
+        /**
+         * Taken from https://chainlist.org/chain/1
+         */
+        const val ETH_NODE_URL = "https://api.securerpc.com/v1"
         private val logger = KLogging().logger
     }
 
