@@ -168,13 +168,6 @@ class BalanceSummaryControllerIT {
         ).isEmpty()
     }
 
-    private fun sampleBalanceSummaryResponseDto(): BalanceSummaryResponseDto {
-        return objectMapper.readValue(
-            this::class.java.getResource("/sampleBalanceSummaryResponse.json").readText(),
-            BalanceSummaryResponseDto::class.java
-        )
-    }
-
     @Test
     fun shouldGetSampleBalanceSummaryWithUpdatedPrices() {
         // given
