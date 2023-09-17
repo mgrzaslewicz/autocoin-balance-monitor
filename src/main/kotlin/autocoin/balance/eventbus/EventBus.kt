@@ -4,36 +4,35 @@ import mu.KLogging
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 
-interface EventType<T> {
-    fun isAsync(): Boolean = false
-}
-
 interface EventBus {
-    fun <T> register(eventType: EventType<T>, eventHandler: (event: T) -> Unit)
-    fun <T> publish(eventType: EventType<T>, event: T)
+    fun <T> register(eventType: Class<T>, eventHandler: (event: T) -> Unit, async: Boolean = false)
+    fun <T> publish(eventType: Class<T>, event: T)
 }
 
 class DefaultEventBus(private val executorService: ExecutorService) : EventBus {
+    private data class EventHandler(
+        val handler: (payload: Any) -> Unit,
+        val async: Boolean,
+    )
+
     private companion object : KLogging()
 
-    private val eventListeners = ConcurrentHashMap<EventType<*>, MutableList<(payload: Any) -> Unit>>()
+    private val eventListeners = ConcurrentHashMap<Class<*>, MutableList<EventHandler>>()
 
-    override fun <T> register(eventType: EventType<T>, eventListener: (payload: T) -> Unit) {
-        val listeners: MutableList<(payload: Any) -> Unit> = eventListeners.computeIfAbsent(eventType as EventType<*>) { ArrayList() }
+    override fun <T> register(eventType: Class<T>, eventListener: (payload: T) -> Unit, async: Boolean) {
+        val listeners = eventListeners.computeIfAbsent(eventType as Class<*>) { ArrayList() }
         @Suppress("UNCHECKED_CAST")
-        listeners += eventListener as (event: Any) -> Unit
+        listeners += EventHandler(eventListener as (event: Any) -> Unit, async = async)
     }
 
-    override fun <T> publish(eventType: EventType<T>, event: T) {
-        if (eventType.isAsync()) {
-            eventListeners[eventType]?.forEach {
+    override fun <T> publish(eventType: Class<T>, event: T) {
+        eventListeners[eventType]?.forEach {
+            if (it.async) {
                 executorService.submit {
-                    tryInvokeEventListener(it, event as Any)
+                    tryInvokeEventListener(it.handler, event as Any)
                 }
-            }
-        } else {
-            eventListeners[eventType]?.forEach {
-                tryInvokeEventListener(it, event as Any)
+            } else {
+                tryInvokeEventListener(it.handler, event as Any)
             }
         }
     }

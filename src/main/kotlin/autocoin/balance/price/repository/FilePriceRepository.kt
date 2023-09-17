@@ -10,6 +10,7 @@ import mu.KLogging
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
+
 class FilePriceRepository(
     private val fileKeyValueRepository: FileKeyValueRepository,
     private val objectMapper: ObjectMapper,

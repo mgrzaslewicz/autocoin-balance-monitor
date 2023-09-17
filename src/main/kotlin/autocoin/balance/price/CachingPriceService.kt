@@ -19,7 +19,8 @@ class CachingPriceService(
 ) : PriceService {
     private companion object : KLogging()
 
-    private val nullValueMarker = CurrencyPrice(price = BigDecimal.ZERO, baseCurrency = "", counterCurrency = "", timestampMillis = 0)
+    private val nullValueMarker =
+        CurrencyPrice(price = BigDecimal.ZERO, baseCurrency = "", counterCurrency = "", timestampMillis = 0)
 
     /**
      * When getting price failed, keep null value cached - but only for a short period of time
@@ -35,11 +36,21 @@ class CachingPriceService(
                 }
             }
 
-            override fun expireAfterUpdate(key: String, value: CurrencyPrice, currentTime: Long, currentDuration: Long): Long {
+            override fun expireAfterUpdate(
+                key: String,
+                value: CurrencyPrice,
+                currentTime: Long,
+                currentDuration: Long
+            ): Long {
                 return currentDuration
             }
 
-            override fun expireAfterRead(key: String, value: CurrencyPrice, currentTime: Long, currentDuration: Long): Long {
+            override fun expireAfterRead(
+                key: String,
+                value: CurrencyPrice,
+                currentTime: Long,
+                currentDuration: Long
+            ): Long {
                 return currentDuration
             }
 
@@ -73,7 +84,10 @@ class CachingPriceService(
                 priceCache.put(priceKey, newPrice)
             }
         }
-        eventBus.publish(pricesUpdatedEventType, Collections.unmodifiableCollection(priceCache.asMap().values))
+        eventBus.publish(
+            PricesEvent::class.java,
+            PricesEvent(Collections.unmodifiableCollection(priceCache.asMap().values))
+        )
     }
 
 }

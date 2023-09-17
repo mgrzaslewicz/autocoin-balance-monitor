@@ -110,7 +110,7 @@ class CachingPriceServiceTest {
         // when
         tested.refreshUsdPrices(listOf("A"))
         // then
-        verify(eventBus).publish(eq(pricesUpdatedEventType), argThat { arg -> arg.contains(expectedPrice) })
+        verify(eventBus).publish(eq(PricesEvent::class.java), argThat { arg -> arg.prices.contains(expectedPrice) })
     }
 
 }

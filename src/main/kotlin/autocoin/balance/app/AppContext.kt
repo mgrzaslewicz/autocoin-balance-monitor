@@ -22,8 +22,8 @@ import autocoin.balance.oauth.server.Oauth2AuthenticationMechanism
 import autocoin.balance.oauth.server.Oauth2BearerTokenAuthHandlerWrapper
 import autocoin.balance.price.CachingPriceService
 import autocoin.balance.price.CurrencyRepository
+import autocoin.balance.price.PricesEvent
 import autocoin.balance.price.RestPriceService
-import autocoin.balance.price.pricesUpdatedEventType
 import autocoin.balance.price.repository.FilePriceRepository
 import autocoin.balance.scheduled.HealthMetricsScheduler
 import autocoin.balance.scheduled.PriceRefreshScheduler
@@ -211,7 +211,11 @@ class AppContext(private val appConfig: AppConfig) {
             objectMapper = objectMapper
         ),
         eventBus = eventBus.apply {
-            this.register(pricesUpdatedEventType, filePriceRepository::savePrices)
+            this.register(
+                eventType = PricesEvent::class.java,
+                eventListener = { filePriceRepository.savePrices(it.prices) },
+                async = true
+            )
         },
     )
 
