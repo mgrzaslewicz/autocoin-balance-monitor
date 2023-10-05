@@ -1,6 +1,11 @@
 package autocoin.balance
 
-import autocoin.balance.app.*
+import autocoin.balance.app.AppContext
+import autocoin.balance.app.AppStarter
+import autocoin.balance.app.AppVersion
+import autocoin.balance.app.config.AppConfig
+import autocoin.balance.app.config.loadConfig
+import autocoin.balance.app.config.shouldStartOwnDbContainer
 import mu.KotlinLogging
 import org.testcontainers.containers.PostgreSQLContainer
 import java.net.SocketAddress

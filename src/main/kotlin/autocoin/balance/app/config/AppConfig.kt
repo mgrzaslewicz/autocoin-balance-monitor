@@ -1,4 +1,4 @@
-package autocoin.balance.app
+package autocoin.balance.app.config
 
 import autocoin.balance.blockchain.eth.Web3EthService
 import java.io.File
@@ -33,26 +33,25 @@ enum class MetricsDestination {
 }
 
 data class AppConfig(
-    val appServerPort: Int = getPropertyThenEnv("APP_SERVER_PORT", "10022").toInt(),
+    val serverPort: Int = getPropertyThenEnv("APP_SERVER_PORT", "10022").toInt(),
     val serviceName: String = getPropertyThenEnv("SERVICE_NAME", "autocoin-balance-monitor"),
+    val appDataPath: String = getPropertyThenEnv("APP_DATA_PATH", "data"),
 
-    val pricesFolder: String = getPropertyThenEnv("APP_DATA_PATH", "data") + File.separator + "prices",
-
-    @InternalDependency
-    val oauth2ApiBaseUrl: String = getPropertyThenEnv("OAUTH2_API_URL", "http://autocoin-auth-service:9002"),
 
     @InternalDependency
-    val exchangeMediatorApiBaseUrl: String = getPropertyThenEnv(
-        "EXCHANGE_MEDIATOR_API_URL",
-        "http://autocoin-exchange-mediator:9001"
-    ),
-
+    val oauth2ApiUrl: String = getPropertyThenEnv("OAUTH2_API_URL", "http://autocoin-auth-service:9002"),
     @InternalDependency
     val oauth2ClientId: String = serviceName,
     @InternalDependency
     val oauth2ClientSecret: String = getPropertyThenEnv("OAUTH_CLIENT_SECRET"),
 
-    val metricsFolder: String = getPropertyThenEnv("APP_DATA_PATH", "data") + File.separator + "metrics",
+    @InternalDependency
+    val exchangeMediatorApiUrl: String = getPropertyThenEnv(
+        "EXCHANGE_MEDIATOR_API_URL",
+        "http://autocoin-exchange-mediator:9001"
+    ),
+
+
 
     @ExternalDependency
     val ethNodeUrl: String = getPropertyThenEnv("ETH_NODE_URL", Web3EthService.ETH_NODE_URL),
@@ -75,6 +74,9 @@ data class AppConfig(
     @InternalDependency
     val dbPassword: String = getPropertyThenEnv(DB_PASSWORD_PARAMETER),
 ) {
+    val pricesFolder: String = appDataPath + File.separator + "prices"
+    val metricsFolder: String = appDataPath + File.separator + "metrics"
+
     companion object {
         fun setJvmPropertiesForDbConnection(jdbcUrl: String, dbUsername: String, dbPassword: String) {
             System.setProperty(JDBC_URL_PARAMETER, jdbcUrl)

@@ -2,6 +2,8 @@ package autocoin.balance.app
 
 import autocoin.balance.api.ServerBuilder
 import autocoin.balance.api.controller.*
+import autocoin.balance.app.config.AppConfig
+import autocoin.balance.app.config.MetricsDestination
 import autocoin.balance.blockchain.BlockChainExplorerUrlService
 import autocoin.balance.blockchain.MultiBlockchainWalletService
 import autocoin.balance.blockchain.MultiWalletAddressValidator
@@ -87,7 +89,7 @@ class AppContext(private val appConfig: AppConfig) {
     val accessTokenProvider = ClientCredentialsAccessTokenProvider(
         httpClient = httpClientWithoutAuthorization,
         objectMapper = objectMapper,
-        oauth2ServerUrl = appConfig.oauth2ApiBaseUrl,
+        oauth2ServerUrl = appConfig.oauth2ApiUrl,
         oauthClientId = appConfig.oauth2ClientId,
         oauthClientSecret = appConfig.oauth2ClientSecret
     )
@@ -205,7 +207,7 @@ class AppContext(private val appConfig: AppConfig) {
 
     val priceService = CachingPriceService(
         decorated = RestPriceService(
-            priceApiUrl = appConfig.exchangeMediatorApiBaseUrl,
+            priceApiUrl = appConfig.exchangeMediatorApiUrl,
             httpClient = oauth2HttpClient,
             metricsService = metricsService,
             objectMapper = objectMapper
@@ -229,7 +231,7 @@ class AppContext(private val appConfig: AppConfig) {
         objectMapper = objectMapper,
         // it might be a long operation to get all wallets from many exchanges
         httpClient = oauth2HttpClient.newBuilder().callTimeout(1, TimeUnit.MINUTES).build(),
-        exchangeMediatorApiUrl = appConfig.exchangeMediatorApiBaseUrl,
+        exchangeMediatorApiUrl = appConfig.exchangeMediatorApiUrl,
     )
 
     val userExchangeWalletService = UserExchangeWalletService(
@@ -306,6 +308,6 @@ class AppContext(private val appConfig: AppConfig) {
         userCurrencyAssetController,
     )
 
-    val server = ServerBuilder(appConfig.appServerPort, controllers, metricsService).build()
+    val server = ServerBuilder(appConfig.serverPort, controllers, metricsService).build()
 
 }
