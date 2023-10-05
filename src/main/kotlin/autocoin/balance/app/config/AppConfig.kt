@@ -4,19 +4,6 @@ import autocoin.balance.blockchain.eth.Web3EthService
 import java.io.File
 
 /**
- * Informational marker that configuration is related to some service within autocoin infrastructure that you can control
- */
-@Retention(AnnotationRetention.SOURCE)
-annotation class InternalDependency
-
-/**
- * Informational marker that configuration is related to some external service that you don't have any control of
- */
-@Retention(AnnotationRetention.SOURCE)
-annotation class ExternalDependency
-
-
-/**
  * Use it to start own container and fill it with sample data. When set to true,
  * db connection parameters will be set as required JVM properties
  */
@@ -38,28 +25,19 @@ data class AppConfig(
     val appDataPath: String = getPropertyThenEnv("APP_DATA_PATH", "data"),
 
 
-    @InternalDependency
     val oauth2ApiUrl: String = getPropertyThenEnv("OAUTH2_API_URL", "http://autocoin-auth-service:9002"),
-    @InternalDependency
     val oauth2ClientId: String = serviceName,
-    @InternalDependency
     val oauth2ClientSecret: String = getPropertyThenEnv("OAUTH_CLIENT_SECRET"),
 
-    @InternalDependency
     val exchangeMediatorApiUrl: String = getPropertyThenEnv(
         "EXCHANGE_MEDIATOR_API_URL",
         "http://autocoin-exchange-mediator:9001"
     ),
 
-
-
-    @ExternalDependency
     val ethNodeUrl: String = getPropertyThenEnv("ETH_NODE_URL", Web3EthService.ETH_NODE_URL),
 
 
-    @InternalDependency
     val telegrafHostname: String = getPropertyThenEnv("TELEGRAF_HOSTNAME", "telegraf"),
-    @InternalDependency
     val metricsDestination: MetricsDestination = MetricsDestination.valueOf(
         getPropertyThenEnv(
             "METRICS_DESTINATION",
@@ -67,11 +45,8 @@ data class AppConfig(
         )
     ),
 
-    @InternalDependency
     val jdbcUrl: String = getPropertyThenEnv(JDBC_URL_PARAMETER),
-    @InternalDependency
     val dbUsername: String = getPropertyThenEnv(DB_USERNAME_PARAMETER),
-    @InternalDependency
     val dbPassword: String = getPropertyThenEnv(DB_PASSWORD_PARAMETER),
 ) {
     val pricesFolder: String = appDataPath + File.separator + "prices"
