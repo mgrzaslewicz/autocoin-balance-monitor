@@ -3,9 +3,7 @@ package autocoin.balance
 import autocoin.balance.app.AppContext
 import autocoin.balance.app.AppStarter
 import autocoin.balance.app.AppVersion
-import autocoin.balance.app.config.AppConfig
-import autocoin.balance.app.config.loadConfig
-import autocoin.balance.app.config.shouldStartOwnDbContainer
+import autocoin.balance.app.config.ConfigLoader
 import mu.KotlinLogging
 import org.testcontainers.containers.PostgreSQLContainer
 import java.net.SocketAddress
@@ -14,10 +12,8 @@ import kotlin.system.measureTimeMillis
 
 private val logger = KotlinLogging.logger { }
 
-private fun startOwnDbContainer() {
+private fun startOwnDbContainer(dbUser: String, dbPassword: String): String {
     logger.warn { "Starting own database container" }
-    val dbPassword = "samplePassword"
-    val dbUser = "sampleUser"
     val dbContainer = PostgreSQLContainer("postgres:11.0")
     dbContainer.withUsername(dbUser)
     dbContainer.withPassword(dbPassword)
@@ -26,12 +22,7 @@ private fun startOwnDbContainer() {
     dbContainer.start()
 
     logger.warn { "Own database container started" }
-    AppConfig.setJvmPropertiesForDbConnection(
-        jdbcUrl = dbContainer.jdbcUrl,
-        dbUsername = dbUser,
-        dbPassword = dbPassword
-    )
-
+    return dbContainer.jdbcUrl
 }
 
 fun main(args: Array<String>) {
@@ -39,10 +30,12 @@ fun main(args: Array<String>) {
     try {
         var address: SocketAddress? = null
         val bootTimeMillis = measureTimeMillis {
-            if (shouldStartOwnDbContainer) {
-                startOwnDbContainer()
+            var config = ConfigLoader.loadConfig()
+            if (config.shouldStartOwnDbContainer) {
+                logger.info { "Config pre db container start: $config" }
+                val jdbcUrl = startOwnDbContainer(config.dbUsername, config.dbPassword)
+                config = config.copy(jdbcUrl = jdbcUrl)
             }
-            val config = loadConfig()
             logger.info { "Config: $config" }
             val appContext = AppContext(config)
             val appStarter = AppStarter(appContext)
