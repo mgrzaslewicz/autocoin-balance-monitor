@@ -3,6 +3,13 @@ set -e
 set -x
 
 SERVICE_NAME="autocoin-balance-monitor"
+
+getLatestLocalImageVersion() {
+  echo $(docker inspect "${SERVICE_NAME}:latest" -f '{{ .RepoTags }}' | tr -d '[]' | cut -d' ' -f1 | cut -d':' -f2)
+}
+
+VERSION="${VERSION:=$(getLatestLocalImageVersion)}"
+
 TMP="/tmp"
 TAR_NAME="${SERVICE_NAME}-${VERSION}.tar"
 TAR_GZ_NAME="${SERVICE_NAME}-${VERSION}.tar.gz"
