@@ -11,6 +11,6 @@ import java.lang.System.setProperty
  */
 fun main() {
     setProperty("logging.level", "DEBUG")
-    setProperty("PROFILE", "dev")
+    setProperty("PROFILES", "dev")
     main(emptyArray())
 }

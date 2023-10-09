@@ -1,20 +1,29 @@
 package autocoin.balance.app.config
 
+import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import mu.KotlinLogging
 
 object ConfigLoader {
+    private val logger = KotlinLogging.logger {}
 
-    fun loadConfig(profile: String? = System.getProperty("PROFILE", System.getenv("PROFILE"))): AppConfig {
+    private fun getProfileConfig(profile: String): Config = ConfigFactory.parseResources("config/app-$profile.conf")
+
+    fun loadConfig(profiles: String? = System.getProperty("PROFILES", System.getenv("PROFILES"))): AppConfig {
+        val profiles = profiles?.split(",")
+        logger.info { "Loading config for profiles: $profiles" }
+
         val defaultConfig = ConfigFactory.load("config/app-base")
-        val profileConfig = if (profile == null) {
-            ConfigFactory.empty()
-        } else {
-            ConfigFactory.parseResources("config/app-$profile.conf")
-        }
         val config = ConfigFactory
             .systemEnvironment()
             .withFallback(ConfigFactory.systemProperties())
-            .withFallback(profileConfig)
+            .let {
+                var currentConfig = it
+                profiles?.forEach { profile ->
+                    currentConfig = currentConfig.withFallback(getProfileConfig(profile))
+                }
+                currentConfig
+            }
             .withFallback(defaultConfig)
             .resolve()
 
