@@ -11,6 +11,6 @@ import java.lang.System.setProperty
  */
 fun main() {
     setProperty("logging.level", "DEBUG")
-    setProperty("PROFILES", "dev,ownDbContainer")
+    setProperty("PROFILES", "dev,ownDbContainer,sampleOauthClientSecret")
     main(emptyArray())
 }
